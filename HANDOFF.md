@@ -1,0 +1,1 @@
+# ⚠️ ARCHIVO OBSOLETO — ver CONTEXT.md

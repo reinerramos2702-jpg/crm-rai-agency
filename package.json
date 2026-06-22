@@ -1,0 +1,48 @@
+{
+  "name": "rai-content-engine-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "RAI Agency — Pipeline de Automatización de Contenido (submódulo CRM)",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "worker": "tsx src/workers/pipeline-worker.ts",
+    "worker:prod": "node --loader ts-node/esm src/workers/pipeline-worker.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:validate": "prisma validate",
+    "prisma:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.0.0",
+    "@ai-sdk/deepseek": "^0.1.0",
+    "@ai-sdk/google": "^1.0.0",
+    "@ai-sdk/openai": "^1.0.0",
+    "@anthropic-ai/sdk": "^0.103.0",
+    "@aws-sdk/client-s3": "^3.600.0",
+    "@aws-sdk/s3-request-presigner": "^3.600.0",
+    "@prisma/client": "^5.20.0",
+    "ai": "^4.0.0",
+    "jszip": "^3.10.1",
+    "bullmq": "^5.20.0",
+    "ioredis": "^5.4.1",
+    "jose": "^5.9.0",
+    "lucide-react": "^0.400.0",
+    "next": "^14.2.15",
+    "playwright": "^1.60.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hot-toast": "^2.6.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "prisma": "^5.20.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3"
+  }
+}

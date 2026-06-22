@@ -1,0 +1,900 @@
+// RAI Content Engine — Schema de base de datos
+// Diseñado para integración con CRM RAI Agency vía SSO
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================
+// IDENTIDAD (proviene del CRM via JWT, replicado local para FKs)
+// ============================================
+model User {
+  id          String   @id // UUID del CRM
+  email       String   @unique
+  displayName String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspaces  Workspace[]
+  apiKeys     ApiKey[]
+  campaigns   Campaign[]
+  executions  Execution[]
+  memberships WorkspaceMember[]
+}
+
+// Un workspace = una marca/cliente del operador de agencia
+model Workspace {
+  id                String    @id @default(cuid())
+  ownerId           String
+  name              String
+  brandProfile      Json? // colores, tono, voz, productos, personajes — output del Brand Analyzer
+  // Doc "Sistema Operativo de Contenido" propio del tenant (placeholder de "bucket" hasta
+  // integrar Hostinger). Texto extraído del .docx subido por el usuario vía drag-and-drop.
+  brandDocText      String?   @db.Text
+  brandDocName      String?
+  brandDocUpdatedAt DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  owner             User               @relation(fields: [ownerId], references: [id])
+  campaigns         Campaign[]
+  contacts          Contact[]
+  snippets          Snippet[]
+  activationLinks   ActivationLink[]
+  calendarGroups    CalendarGroup[]
+  calendarResources CalendarResource[]
+  appointments      Appointment[]
+  members           WorkspaceMember[]
+  workflowFolders   WorkflowFolder[]
+  workflows         Workflow[]
+  contentGrids      ContentGrid[]
+  aiAgents          AIAgent[]
+  knowledgeBases    KnowledgeBase[]
+  guests            Guest[]
+  sites             Site[]
+  rooms             Room[]
+  roomTypes         RoomType[]
+  bookings          Booking[]
+  payments          Payment[]
+  auditEvents       AuditEvent[]
+
+  @@index([ownerId])
+}
+
+// ============================================
+// GENERADOR DE IMÁGENES — "Grillas" de contenido semanal
+// Wizard de 5 nodos secuenciales (ver doc "Sistema Operativo de Contenido"):
+// 1. Ideación semanal · 2. Arquitectura narrativa · 3. Generación de imágenes
+// 4. Ciclaje entre temas · 5. Síntesis de copywriting
+// ============================================
+model ContentGrid {
+  id               String   @id @default(cuid())
+  workspaceId      String
+  userId           String
+  name             String   @default("Nueva grilla")
+  status           String   @default("draft") // draft | in_progress | completed
+  currentStep      Int      @default(1) // 1-5, nodo activo del wizard
+  activeThemeIndex Int      @default(0) // índice del tema en curso (0-6) para Nodos 2-4
+  themesTotal      Int      @default(7)
+  imageProvider    String   @default("gemini") // gemini | openai | stabilityai
+  llmProvider      String?
+  llmModel         String?
+  chatHistory      Json     @default("[]") // historial completo del wizard (todos los nodos)
+  themes           Json     @default("[]") // [{ id, title, category, palette, segment, status, styles, slides:[{slideNumber,prompt,imageUrl,status}], caption, hashtags, stories, linkedin }]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  workspace Workspace          @relation(fields: [workspaceId], references: [id])
+  assets    ContentGridAsset[]
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+// Imagen generada para un slide específico de una grilla (Nodo 3)
+model ContentGridAsset {
+  id          String   @id @default(cuid())
+  gridId      String
+  themeIndex  Int
+  slideNumber Int
+  kind        String   @default("image")
+  prompt      String?  @db.Text
+  r2Key       String
+  publicUrl   String
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now())
+
+  grid ContentGrid @relation(fields: [gridId], references: [id], onDelete: Cascade)
+
+  @@index([gridId])
+  @@index([gridId, themeIndex, slideNumber])
+}
+
+// ============================================
+// API KEYS BYOK (cifradas con AES-256-GCM)
+// ============================================
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String
+  provider   String // 'openai' | 'anthropic' | 'google' | 'deepseek' | 'elevenlabs' | 'suno' | 'instagram'
+  label      String? // alias opcional
+  ciphertext String // hex
+  iv         String // hex
+  authTag    String // hex
+  validated  Boolean   @default(false)
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, provider, label])
+  @@index([userId])
+}
+
+// ============================================
+// CAMPAÑA = unidad de planificación (Secuencia 1)
+// Una campaña puede generar múltiples Executions (batches)
+// ============================================
+model Campaign {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  userId       String
+  name         String
+  pipelineType String // 'ugc' | 'avatar_reel' | 'static_ads' | 'carousel'
+  status       String   @default("planning") // planning | ready | processing | done | failed
+  llmProvider  String? // el LLM seleccionado en Secuencia 1
+  llmModel     String?
+  chatHistory  Json     @default("[]") // historial completo del chat de planificación
+  masterJson   Json? // JSON maestro extraído al "Finalizar planificación"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspace      Workspace       @relation(fields: [workspaceId], references: [id])
+  user           User            @relation(fields: [userId], references: [id])
+  executions     Execution[]
+  inventoryItems InventoryItem[]
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+// ============================================
+// EJECUCIÓN = un batch disparado con "Procesar"
+// ============================================
+model Execution {
+  id               String    @id @default(cuid())
+  campaignId       String
+  userId           String
+  status           String    @default("queued") // queued | running | paused | completed | failed
+  estimatedCostUsd Float?
+  actualCostUsd    Float     @default(0)
+  hardCapUsd       Float?
+  startedAt        DateTime?
+  finishedAt       DateTime?
+  errorMessage     String?
+  createdAt        DateTime  @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+  tasks    Task[]
+  events   Event[]
+
+  @@index([campaignId])
+  @@index([userId])
+  @@index([status])
+}
+
+// Una Task = una unidad de trabajo dentro de la ejecución
+// (ej: un video del batch de 30 días → 30 Tasks por Execution)
+model Task {
+  id           String    @id @default(cuid())
+  executionId  String
+  index        Int // posición dentro del batch
+  status       String    @default("queued") // queued | running | paused | done | failed
+  masterNode   Json // slice del JSON maestro asignado a esta task
+  outputJson   Json      @default("{}") // append-only: outputs de cada agente
+  costUsd      Float     @default(0)
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  errorAgent   String? // qué agente falló (si aplica)
+  errorMessage String?
+  createdAt    DateTime  @default(now())
+
+  execution Execution @relation(fields: [executionId], references: [id])
+  assets    Asset[]
+
+  @@index([executionId])
+  @@index([status])
+}
+
+// Asset final subido a R2
+model Asset {
+  id        String   @id @default(cuid())
+  taskId    String
+  kind      String // 'script' | 'image' | 'voice' | 'music' | 'video' | 'final'
+  agentName String // qué sub-agente lo produjo
+  r2Key     String // key en bucket R2
+  publicUrl String
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id])
+
+  @@index([taskId])
+}
+
+// Eventos para la Secuencia 3 (SSE)
+// Los logs efímeros NO se guardan acá; solo eventos clave persistentes
+model Event {
+  id          String   @id @default(cuid())
+  executionId String
+  taskId      String?
+  type        String // 'agent.started' | 'asset.ready' | 'agent.failed' | 'execution.paused'
+  agentName   String?
+  payload     Json     @default("{}")
+  createdAt   DateTime @default(now())
+
+  execution Execution @relation(fields: [executionId], references: [id])
+
+  @@index([executionId, createdAt])
+}
+
+// ============================================
+// INVENTARIO DE ASSETS LOCALES (NUEVO)
+// ============================================
+model InventoryItem {
+  id             String   @id @default(cuid())
+  campaignId     String
+  dayNumber      Int
+  folderPath     String
+  assetName      String
+  assetType      String // 'image' | 'video' | 'audio'
+  localPath      String
+  visionAnalysis Json? // output del vision-analyzer (Gemini Vision)
+  createdAt      DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id])
+
+  @@index([campaignId])
+}
+
+// ============================================
+// CONFIGURACIÓN GLOBAL
+// ============================================
+model Settings {
+  id                       String   @id @default("global")
+  n8nWebhookUrl            String?
+  igBusinessId             String?
+  // Configuración del módulo Conversaciones (ANS / SLA)
+  slaFirstResponseMins     Int? // ANS a punto de expirar: minutos para primera respuesta
+  slaOverdueMins           Int? // ANS atrasado: minutos tras los cuales se marca como atrasado
+  aiCountsAsResponse       Boolean  @default(false)
+  // Configuración del módulo Calendarios
+  calendarHideEventDetails Boolean  @default(true) // "Modo privado": ocultar detalles de eventos sincronizados
+  // Configuración del módulo Automatización
+  automationsEnabled       Boolean  @default(true) // kill switch global: pausar todos los flujos
+  automationNotifyEmail    String? // destino de notificaciones internas (alertas a gerente)
+  aiBuilderProvider        String? // 'anthropic' | null - si hay API key configurada en /keys
+  updatedAt                DateTime @updatedAt
+}
+
+// ============================================
+// MÓDULO CONVERSACIONES (CRM ligero)
+// ============================================
+
+// Un contacto = persona/lead con la que se conversa
+model Contact {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  email       String?
+  phone       String?
+  avatarUrl   String?
+  source      String? // 'manual' | 'whatsapp' | 'instagram' | 'email' | 'web'
+  tags        String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id])
+  conversations Conversation[]
+  notes         Note[]
+  contactTasks  ContactTask[]
+  appointments  Appointment[]
+  guests        Guest[]
+
+  @@index([workspaceId])
+}
+
+// Una conversación agrupa los mensajes de un canal con un contacto
+model Conversation {
+  id            String    @id @default(cuid())
+  contactId     String
+  agentId       String? // agente de IA que atiende esta conversación (módulo Agentes de IA)
+  channel       String    @default("manual") // 'manual' | 'whatsapp' | 'instagram' | 'email' | 'sms'
+  status        String    @default("open") // 'open' | 'pending' | 'closed'
+  unreadCount   Int       @default(0)
+  lastMessageAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  contact  Contact   @relation(fields: [contactId], references: [id])
+  agent    AIAgent?  @relation(fields: [agentId], references: [id])
+  messages Message[]
+
+  @@index([contactId])
+  @@index([status])
+  @@index([agentId])
+}
+
+// Un mensaje dentro de una conversación
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  direction      String // 'in' (recibido del contacto) | 'out' (enviado por el equipo/IA)
+  sender         String   @default("agent") // 'contact' | 'agent' | 'ai'
+  body           String
+  attachmentUrl  String?
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+
+  @@index([conversationId, createdAt])
+}
+
+// Notas internas sobre un contacto (panel lateral "Notas")
+model Note {
+  id        String   @id @default(cuid())
+  contactId String
+  body      String
+  createdAt DateTime @default(now())
+
+  contact Contact @relation(fields: [contactId], references: [id])
+
+  @@index([contactId])
+}
+
+// Tareas asociadas a un contacto (panel lateral "Tareas")
+model ContactTask {
+  id        String    @id @default(cuid())
+  contactId String
+  title     String
+  done      Boolean   @default(false)
+  dueAt     DateTime?
+  createdAt DateTime  @default(now())
+
+  contact Contact @relation(fields: [contactId], references: [id])
+
+  @@index([contactId])
+}
+
+// Fragmentos / respuestas rápidas reutilizables (tab "Fragmentos")
+model Snippet {
+  id          String   @id @default(cuid())
+  workspaceId String
+  title       String
+  body        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
+}
+
+// Enlaces de activación rastreables (tab "Enlaces de Activación")
+model ActivationLink {
+  id          String   @id @default(cuid())
+  workspaceId String
+  label       String
+  slug        String   @unique
+  destination String
+  clicks      Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
+}
+
+// ============================================
+// MÓDULO CALENDARIOS
+// ============================================
+
+// Grupo de calendarios (organiza varios CalendarResource)
+model CalendarGroup {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  description String?
+  slug        String   @unique
+  template    String   @default("neo") // 'neo' | 'classic'
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace          @relation(fields: [workspaceId], references: [id])
+  calendars CalendarResource[]
+
+  @@index([workspaceId])
+}
+
+// Un calendario individual o de evento (genera citas)
+model CalendarResource {
+  id             String   @id @default(cuid())
+  workspaceId    String
+  groupId        String?
+  name           String
+  description    String?
+  type           String   @default("personal") // 'personal' | 'evento' | 'colectivo'
+  durationMins   Int      @default(30)
+  status         String   @default("active") // 'active' | 'inactive'
+  // Reservas públicas
+  bookingSlug    String?  @unique // slug para /book/[slug]
+  bookingEnabled Boolean  @default(false)
+  // Disponibilidad semanal: { mon: [{start:"09:00",end:"17:00"}], tue: [...], ... }
+  availability   Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  workspace    Workspace      @relation(fields: [workspaceId], references: [id])
+  group        CalendarGroup? @relation(fields: [groupId], references: [id])
+  appointments Appointment[]
+
+  @@index([workspaceId])
+  @@index([groupId])
+  @@index([bookingSlug])
+}
+
+// Una cita agendada en un calendario
+model Appointment {
+  id          String   @id @default(cuid())
+  workspaceId String
+  calendarId  String
+  contactId   String?
+  title       String
+  notes       String?
+  status      String   @default("confirmed") // 'confirmed' | 'cancelled' | 'completed' | 'no_show'
+  startTime   DateTime
+  endTime     DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace        @relation(fields: [workspaceId], references: [id])
+  calendar  CalendarResource @relation(fields: [calendarId], references: [id])
+  contact   Contact?         @relation(fields: [contactId], references: [id])
+
+  @@index([workspaceId])
+  @@index([calendarId])
+  @@index([contactId])
+  @@index([startTime])
+}
+
+// ============================================
+// EQUIPO Y ROLES
+// ============================================
+
+// Miembro de un workspace con un rol asignado.
+// El owner del Workspace es 'admin' implicito (no necesita fila aqui).
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String? // null mientras la invitacion esta pendiente (no existe User aun)
+  email       String
+  role        String   @default("agente") // 'admin' | 'gerente' | 'agente' | 'viewer'
+  status      String   @default("invited") // 'invited' | 'active' | 'suspended'
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  user      User?     @relation(fields: [userId], references: [id])
+
+  @@unique([workspaceId, email])
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+// ============================================
+// MODULO AUTOMATIZACION
+// ============================================
+
+// Carpeta para organizar flujos (estilo "Marketing Workflows")
+model WorkflowFolder {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace  @relation(fields: [workspaceId], references: [id])
+  workflows Workflow[]
+
+  @@index([workspaceId])
+}
+
+// Un flujo de automatizacion: trigger + pasos (condicion/delay/accion) en JSON
+model Workflow {
+  id          String    @id @default(cuid())
+  workspaceId String
+  folderId    String?
+  name        String
+  description String?
+  status      String    @default("draft") // 'draft' | 'active' | 'paused'
+  trigger     Json
+  steps       Json      @default("[]")
+  runsCount   Int       @default(0)
+  lastRunAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  workspace Workspace       @relation(fields: [workspaceId], references: [id])
+  folder    WorkflowFolder? @relation(fields: [folderId], references: [id])
+  runs      WorkflowRun[]
+
+  @@index([workspaceId])
+  @@index([folderId])
+  @@index([status])
+}
+
+// Registro de cada ejecucion de un Workflow (para la pestana "Actividad")
+model WorkflowRun {
+  id         String    @id @default(cuid())
+  workflowId String
+  contactId  String?
+  status     String
+  trigger    Json
+  result     Json?
+  error      String?
+  nextRunAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  workflow Workflow @relation(fields: [workflowId], references: [id])
+
+  @@index([workflowId])
+  @@index([contactId])
+  @@index([status])
+  @@index([nextRunAt])
+}
+
+// ============================================
+// MÓDULO AGENTES DE IA
+// Centraliza todos los bots conversacionales (chat y voz) del workspace:
+// configuración, objetivos/personalidad, entrenamiento (bases de
+// conocimiento) y tablero de métricas.
+// ============================================
+
+// Un Agente de IA = un bot configurable (chat, SMS, WhatsApp, voz, etc.)
+model AIAgent {
+  id          String  @id @default(cuid())
+  workspaceId String
+  name        String
+  // Estado operativo del bot
+  status      String  @default("suggested") // 'active' (Piloto automático) | 'suggested' (Sugerido) | 'disabled' (Deshabilitado)
+  isPrimary   Boolean @default(false) // solo el agente principal responde mensajes entrantes
+  kind        String  @default("chat") // 'chat' (Conversation AI) | 'voice' (Aide voz)
+  // Canales/proveedores de comunicación compatibles
+  channels    String[] @default([])
+
+  // ---- Objetivos del bot (motor LLM + prompt) ----
+  llmProvider     String  @default("openai") // 'openai' | 'anthropic' | 'google' | 'deepseek'
+  llmModel        String  @default("gpt-4o-mini")
+  personality     String? @db.Text // Sección 1 — identidad y personalidad del agente
+  objective       String? @db.Text // Sección 2 — intenciones y flujos de conversación
+  additionalInfo  String? @db.Text // Información adicional (tarifas, políticas, datos del negocio)
+  welcomeMessage  String? @db.Text
+  fallbackMessage String? @db.Text
+
+  // ---- Parámetros para el Tablero (métricas estimadas) ----
+  avgSecondsPerMessage Int @default(8) // usado para "Tiempo ahorrado"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace     Workspace              @relation(fields: [workspaceId], references: [id])
+  triggers      AIAgentKnowledgeBase[]
+  conversations Conversation[]
+
+  @@index([workspaceId])
+  @@index([status])
+}
+
+// Una base de conocimiento = colección de fuentes (FAQs, texto, tablas, archivos)
+// que se puede vincular a uno o varios agentes mediante "triggers"
+model KnowledgeBase {
+  id          String  @id @default(cuid())
+  workspaceId String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace              @relation(fields: [workspaceId], references: [id])
+  items     KnowledgeBaseItem[]
+  triggers  AIAgentKnowledgeBase[]
+
+  @@index([workspaceId])
+}
+
+// Un elemento dentro de una base de conocimiento
+model KnowledgeBaseItem {
+  id              String   @id @default(cuid())
+  knowledgeBaseId String
+  type            String   @default("faq") // 'faq' | 'text' | 'table' | 'file' | 'url'
+  question        String? // type = 'faq'
+  answer          String?  @db.Text // type = 'faq'
+  title           String? // type = 'text' | 'table' | 'file' | 'url'
+  content         String?  @db.Text // type = 'text'
+  data            Json? // type = 'table' (filas/columnas) | 'file' | 'url' (metadata)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  knowledgeBase KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+
+  @@index([knowledgeBaseId])
+  @@index([type])
+}
+
+// "Knowledge Base Trigger": condición bajo la cual un agente debe usar
+// una base de conocimiento determinada (pestaña "Entrenamiento del bot")
+model AIAgentKnowledgeBase {
+  id               String  @id @default(cuid())
+  agentId          String
+  knowledgeBaseId  String
+  triggerCondition String? @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  agent         AIAgent       @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  knowledgeBase KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, knowledgeBaseId])
+}
+
+// ============================================
+// MÓDULO HOTELERO — Guests, Sites, Rooms, Bookings
+// Capa de gestión de alojamiento construida sobre el CRM base.
+// Guest ↔ Contact (opcional): un huésped puede o no estar registrado como
+// contacto de marketing. Booking conecta Guest + Site + Room + Payment.
+// ============================================
+
+// Un huésped/pasajero del negocio (hotel, transporte, tour, etc.)
+model Guest {
+  id              String   @id @default(cuid())
+  workspaceId     String
+  // Opcional: vincula al mismo registro en el CRM de Contactos para no duplicar
+  contactId       String?
+  // Identidad
+  firstName       String
+  lastName        String?
+  email           String?
+  phone           String?
+  // Identificación oficial
+  documentType    String?  // 'passport' | 'national_id' | 'driver_license' | 'other'
+  documentNumber  String?
+  nationality     String?  // ISO 3166-1 alpha-2 (ej. 'DO', 'US')
+  dateOfBirth     DateTime?
+  // Contacto de emergencia
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  // Operativo
+  status          String   @default("active") // 'active' | 'staying' | 'checked_out' | 'inactive' | 'vip' | 'blacklisted'
+  preferredLanguage String? // 'es' | 'en' | ...
+  tags            String[] @default([])
+  notes           String?  @db.Text
+  // Métricas agregadas (denormalizadas para listas rápidas)
+  totalStays      Int      @default(0)
+  totalSpentCents Int      @default(0)
+  lastStayAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  contact   Contact?  @relation(fields: [contactId], references: [id])
+  bookings  Booking[]
+  payments  Payment[]
+
+  @@index([workspaceId])
+  @@index([contactId])
+  @@index([status])
+  @@index([email])
+}
+
+// Una sucursal / locación / sede del negocio
+model Site {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  name         String
+  slug         String   @unique
+  type         String   @default("hotel") // 'hotel' | 'restaurant' | 'office' | 'venue' | 'other'
+  address      String?
+  city         String?
+  country      String?  // ISO 3166-1 alpha-2
+  postalCode   String?
+  latitude     Float?
+  longitude    Float?
+  contactName  String?
+  contactPhone String?
+  contactEmail String?
+  capacity     Int      @default(0) // huéspedes máximos / aforo
+  status       String   @default("active") // 'active' | 'maintenance' | 'closed'
+  notes        String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  rooms     Room[]
+  bookings  Booking[]
+  payments  Payment[]
+
+  @@index([workspaceId])
+  @@index([status])
+}
+
+// Categoría/tipo de habitación (Single, Double, Suite, Deluxe, etc.)
+model RoomType {
+  id             String   @id @default(cuid())
+  workspaceId    String
+  name           String
+  description    String?  @db.Text
+  basePriceCents Int      @default(0)
+  currency       String   @default("USD")
+  maxOccupancy   Int      @default(2)
+  amenities      String[] @default([])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  rooms     Room[]
+
+  @@index([workspaceId])
+}
+
+// Una habitación física (instancia)
+model Room {
+  id          String   @id @default(cuid())
+  workspaceId String
+  siteId      String
+  roomTypeId  String?
+  number      String   // "101", "A-203", etc. — string para soportar formatos mixtos
+  floor       String?
+  status      String   @default("available") // 'available' | 'occupied' | 'cleaning' | 'maintenance' | 'out_of_order'
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  site      Site      @relation(fields: [siteId], references: [id])
+  roomType  RoomType? @relation(fields: [roomTypeId], references: [id])
+  bookings  Booking[]
+
+  @@unique([siteId, number])
+  @@index([workspaceId])
+  @@index([siteId])
+  @@index([status])
+}
+
+// Una reserva hotelera (distinta del Appointment del módulo Calendarios)
+// Conecta Guest + Site + (Room?) + Payment. Status sigue ciclo hotelero.
+model Booking {
+  id               String   @id @default(cuid())
+  workspaceId      String
+  guestId          String
+  siteId           String
+  roomId           String?
+  reference        String   @unique // 'BK-' + cuid corto
+  status           String   @default("pending") // 'pending' | 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled' | 'no_show'
+  checkInDate      DateTime
+  checkOutDate     DateTime
+  adults           Int      @default(1)
+  children         Int      @default(0)
+  source           String   @default("direct") // 'direct' | 'booking_com' | 'airbnb' | 'expedia' | 'walkin' | 'phone' | 'other'
+  totalAmountCents Int      @default(0)
+  paidAmountCents  Int      @default(0)
+  currency         String   @default("USD")
+  specialRequests  String?  @db.Text
+  internalNotes    String?  @db.Text
+  cancelledReason  String?
+  actualCheckIn    DateTime?
+  actualCheckOut   DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  guest     Guest     @relation(fields: [guestId], references: [id])
+  site      Site      @relation(fields: [siteId], references: [id])
+  room      Room?     @relation(fields: [roomId], references: [id])
+  payments  Payment[]
+
+  @@index([workspaceId])
+  @@index([guestId])
+  @@index([siteId])
+  @@index([roomId])
+  @@index([status])
+  @@index([checkInDate])
+  @@index([checkOutDate])
+}
+
+// Pago/transacción del negocio (vinculable a Guest/Booking/Site)
+model Payment {
+  id                  String   @id @default(cuid())
+  workspaceId         String
+  reference           String   @unique // 'PAY-' + cuid corto
+  guestId             String?
+  bookingId           String?
+  siteId              String?
+  amountCents         Int
+  currency            String   @default("USD")
+  method              String   @default("cash") // 'cash' | 'card' | 'transfer' | 'paypal' | 'stripe' | 'mercadopago' | 'crypto' | 'check' | 'other'
+  status              String   @default("pending") // 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded' | 'under_review'
+  paidAt              DateTime?
+  proofUrl            String?  // URL del comprobante (subido a R2/Supabase storage)
+  transactionRef      String?  // ID externo (Stripe charge_id, transfer ref, etc.)
+  notes               String?  @db.Text
+  internalComments    String?  @db.Text
+  createdById         String
+  approvedById        String?
+  approvedAt          DateTime?
+  refundedAmountCents Int      @default(0)
+  refundedAt          DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  workspace Workspace      @relation(fields: [workspaceId], references: [id])
+  guest     Guest?         @relation(fields: [guestId], references: [id])
+  booking   Booking?       @relation(fields: [bookingId], references: [id])
+  site      Site?          @relation(fields: [siteId], references: [id])
+  events    PaymentEvent[]
+
+  @@index([workspaceId])
+  @@index([status])
+  @@index([guestId])
+  @@index([bookingId])
+  @@index([siteId])
+  @@index([paidAt])
+  @@index([createdAt])
+}
+
+// Audit log específico de pagos (created/approved/rejected/refunded/note)
+model PaymentEvent {
+  id          String   @id @default(cuid())
+  paymentId   String
+  actorUserId String
+  action      String   // 'created' | 'updated' | 'approved' | 'rejected' | 'refunded' | 'note' | 'proof_uploaded'
+  fromStatus  String?
+  toStatus    String?
+  meta        Json     @default("{}")
+  createdAt   DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId, createdAt])
+}
+
+// ============================================
+// AUDIT LOG GLOBAL del workspace
+// Registra acciones importantes (crear/editar/eliminar/aprobar) en cualquier módulo
+// para trazabilidad y compliance. Se llena vía helper logAudit() en src/lib/audit.ts.
+// ============================================
+model AuditEvent {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  action      String   // 'guest.created' | 'booking.cancelled' | 'payment.approved' | ...
+  entityType  String   // 'guest' | 'booking' | 'payment' | 'site' | 'room' | ...
+  entityId    String?
+  meta        Json     @default("{}")
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId, createdAt])
+  @@index([entityType, entityId])
+  @@index([userId])
+}

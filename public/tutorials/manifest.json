@@ -1,0 +1,79 @@
+{
+  "_comment": "Manifiesto de tutoriales de la Guia de Inicio. Cada clave = id del paso (coincide con ChecklistItem.id en src/app/launchpad/page.tsx). 'version' = version de las diapositivas (subela cuando la UI cambie y regeneres las imagenes). 'slides' = cantidad de archivos slide-1.svg..slide-N.svg en public/tutorials/<id>/, generados por scripts/generate-tutorial-slides.py. Ver TUTORIAL_PROMPTS.md para el flujo de actualizacion.",
+  "updatedAt": "2026-06-10",
+  "items": {
+    "crear-contacto": {
+      "version": 1,
+      "slides": 2
+    },
+    "importar-contactos": {
+      "version": 1,
+      "slides": 2
+    },
+    "embudo-captacion": {
+      "version": 1,
+      "slides": 2
+    },
+    "comunicacion-multicanal": {
+      "version": 1,
+      "slides": 2
+    },
+    "primera-campana": {
+      "version": 1,
+      "slides": 2
+    },
+    "seguimiento-automatizado": {
+      "version": 1,
+      "slides": 2
+    },
+    "programacion-citas": {
+      "version": 1,
+      "slides": 2
+    },
+    "pipeline-ventas": {
+      "version": 1,
+      "slides": 2
+    },
+    "redes-sociales": {
+      "version": 1,
+      "slides": 2
+    },
+    "anuncios-meta": {
+      "version": 1,
+      "slides": 2
+    },
+    "campana-sms": {
+      "version": 1,
+      "slides": 2
+    },
+    "conversaciones-ventas": {
+      "version": 1,
+      "slides": 2
+    },
+    "chat-en-vivo": {
+      "version": 1,
+      "slides": 2
+    },
+    "messenger": {
+      "version": 1,
+      "slides": 2
+    },
+    "lanzar-producto": {
+      "version": 1,
+      "slides": 2
+    },
+    "conectar-pagos": {
+      "version": 1,
+      "slides": 2
+    },
+    "enlace-pago": {
+      "version": 1,
+      "slides": 2
+    },
+    "facturas": {
+      "version": 1,
+      "slides": 2
+    }
+  },
+  "format": "svg"
+}

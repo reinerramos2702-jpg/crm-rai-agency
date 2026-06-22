@@ -1,0 +1,9 @@
+services:
+  - type: worker
+    name: rai-content-worker
+    runtime: node
+    buildCommand: npm install && npx prisma generate
+    startCommand: npm run worker
+    envVarGroups:
+      - rai-env-vars
+    plan: free
