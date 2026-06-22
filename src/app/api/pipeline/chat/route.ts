@@ -136,6 +136,7 @@ export async function POST(req: NextRequest) {
       if (brandContext.photoMode) parts.push(`- Modo de fotos: ${brandContext.photoMode}`);
       if (brandContext.logoMode) parts.push(`- Modo de logo: ${brandContext.logoMode}`);
       if (brandContext.availablePhotos) parts.push(`- Fotos disponibles: ${brandContext.availablePhotos}`);
+      if (brandContext.brandRules) parts.push(`\n## REGLAS DE LENGUAJE DE MARCA (OBLIGATORIO)\nPalabras PROHIBIDAS y sus reemplazos. NUNCA uses las palabras prohibidas en ningún caption, hook, CTA o texto:\n${brandContext.brandRules}\nAntes de generar cualquier texto, verifica que NINGUNA palabra prohibida aparezca. Si ibas a usar una, usa el reemplazo.`);
       if (brandContext.brandDocument) parts.push(`\n## DOCUMENTO DE MARCA / BRIEF\n${brandContext.brandDocument}`);
       parts.push('\nUSA toda esta información para personalizar el plan. NO preguntes datos que ya tienes aquí. Si ya tienes nombre, tipo, servicios y audiencia, puedes ir directo a proponer los 5 pilares.');
       fullPrompt += parts.join('\n');

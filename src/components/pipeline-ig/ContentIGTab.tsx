@@ -158,6 +158,13 @@ export default function ContentIGTab() {
   const [competitors, setCompetitors] = useState(() => loadFromStorage('competitors', ''));
   const [contentNotes, setContentNotes] = useState(() => loadFromStorage('contentNotes', ''));
 
+  // Brand Language Rules
+  interface BrandRule { forbidden: string; replacement: string; reason: string; }
+  const [brandRules, setBrandRules] = useState<BrandRule[]>(() => loadFromStorage('brandRules', []));
+  const [newForbidden, setNewForbidden] = useState('');
+  const [newReplacement, setNewReplacement] = useState('');
+  const [newReason, setNewReason] = useState('');
+
   // Auto-save all state to localStorage
   useEffect(() => { saveToStorage('view', view); }, [view]);
   useEffect(() => { saveToStorage('campaigns', campaigns); }, [campaigns]);
@@ -185,6 +192,7 @@ export default function ContentIGTab() {
   useEffect(() => { saveToStorage('services', services); }, [services]);
   useEffect(() => { saveToStorage('competitors', competitors); }, [competitors]);
   useEffect(() => { saveToStorage('contentNotes', contentNotes); }, [contentNotes]);
+  useEffect(() => { saveToStorage('brandRules', brandRules); }, [brandRules]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -216,6 +224,7 @@ export default function ContentIGTab() {
       if (logoMode) brandContext.logoMode = logoMode;
       if (uploadedPhotos.length > 0) brandContext.availablePhotos = uploadedPhotos.join(', ');
       if (brandDocContent) brandContext.brandDocument = brandDocContent.slice(0, 30000);
+      if (brandRules.length > 0) brandContext.brandRules = brandRules.map(r => `"${r.forbidden}" → "${r.replacement}" (${r.reason})`).join('; ');
 
       const res = await fetch('/api/pipeline/chat', {
         method: 'POST',
@@ -541,6 +550,64 @@ export default function ContentIGTab() {
                 <label htmlFor="auto-publish" className="muted" style={{ fontSize: 13 }}>
                   Publicación automática vía API de Instagram (requiere token configurado)
                 </label>
+              </div>
+            </div>
+
+            {/* --- Reglas de Lenguaje de Marca --- */}
+            <div className="card">
+              <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: 15 }}>
+                <AlertCircle size={16} style={{ color: '#ef4444' }} /> Reglas de Lenguaje de Marca
+              </div>
+              <p className="muted" style={{ fontSize: 12, marginBottom: 14 }}>
+                Palabras prohibidas y sus reemplazos. El planificador IA evitará estas palabras y usará los reemplazos automáticamente.
+              </p>
+
+              {/* Existing rules */}
+              {brandRules.length > 0 && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr auto', gap: 6, marginBottom: 6 }}>
+                    <span className="muted" style={{ fontSize: 11, fontWeight: 600 }}>PROHIBIDA</span>
+                    <span className="muted" style={{ fontSize: 11, fontWeight: 600 }}>USAR EN SU LUGAR</span>
+                    <span className="muted" style={{ fontSize: 11, fontWeight: 600 }}>RAZÓN</span>
+                    <span />
+                  </div>
+                  {brandRules.map((rule, i) => (
+                    <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr auto', gap: 6, alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--rai-border)' }}>
+                      <span style={{ fontSize: 13, color: '#ef4444', fontWeight: 600, textDecoration: 'line-through' }}>{rule.forbidden}</span>
+                      <span style={{ fontSize: 13, color: 'var(--rai-success)', fontWeight: 600 }}>{rule.replacement}</span>
+                      <span className="muted" style={{ fontSize: 12 }}>{rule.reason}</span>
+                      <button onClick={() => setBrandRules(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                        <Trash2 size={14} style={{ color: 'var(--rai-error)' }} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add new rule */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr auto', gap: 8, alignItems: 'end' }}>
+                <div>
+                  <label className="muted" style={{ fontSize: 11, display: 'block', marginBottom: 2 }}>Palabra prohibida</label>
+                  <input className="input" placeholder="cuarto" value={newForbidden} onChange={(e) => setNewForbidden(e.target.value)} style={{ fontSize: 13 }} />
+                </div>
+                <div>
+                  <label className="muted" style={{ fontSize: 11, display: 'block', marginBottom: 2 }}>Reemplazo</label>
+                  <input className="input" placeholder="habitación" value={newReplacement} onChange={(e) => setNewReplacement(e.target.value)} style={{ fontSize: 13 }} />
+                </div>
+                <div>
+                  <label className="muted" style={{ fontSize: 11, display: 'block', marginBottom: 2 }}>Razón (opcional)</label>
+                  <input className="input" placeholder="Más profesional para hotelería" value={newReason} onChange={(e) => setNewReason(e.target.value)} style={{ fontSize: 13 }} />
+                </div>
+                <button
+                  onClick={() => {
+                    if (!newForbidden.trim() || !newReplacement.trim()) return;
+                    setBrandRules(prev => [...prev, { forbidden: newForbidden.trim(), replacement: newReplacement.trim(), reason: newReason.trim() }]);
+                    setNewForbidden(''); setNewReplacement(''); setNewReason('');
+                  }}
+                  style={{ padding: '8px 14px', background: 'var(--rai-purple)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}
+                >
+                  + Agregar
+                </button>
               </div>
             </div>
 
