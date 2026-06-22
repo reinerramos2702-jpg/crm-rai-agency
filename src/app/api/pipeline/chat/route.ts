@@ -115,10 +115,34 @@ Cuando generes el calendario, usa este JSON dentro de \`\`\`json ... \`\`\`:
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, model } = await req.json();
+    const { messages, model, brandContext } = await req.json();
+
+    let fullPrompt = SYSTEM_PROMPT;
+    if (brandContext && typeof brandContext === 'object') {
+      const parts: string[] = ['\n\n## CONTEXTO DEL NEGOCIO (pre-cargado por el cliente)'];
+      if (brandContext.businessName) parts.push(`- Negocio: ${brandContext.businessName}`);
+      if (brandContext.businessType) parts.push(`- Tipo: ${brandContext.businessType}`);
+      if (brandContext.businessLocation) parts.push(`- Ubicación: ${brandContext.businessLocation}`);
+      if (brandContext.businessPhone) parts.push(`- Teléfono: ${brandContext.businessPhone}`);
+      if (brandContext.businessWhatsApp) parts.push(`- WhatsApp: ${brandContext.businessWhatsApp}`);
+      if (brandContext.businessWebsite) parts.push(`- Web: ${brandContext.businessWebsite}`);
+      if (brandContext.igHandle) parts.push(`- Instagram: ${brandContext.igHandle}`);
+      if (brandContext.brandColors) parts.push(`- Colores de marca: ${brandContext.brandColors}`);
+      if (brandContext.brandTone) parts.push(`- Tono: ${brandContext.brandTone}`);
+      if (brandContext.services) parts.push(`- Servicios: ${brandContext.services}`);
+      if (brandContext.targetAudience) parts.push(`- Público objetivo: ${brandContext.targetAudience}`);
+      if (brandContext.competitors) parts.push(`- Competidores: ${brandContext.competitors}`);
+      if (brandContext.contentNotes) parts.push(`- Notas: ${brandContext.contentNotes}`);
+      if (brandContext.photoMode) parts.push(`- Modo de fotos: ${brandContext.photoMode}`);
+      if (brandContext.logoMode) parts.push(`- Modo de logo: ${brandContext.logoMode}`);
+      if (brandContext.availablePhotos) parts.push(`- Fotos disponibles: ${brandContext.availablePhotos}`);
+      if (brandContext.brandDocument) parts.push(`\n## DOCUMENTO DE MARCA / BRIEF\n${brandContext.brandDocument}`);
+      parts.push('\nUSA toda esta información para personalizar el plan. NO preguntes datos que ya tienes aquí. Si ya tienes nombre, tipo, servicios y audiencia, puedes ir directo a proponer los 5 pilares.');
+      fullPrompt += parts.join('\n');
+    }
 
     const apiMessages = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: fullPrompt },
       ...messages.map((m: { role: string; content: string }) => ({
         role: m.role === 'system' ? 'assistant' : m.role,
         content: m.content,

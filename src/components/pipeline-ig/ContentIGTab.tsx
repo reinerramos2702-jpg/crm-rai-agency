@@ -21,6 +21,15 @@ import {
   Play,
   Pause,
   RefreshCw,
+  Upload,
+  FileText,
+  Palette,
+  Camera,
+  Globe,
+  Phone,
+  MapPin,
+  Trash2,
+  X,
 } from 'lucide-react';
 
 type CampaignStatus = 'planning' | 'generating' | 'review' | 'scheduled' | 'publishing' | 'completed';
@@ -130,6 +139,25 @@ export default function ContentIGTab() {
   const [igHandle, setIgHandle] = useState(() => loadFromStorage('igHandle', '@Hotel_mpv'));
   const [autoPublish, setAutoPublish] = useState(() => loadFromStorage('autoPublish', false));
 
+  // Brand & Business Config
+  const [businessName, setBusinessName] = useState(() => loadFromStorage('businessName', ''));
+  const [businessType, setBusinessType] = useState(() => loadFromStorage('businessType', ''));
+  const [businessLocation, setBusinessLocation] = useState(() => loadFromStorage('businessLocation', ''));
+  const [businessPhone, setBusinessPhone] = useState(() => loadFromStorage('businessPhone', ''));
+  const [businessWhatsApp, setBusinessWhatsApp] = useState(() => loadFromStorage('businessWhatsApp', ''));
+  const [businessWebsite, setBusinessWebsite] = useState(() => loadFromStorage('businessWebsite', ''));
+  const [brandColors, setBrandColors] = useState(() => loadFromStorage('brandColors', ''));
+  const [brandTone, setBrandTone] = useState(() => loadFromStorage('brandTone', 'amigable'));
+  const [brandDocName, setBrandDocName] = useState(() => loadFromStorage('brandDocName', ''));
+  const [brandDocContent, setBrandDocContent] = useState(() => loadFromStorage('brandDocContent', ''));
+  const [uploadedPhotos, setUploadedPhotos] = useState<string[]>(() => loadFromStorage('uploadedPhotos', []));
+  const [photoMode, setPhotoMode] = useState(() => loadFromStorage('photoMode', 'mixed'));
+  const [logoMode, setLogoMode] = useState(() => loadFromStorage('logoMode', 'manual'));
+  const [targetAudience, setTargetAudience] = useState(() => loadFromStorage('targetAudience', ''));
+  const [services, setServices] = useState(() => loadFromStorage('services', ''));
+  const [competitors, setCompetitors] = useState(() => loadFromStorage('competitors', ''));
+  const [contentNotes, setContentNotes] = useState(() => loadFromStorage('contentNotes', ''));
+
   // Auto-save all state to localStorage
   useEffect(() => { saveToStorage('view', view); }, [view]);
   useEffect(() => { saveToStorage('campaigns', campaigns); }, [campaigns]);
@@ -140,6 +168,23 @@ export default function ContentIGTab() {
   useEffect(() => { saveToStorage('publishTime', publishTime); }, [publishTime]);
   useEffect(() => { saveToStorage('igHandle', igHandle); }, [igHandle]);
   useEffect(() => { saveToStorage('autoPublish', autoPublish); }, [autoPublish]);
+  useEffect(() => { saveToStorage('businessName', businessName); }, [businessName]);
+  useEffect(() => { saveToStorage('businessType', businessType); }, [businessType]);
+  useEffect(() => { saveToStorage('businessLocation', businessLocation); }, [businessLocation]);
+  useEffect(() => { saveToStorage('businessPhone', businessPhone); }, [businessPhone]);
+  useEffect(() => { saveToStorage('businessWhatsApp', businessWhatsApp); }, [businessWhatsApp]);
+  useEffect(() => { saveToStorage('businessWebsite', businessWebsite); }, [businessWebsite]);
+  useEffect(() => { saveToStorage('brandColors', brandColors); }, [brandColors]);
+  useEffect(() => { saveToStorage('brandTone', brandTone); }, [brandTone]);
+  useEffect(() => { saveToStorage('brandDocName', brandDocName); }, [brandDocName]);
+  useEffect(() => { saveToStorage('brandDocContent', brandDocContent); }, [brandDocContent]);
+  useEffect(() => { saveToStorage('uploadedPhotos', uploadedPhotos); }, [uploadedPhotos]);
+  useEffect(() => { saveToStorage('photoMode', photoMode); }, [photoMode]);
+  useEffect(() => { saveToStorage('logoMode', logoMode); }, [logoMode]);
+  useEffect(() => { saveToStorage('targetAudience', targetAudience); }, [targetAudience]);
+  useEffect(() => { saveToStorage('services', services); }, [services]);
+  useEffect(() => { saveToStorage('competitors', competitors); }, [competitors]);
+  useEffect(() => { saveToStorage('contentNotes', contentNotes); }, [contentNotes]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -153,12 +198,32 @@ export default function ContentIGTab() {
     setChatLoading(true);
 
     try {
+      const brandContext: Record<string, string> = {};
+      if (businessName) brandContext.businessName = businessName;
+      if (businessType) brandContext.businessType = businessType;
+      if (businessLocation) brandContext.businessLocation = businessLocation;
+      if (businessPhone) brandContext.businessPhone = businessPhone;
+      if (businessWhatsApp) brandContext.businessWhatsApp = businessWhatsApp;
+      if (businessWebsite) brandContext.businessWebsite = businessWebsite;
+      if (igHandle) brandContext.igHandle = igHandle;
+      if (brandColors) brandContext.brandColors = brandColors;
+      if (brandTone) brandContext.brandTone = brandTone;
+      if (services) brandContext.services = services;
+      if (targetAudience) brandContext.targetAudience = targetAudience;
+      if (competitors) brandContext.competitors = competitors;
+      if (contentNotes) brandContext.contentNotes = contentNotes;
+      if (photoMode) brandContext.photoMode = photoMode;
+      if (logoMode) brandContext.logoMode = logoMode;
+      if (uploadedPhotos.length > 0) brandContext.availablePhotos = uploadedPhotos.join(', ');
+      if (brandDocContent) brandContext.brandDocument = brandDocContent.slice(0, 30000);
+
       const res = await fetch('/api/pipeline/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [...chatMessages, userMsg],
           model: selectedModel,
+          brandContext: Object.keys(brandContext).length > 0 ? brandContext : undefined,
         }),
       });
 
@@ -287,42 +352,206 @@ export default function ContentIGTab() {
             </div>
           )}
 
-          {/* IG Config section */}
-          <div className="card mt-6" style={{ maxWidth: 600 }}>
-            <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-              <Settings size={15} /> Configuración de Instagram
+          {/* ===== CONFIGURACIÓN COMPLETA ===== */}
+          <div style={{ display: 'grid', gap: 16, maxWidth: 800, marginTop: 24 }}>
+
+            {/* --- Datos del Negocio --- */}
+            <div className="card">
+              <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, fontSize: 15 }}>
+                <MapPin size={16} style={{ color: 'var(--rai-gold)' }} /> Datos del Negocio
+              </div>
+              <p className="muted" style={{ fontSize: 12, marginBottom: 12 }}>Esta información se inyecta automáticamente al planificador IA para generar contenido preciso.</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Nombre del negocio</label>
+                  <input className="input" placeholder="Hotel Muévete por Vargas" value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
+                </div>
+                <div>
+                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Tipo de negocio</label>
+                  <input className="input" placeholder="Hotel, Restaurante, Tienda..." value={businessType} onChange={(e) => setBusinessType(e.target.value)} />
+                </div>
+                <div>
+                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Ubicación</label>
+                  <input className="input" placeholder="Maiquetía, Venezuela" value={businessLocation} onChange={(e) => setBusinessLocation(e.target.value)} />
+                </div>
+                <div>
+                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Sitio web</label>
+                  <input className="input" placeholder="www.ejemplo.com" value={businessWebsite} onChange={(e) => setBusinessWebsite(e.target.value)} />
+                </div>
+                <div>
+                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Teléfono</label>
+                  <input className="input" placeholder="(0212) 351.03.03" value={businessPhone} onChange={(e) => setBusinessPhone(e.target.value)} />
+                </div>
+                <div>
+                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>WhatsApp</label>
+                  <input className="input" placeholder="584241292814" value={businessWhatsApp} onChange={(e) => setBusinessWhatsApp(e.target.value)} />
+                </div>
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Servicios / Productos principales</label>
+                <textarea className="input" rows={3} placeholder="Ej: 6 tipos de habitación, WiFi, AC, traslado aeropuerto incluido, piscina, restaurante..." value={services} onChange={(e) => setServices(e.target.value)} style={{ resize: 'vertical', width: '100%' }} />
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Cliente ideal / Público objetivo</label>
+                <textarea className="input" rows={2} placeholder="Ej: Viajeros 25-55 años, familias, parejas, viajeros de negocios que buscan hotel cerca del aeropuerto..." value={targetAudience} onChange={(e) => setTargetAudience(e.target.value)} style={{ resize: 'vertical', width: '100%' }} />
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Competidores principales (opcional)</label>
+                <input className="input" placeholder="@competidor1, @competidor2..." value={competitors} onChange={(e) => setCompetitors(e.target.value)} />
+              </div>
             </div>
-            <div className="grid" style={{ gap: 12 }}>
-              <div>
-                <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Handle de Instagram</label>
-                <input
-                  className="input"
-                  placeholder="@tu_cuenta"
-                  value={igHandle}
-                  onChange={(e) => setIgHandle(e.target.value)}
-                />
+
+            {/* --- Marca y Estilo --- */}
+            <div className="card">
+              <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, fontSize: 15 }}>
+                <Palette size={16} style={{ color: 'var(--rai-purple)' }} /> Marca y Estilo Visual
               </div>
-              <div>
-                <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Hora de publicación por defecto</label>
-                <input
-                  className="input"
-                  type="time"
-                  value={publishTime}
-                  onChange={(e) => setPublishTime(e.target.value)}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Colores de marca</label>
+                  <input className="input" placeholder="Azul oscuro, dorado, blanco..." value={brandColors} onChange={(e) => setBrandColors(e.target.value)} />
+                </div>
+                <div>
+                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Tono de comunicación</label>
+                  <select className="input" value={brandTone} onChange={(e) => setBrandTone(e.target.value)}>
+                    <option value="amigable">Amigable y cercano</option>
+                    <option value="profesional">Profesional y elegante</option>
+                    <option value="divertido">Divertido y casual</option>
+                    <option value="inspiracional">Inspiracional y motivador</option>
+                    <option value="informativo">Informativo y educativo</option>
+                    <option value="lujoso">Lujoso y exclusivo</option>
+                  </select>
+                </div>
               </div>
-              <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-                <input
-                  type="checkbox"
-                  checked={autoPublish}
-                  onChange={(e) => setAutoPublish(e.target.checked)}
-                  id="auto-publish"
-                />
+
+              {/* Brand Document Upload */}
+              <div style={{ marginTop: 16, padding: 16, border: '1px dashed var(--rai-border)', borderRadius: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <FileText size={16} style={{ color: 'var(--rai-gold)' }} />
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>Manual de Marca / Documento de referencia</span>
+                </div>
+                <p className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
+                  Sube un PDF, TXT o pega el contenido de tu manual de marca, brief, guía de estilo o cualquier documento informativo. El planificador IA lo usará como contexto para generar contenido alineado a tu marca.
+                </p>
+                {brandDocName ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--rai-bg-secondary)', borderRadius: 6 }}>
+                    <FileText size={14} style={{ color: 'var(--rai-success)' }} />
+                    <span style={{ fontSize: 13, flex: 1 }}>{brandDocName}</span>
+                    <span className="muted" style={{ fontSize: 11 }}>{(brandDocContent.length / 1024).toFixed(1)}KB</span>
+                    <button onClick={() => { setBrandDocName(''); setBrandDocContent(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                      <X size={14} style={{ color: 'var(--rai-error)' }} />
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'var(--rai-bg-secondary)', borderRadius: 6, cursor: 'pointer', fontSize: 13, border: '1px solid var(--rai-border)' }}>
+                      <Upload size={14} /> Subir archivo
+                      <input type="file" accept=".pdf,.txt,.md,.doc,.docx" style={{ display: 'none' }} onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setBrandDocName(file.name);
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          const text = ev.target?.result as string;
+                          setBrandDocContent(text.slice(0, 50000));
+                        };
+                        reader.readAsText(file);
+                      }} />
+                    </label>
+                  </div>
+                )}
+                <div style={{ marginTop: 10 }}>
+                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>O pega el contenido directamente:</label>
+                  <textarea className="input" rows={4} placeholder="Pega aquí tu manual de marca, brief del negocio, guía de estilo, información de servicios, precios, horarios, políticas..." value={brandDocContent} onChange={(e) => { setBrandDocContent(e.target.value); if (!brandDocName && e.target.value.length > 0) setBrandDocName('Documento pegado'); }} style={{ resize: 'vertical', width: '100%', fontSize: 12 }} />
+                </div>
+              </div>
+            </div>
+
+            {/* --- Fotos y Assets --- */}
+            <div className="card">
+              <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, fontSize: 15 }}>
+                <Camera size={16} style={{ color: 'var(--rai-success)' }} /> Fotos y Assets
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                <div>
+                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Modo de imágenes</label>
+                  <select className="input" value={photoMode} onChange={(e) => setPhotoMode(e.target.value)}>
+                    <option value="real">Solo fotos reales del negocio</option>
+                    <option value="ai">Solo imágenes generadas por IA</option>
+                    <option value="mixed">Mixto: reales + IA según el post</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Logo en imágenes</label>
+                  <select className="input" value={logoMode} onChange={(e) => setLogoMode(e.target.value)}>
+                    <option value="manual">Manual (Canva u otro editor)</option>
+                    <option value="auto">Automático (IA + verificación QA)</option>
+                    <option value="none">Sin logo en posts</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Photo upload area */}
+              <div style={{ padding: 16, border: '1px dashed var(--rai-border)', borderRadius: 8 }}>
+                <p className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
+                  Sube fotos reales de tu negocio. El IA las referenciará por nombre al planificar contenido. Usa nombres descriptivos (ej: suite-principal-01.jpg, piscina-dia.jpg, fachada-noche.jpg).
+                </p>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'var(--rai-bg-secondary)', borderRadius: 6, cursor: 'pointer', fontSize: 13, border: '1px solid var(--rai-border)' }}>
+                  <Upload size={14} /> Subir fotos
+                  <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={(e) => {
+                    const files = e.target.files;
+                    if (!files) return;
+                    const names = Array.from(files).map(f => f.name);
+                    setUploadedPhotos(prev => [...prev, ...names.filter(n => !prev.includes(n))]);
+                  }} />
+                </label>
+                {uploadedPhotos.length > 0 && (
+                  <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {uploadedPhotos.map((name, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', background: 'var(--rai-bg-secondary)', borderRadius: 4, fontSize: 12 }}>
+                        <ImageIcon size={12} />
+                        <span>{name}</span>
+                        <button onClick={() => setUploadedPhotos(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+                          <X size={12} style={{ color: 'var(--rai-error)' }} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* --- Config de Instagram --- */}
+            <div className="card">
+              <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, fontSize: 15 }}>
+                <Instagram size={16} style={{ color: '#E4405F' }} /> Configuración de Instagram
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Handle de Instagram</label>
+                  <input className="input" placeholder="@tu_cuenta" value={igHandle} onChange={(e) => setIgHandle(e.target.value)} />
+                </div>
+                <div>
+                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Hora de publicación por defecto</label>
+                  <input className="input" type="time" value={publishTime} onChange={(e) => setPublishTime(e.target.value)} />
+                </div>
+              </div>
+              <div className="row" style={{ gap: 8, alignItems: 'center', marginTop: 12 }}>
+                <input type="checkbox" checked={autoPublish} onChange={(e) => setAutoPublish(e.target.checked)} id="auto-publish" />
                 <label htmlFor="auto-publish" className="muted" style={{ fontSize: 13 }}>
                   Publicación automática vía API de Instagram (requiere token configurado)
                 </label>
               </div>
             </div>
+
+            {/* --- Notas adicionales --- */}
+            <div className="card">
+              <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, fontSize: 15 }}>
+                <FileText size={16} style={{ color: 'var(--rai-muted)' }} /> Notas y contexto adicional
+              </div>
+              <textarea className="input" rows={3} placeholder="Cualquier información extra para el planificador: promociones actuales, eventos próximos, temporada alta, restricciones de contenido, cosas que NO mencionar..." value={contentNotes} onChange={(e) => setContentNotes(e.target.value)} style={{ resize: 'vertical', width: '100%' }} />
+            </div>
+
           </div>
         </div>
       )}
