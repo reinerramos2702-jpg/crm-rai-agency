@@ -134,3 +134,4 @@ Pídele a Claude Code:
 - "Optimiza `visual-agent.ts` para hacer 2 pasadas: primero prompt-engineering, luego generación"
 
 El JSON maestro es inmutable y append-only, así que cambios en un agente no rompen el resto.
+
