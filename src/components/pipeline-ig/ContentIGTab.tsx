@@ -552,6 +552,34 @@ export default function ContentIGTab() {
               <textarea className="input" rows={3} placeholder="Cualquier información extra para el planificador: promociones actuales, eventos próximos, temporada alta, restricciones de contenido, cosas que NO mencionar..." value={contentNotes} onChange={(e) => setContentNotes(e.target.value)} style={{ resize: 'vertical', width: '100%' }} />
             </div>
 
+            {/* --- Botón Guardar y Planificar --- */}
+            <button
+              onClick={() => setView('planner')}
+              style={{
+                width: '100%',
+                padding: '14px 24px',
+                background: 'linear-gradient(135deg, var(--rai-gold), #d4a017)',
+                color: '#000',
+                border: 'none',
+                borderRadius: 8,
+                fontSize: 16,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 10,
+                letterSpacing: '0.5px',
+                transition: 'opacity 0.2s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+            >
+              <Sparkles size={20} />
+              GUARDAR CONFIGURACIÓN Y PLANIFICAR CONTENIDO
+              <ChevronRight size={20} />
+            </button>
+
           </div>
         </div>
       )}
