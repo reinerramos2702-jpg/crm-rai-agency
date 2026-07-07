@@ -48,6 +48,7 @@ export const MODULE_ACCESS: Record<string, Role[]> = {
   '/reservas': ['admin', 'gerente', 'agente', 'viewer'],
   '/pagos': ['admin', 'gerente'],
   '/automatizacion': ['admin', 'gerente', 'agente', 'viewer'],
+  '/instagram': ['admin', 'gerente', 'agente', 'viewer'],
   '/marketing': ['admin', 'gerente', 'agente', 'viewer'],
   '/sitios': ['admin', 'gerente', 'agente'],
   '/contenido-multimedia': ['admin', 'gerente', 'agente'],

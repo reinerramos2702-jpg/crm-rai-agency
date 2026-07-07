@@ -22,11 +22,17 @@ export async function GET(req: NextRequest) {
   if (!auth) return new Response('Unauthorized', { status: 401 });
 
   const ws = await getOrCreateWorkspace(auth.userId);
+  // el cache de workspace no incluye los campos brandDoc (y pueden cambiar):
+  // leerlos frescos de la DB
+  const fresh = await prisma.workspace.findUnique({
+    where: { id: ws.id },
+    select: { brandDocName: true, brandDocText: true, brandDocUpdatedAt: true },
+  });
   return Response.json({
-    brandDocName: ws.brandDocName,
-    brandDocText: ws.brandDocText,
-    brandDocUpdatedAt: ws.brandDocUpdatedAt,
-    hasBrandDoc: !!ws.brandDocText,
+    brandDocName: fresh?.brandDocName ?? null,
+    brandDocText: fresh?.brandDocText ?? null,
+    brandDocUpdatedAt: fresh?.brandDocUpdatedAt ?? null,
+    hasBrandDoc: !!fresh?.brandDocText,
   });
 }
 

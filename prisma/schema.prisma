@@ -898,3 +898,105 @@ model AuditEvent {
   @@index([entityType, entityId])
   @@index([userId])
 }
+
+// ============================================
+// INSTAGRAM AUTOMATION (jul 2026)
+// Publicación automática de posts/carruseles/reels/stories +
+// DM automático por palabra clave en comentarios (Meta Graph API).
+// Sin FK a Workspace: tablas autocontenidas, filtrado por workspaceId.
+// Migración aplicable desde el teléfono vía /api/admin/setup-instagram.
+// ============================================
+
+model SocialAccount {
+  id            String    @id @default(cuid())
+  workspaceId   String
+  platform      String    @default("instagram") // solo IG por ahora
+  igUserId      String? // Instagram Business Account ID (17841...)
+  igUsername    String?
+  pageId        String? // Facebook Page vinculada (necesaria para DMs)
+  // Token cifrado AES-256-GCM con KEYS_ENCRYPTION_KEY (mismo esquema que ApiKey/BYOK)
+  tokenCiphertext String? @db.Text
+  tokenIv         String?
+  tokenAuthTag    String?
+  tokenExpiresAt  DateTime?
+  status        String    @default("disconnected") // 'connected' | 'error' | 'disconnected'
+  lastCheckedAt DateTime?
+  lastError     String?
+  meta          Json      @default("{}")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([workspaceId, platform])
+  @@index([workspaceId])
+}
+
+model SocialPost {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  accountId    String?
+  type         String    @default("image") // 'image' | 'carousel' | 'reel' | 'story'
+  status       String    @default("draft") // 'draft' | 'scheduled' | 'publishing' | 'published' | 'failed'
+  caption      String    @default("") @db.Text
+  // URLs públicas (jpeg/mp4) — IG Graph API exige URLs accesibles públicamente
+  mediaUrls    String[]  @default([])
+  coverUrl     String?
+  scheduledAt  DateTime?
+  publishedAt  DateTime?
+  igMediaId    String?
+  permalink    String?
+  errorMessage String?   @db.Text
+  attemptCount Int       @default(0)
+  // Metadatos editoriales (enlazan con plan/calendario-editorial.md)
+  keyword      String? // palabra clave CTA que dispara la KeywordRule
+  pillar       String? // pilar de contenido
+  hook         String? // gancho del post
+  source       String    @default("manual") // 'manual' | 'calendar' | 'api'
+  createdById  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([workspaceId, status, scheduledAt])
+  @@index([workspaceId, createdAt])
+}
+
+model KeywordRule {
+  id              String    @id @default(cuid())
+  workspaceId     String
+  accountId       String?
+  keyword         String // palabra que el usuario comenta (ej. "CRM", "GUIA1")
+  matchType       String    @default("contains") // 'contains' | 'exact'
+  enabled         Boolean   @default(true)
+  // Respuesta pública al comentario (se elige una al azar si hay varias)
+  replyToComment  Boolean   @default(true)
+  commentReplies  String[]  @default([])
+  // DM privado (private reply) — requiere instagram_manage_messages aprobado por Meta
+  dmEnabled       Boolean   @default(true)
+  dmMessage       String    @default("") @db.Text
+  dmLink          String? // link a la guía/recurso que se envía
+  mediaScope      String    @default("all") // 'all' | 'specific'
+  mediaIds        String[]  @default([]) // ig media ids si scope='specific'
+  triggerCount    Int       @default(0)
+  lastTriggeredAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([workspaceId, enabled])
+}
+
+model SocialActionLog {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  ruleId       String?
+  postId       String?
+  kind         String // 'publish' | 'comment_reply' | 'dm_sent' | 'webhook' | 'cron' | 'error'
+  status       String   @default("ok") // 'ok' | 'failed' | 'skipped'
+  igCommentId  String?
+  igUserId     String?
+  igUsername   String?
+  detail       String   @default("") @db.Text
+  meta         Json     @default("{}")
+  createdAt    DateTime @default(now())
+
+  @@index([workspaceId, createdAt])
+  @@index([igCommentId])
+}

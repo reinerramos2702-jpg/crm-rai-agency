@@ -13,24 +13,47 @@
 - `main` y la rama de trabajo estaban en el mismo commit (`4d60003`) al iniciar. Nada perdido.
 - Deploy: Vercel con `buildCommand: npx prisma generate && npm run build` (vercel.json) → los cambios de schema se regeneran solos al deployar.
 
-### Sesión 2026-07-07 (en curso — ver secciones 2 y 3)
+### Módulo Instagram COMPLETO (sesión 2026-07-07) — código terminado, `tsc` limpio, pendiente activación del usuario
+
+**Publicación automática (posts, carruseles, reels, stories):**
+- Modelos Prisma: `SocialAccount`, `SocialPost`, `KeywordRule`, `SocialActionLog` (final de `prisma/schema.prisma`)
+- Migración idempotente: `prisma/migrations/20260707000000_add_instagram_module/migration.sql`
+- Motor Graph API: `src/lib/instagram.ts` (containers, carrusel 2-10, reels con polling FINISHED, stories, permalink, reintentos MAX 3, lock optimista anti doble-publicación)
+- API: `GET/POST /api/instagram/posts`, `GET/PATCH/DELETE /api/instagram/posts/[id]`, `POST /api/instagram/posts/[id]/publish` (publicar ya)
+- Scheduler: `GET/POST /api/cron/instagram?secret=CRON_SECRET` (procesa 5 posts vencidos por tick) + cron Vercel diario de respaldo (11:00 UTC) en `vercel.json`. Scheduler real: n8n cada 5 min (guía §6 de `docs/INSTAGRAM_SETUP.md`)
+- Cuenta: `GET/POST/DELETE /api/instagram/account` — token cifrado AES-256-GCM en DB (reusa `src/lib/crypto.ts`) con fallback a env vars; valida contra Graph API antes de guardar
+
+**DM por palabra clave en comentarios (construido, interruptor listo, pendiente de Meta App Review):**
+- Webhook: `GET/POST /api/webhooks/instagram` (verify hub.challenge + firma X-Hub-Signature-256 + procesa campo `comments`)
+- Motor keywords: match con borde de palabra unicode (9/9 tests OK), dedupe por igCommentId, anti-loop (ignora comentarios propios), reply público aleatorio + DM privado (private reply `/{page-id}/messages` con `recipient={comment_id}`), contador de disparos por regla
+- API reglas: `GET/POST /api/instagram/keywords`, `PATCH/DELETE /api/instagram/keywords/[id]`
+- Log de todo: `GET /api/instagram/logs` (tabla `SocialActionLog`)
+
+**UI `/instagram`** (`src/app/instagram/page.tsx`): 5 tabs — Publicaciones (cola + filtros + publicar ya/reprogramar/eliminar) / Nueva publicación (4 tipos, preview, borrador-programar-publicar) / Palabras clave (cards + modal + toggle on-off + badge "pendiente de Meta") / Actividad (últimas 100 acciones) / Cuenta (estado + conectar + botón "Crear tablas" para setup DB sin PC). Sidebar entry + `MODULE_ACCESS` actualizados.
+
+**Setup DB sin computadora:** `GET/POST /api/admin/setup-instagram?secret=CRON_SECRET` — crea las 4 tablas (SQL idempotente espejo de la migración). También ejecutable desde la UI (tab Cuenta).
+
+**Fixes de deuda técnica:** los 5 errores TypeScript pre-existentes del repo (`payments/[id]/transition` meta Json + `workspace/brand-doc` × 4 por el cache tipado estrecho) — `npx tsc --noEmit` ahora sale **exit 0**.
+
+**Guía de activación móvil:** `docs/INSTAGRAM_SETUP.md` — 9 pasos pantalla-por-pantalla desde el teléfono (Meta Developers, tokens, Vercel, tablas, n8n, webhook, App Review, prueba E2E) + tabla de errores comunes.
 
 ---
 
 ## 2. 🚧 A MEDIAS (exactamente dónde quedó)
 
-- (se actualiza con cada commit)
+- Nada a medias en el código. Lo único no-código pendiente es la **activación** (acciones del usuario, §5) y el **App Review de Meta** para DMs (§5 punto 5).
 
 ---
 
 ## 3. ⏳ FALTA POR HACER (en orden)
 
-1. **Módulo Instagram — motor backend** (Prisma + lib Graph API + API routes + cron + webhook DM). ← EN CONSTRUCCIÓN AHORA
-2. **Módulo Instagram — UI** `/instagram` (cola, nueva publicación, palabras clave, actividad, cuenta).
-3. **Stories automáticas** (integradas al mismo motor, type `story`).
-4. **Planes de contenido** en `plan/` (calendario editorial 30 días, estrategia captación, mapa guías↔keywords).
-5. Activación por el usuario (variables de entorno + tablas DB + n8n scheduler) — ver §5.
-6. Pendientes heredados del CRM (no bloquean Instagram): ver `CONTEXT.md` §3 backlog (P1–P6).
+1. **Usuario:** activar siguiendo `docs/INSTAGRAM_SETUP.md` (30-45 min desde el teléfono).
+2. **Usuario:** enviar App Review de Meta (paso 8 de la guía) para que los DMs funcionen con el público.
+3. Los 3 archivos de `plan/` (calendario editorial, estrategia, guías↔keywords) — si no están en este commit, ver §7.
+4. (Mejora futura) Subida de imágenes directa a R2 desde la UI en vez de pegar URLs (`src/lib/r2.ts` ya existe).
+5. (Mejora futura) Renovación automática del token de 60 días + aviso de vencimiento en Dashboard.
+6. (Mejora futura) Insights de posts publicados (`GET /{ig-media-id}/insights`) en tab Actividad.
+7. Pendientes heredados del CRM (no bloquean Instagram): ver `CONTEXT.md` §3 backlog (P1–P6).
 
 ---
 

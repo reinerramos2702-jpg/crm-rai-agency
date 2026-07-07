@@ -19,7 +19,18 @@
     },
     "src/app/api/automations/run-due/route.ts": {
       "maxDuration": 60
+    },
+    "src/app/api/cron/instagram/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/instagram/posts/[id]/publish/route.ts": {
+      "maxDuration": 60
     }
   },
-  "crons": []
+  "crons": [
+    {
+      "path": "/api/cron/instagram",
+      "schedule": "0 11 * * *"
+    }
+  ]
 }

@@ -29,6 +29,7 @@ import {
   Star,
   BarChart3,
   Store,
+  Instagram,
   Menu,
   X,
 } from 'lucide-react';
@@ -52,6 +53,7 @@ const NAV_ITEMS = [
   { href: '/reservas', label: 'Reservas', icon: BedDouble },
   { href: '/pagos', label: 'Pagos', icon: CreditCard },
   { href: '/automatizacion', label: 'Automatización', icon: Zap },
+  { href: '/instagram', label: 'Instagram', icon: Instagram },
   { href: '/marketing', label: 'Marketing', icon: Megaphone },
   { href: '/sitios', label: 'Sitios', icon: Globe },
   { href: '/contenido-multimedia', label: 'Contenido multimedia', icon: FolderOpen },
