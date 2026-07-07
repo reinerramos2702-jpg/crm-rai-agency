@@ -7,7 +7,15 @@
 
 ## ▶️ SIGUIENTE PASO (actualizar cada sesión)
 
-**Tarea activa (jun 20 2026): Construir tab "Pipeline IG" como 5ta tab dentro de `/automatizacion`. Sistema multi-agente de contenido automático para Hotel MPV (cliente piloto + producto vendible del CRM).**
+**Tarea activa (jul 7 2026): ACTIVAR el módulo Instagram recién construido.**
+El código está terminado y pusheado (ver `ESTADO.md` — leer ese archivo PRIMERO).
+Lo que sigue, en orden:
+1. **Usuario** (sin PC, todo desde el teléfono): seguir `docs/INSTAGRAM_SETUP.md` pasos 1-9 (Meta app + tokens + env vars Vercel + crear tablas + n8n tick + webhook).
+2. **Usuario:** mergear la rama `claude/rai-instagram-crm-automation-ykkwg2` a `main` para que Vercel deploye (o apuntar el deploy a la rama).
+3. **Próxima sesión de código:** upload directo de imágenes a R2 desde la UI (en vez de pegar URLs), aviso de vencimiento del token 60d en Dashboard, insights de posts en tab Actividad.
+4. Cargar la semana 1 del `plan/calendario-editorial.md` en el CRM y crear las 8 reglas de `plan/guias-mapa.md`.
+
+**Tarea heredada (jun 20, EN PAUSA):** tab "Pipeline IG" multi-agente para Hotel MPV — el paquete fuente `../HOTEL_MPV_PIPELINE/` no está en este repo (quedó en la máquina Windows del usuario). El módulo `/instagram` nuevo cubre publicación+DMs para @raiagency__; el pipeline multi-agente del Hotel queda para cuando el usuario recupere acceso a esos docs.
 
 📦 **Paquete fuente:** `../HOTEL_MPV_PIPELINE/` (15 docs en 11 carpetas):
 - `README.md` — mapa maestro
@@ -133,6 +141,33 @@ Cuando recibas orden tipo **"replica /pasajeros — carpeta `ghl-capturas/05-pas
 ---
 
 ## Historial de sesiones
+
+### Sesión jul 7 2026 — Módulo Instagram completo (Fable 5, sesión corta e intensiva)
+
+**Contexto:** terremoto en Venezuela frenó la operación de turismo; foco total en automatizar el
+Instagram de RAI Agency (@raiagency__) para captar clientes del CRM. Usuario sin computadora
+(solo teléfono) → todo el diseño evita pasos que requieran PC. Rama:
+`claude/rai-instagram-crm-automation-ykkwg2` (4 commits, pusheada).
+
+**Entregado (código, tsc exit 0, next build exit 0):**
+- Módulo `/instagram` completo: publicación automática de posts/carruseles/reels/stories con
+  programación (cron n8n cada 5 min + Vercel cron diario de respaldo) + DM automático por
+  palabra clave en comentarios (webhook Meta + private replies) + auditoría completa.
+- 4 modelos Prisma nuevos (SocialAccount/SocialPost/KeywordRule/SocialActionLog) con migración
+  idempotente aplicable desde el teléfono (`/api/admin/setup-instagram`).
+- `src/lib/instagram.ts` (motor Graph API v21.0), 8 grupos de API routes, UI 5 tabs, Sidebar+ACL.
+- `docs/INSTAGRAM_SETUP.md`: activación móvil en 9 pasos.
+- `plan/`: calendario editorial 30 días + estrategia de captación (funnel comentario→DM→diagnóstico→venta presencial con instalación + 2 meses capacitación) + mapa de 8 guías↔keywords (SISTEMA/CLIENTES/AGENDA/COBRAR/CONTENIDO/AGENTE/NUMEROS/EMBUDO).
+- `ESTADO.md` nuevo: handoff vivo (reemplaza la función de handoffs sueltos, se actualiza cada commit).
+- Fix deuda técnica: 5 errores tsc pre-existentes (payments/transition meta, brand-doc × 4) +
+  `force-dynamic` en `run-due` (rompía `next build` sin DB).
+
+**Estado DM automation:** construido con interruptor por regla. Reply público a comentarios
+funciona con permisos estándar; el DM privado requiere `instagram_manage_messages` aprobado
+por Meta App Review (guía §8) → marcado "pendiente de Meta" en la UI.
+
+**Pendiente del usuario:** activación (env vars + tablas + n8n + webhook) — lista única con
+instrucciones móviles entregada en el chat y resumida en `docs/INSTAGRAM_SETUP.md` y `ESTADO.md` §5.
 
 ### Sesión jun 20 2026 — Planificación Pipeline IG (Hotel MPV) + handoff a Claude Code
 

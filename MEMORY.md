@@ -79,6 +79,7 @@ Principios: escalable, modular, UX sin fricción para usuarios no técnicos, dat
 | Calendarios | `/calendarios` | ✅ Vivo | 3 tabs, disponibilidad, reservas online |
 | Reservas online | `/book/[slug]` | ✅ Vivo | Página pública sin auth |
 | Automatización | `/automatizacion` | ✅ Vivo + ⏳ Pipeline IG tab | 15 plantillas, motor, webhook n8n. **5ta tab "Pipeline IG" en construcción (jun 20)** — sistema multi-agente Hotel MPV. Ver `../HOTEL_MPV_PIPELINE/HANDOFF_CLAUDE_CODE.md` |
+| **Instagram** | `/instagram` | ✅ Vivo (jul 7 2026) | Publicación automática (image/carousel/reel/story) + programación via cron/n8n + DM por keyword en comentarios (webhook Meta). 5 tabs. Ver `docs/INSTAGRAM_SETUP.md` + `ESTADO.md` |
 | Marketing | `/marketing` | ✅ Vivo | 8 tabs |
 | Facturación | `/facturacion` | ✅ Vivo | 10 tabs, conectores placeholder |
 | Claves de IA | `/keys` | ✅ Vivo | BYOK, cifrado AES-256-GCM |
@@ -109,6 +110,28 @@ Migration: `20260620_add_pipeline_module/migration.sql`. Schema completo en `../
 
 **Generador Imágenes:**
 `ContentGrid` (status, currentStep, stateJson), `ContentGridTheme`, `ContentGridSlide`
+
+**Instagram Automation (jul 7 2026):**
+```
+SocialAccount   -- 1 por workspace+platform. Token IG cifrado AES-256-GCM
+                -- (tokenCiphertext/Iv/AuthTag con KEYS_ENCRYPTION_KEY),
+                -- igUserId (17841...), pageId (FB Page para DMs), status
+SocialPost      -- cola de publicación. type: image|carousel|reel|story
+                -- status: draft|scheduled|publishing|published|failed
+                -- mediaUrls String[] (URLs públicas), scheduledAt, igMediaId,
+                -- permalink, attemptCount (MAX 3 reintentos), keyword/pillar/hook
+KeywordRule     -- DM automation: keyword + matchType (contains con borde de
+                -- palabra unicode | exact), commentReplies[] (rota al azar),
+                -- dmMessage+dmLink, enabled (interruptor), triggerCount
+SocialActionLog -- auditoría: publish|comment_reply|dm_sent|webhook|cron|error
+                -- dedupe de comentarios por igCommentId
+```
+Sin FK a Workspace (tablas autocontenidas, filtro por workspaceId indexado).
+Migración: `20260707000000_add_instagram_module` (idempotente — aplicable vía
+`POST /api/admin/setup-instagram?secret=CRON_SECRET` sin PC).
+Lib server-only: `src/lib/instagram.ts`. Env vars: INSTAGRAM_ACCESS_TOKEN,
+INSTAGRAM_BUSINESS_ID, FACEBOOK_PAGE_ID, META_APP_SECRET,
+META_WEBHOOK_VERIFY_TOKEN, CRON_SECRET.
 
 **Agentes de IA (jun 2026):**
 ```

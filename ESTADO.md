@@ -49,7 +49,7 @@
 
 1. **Usuario:** activar siguiendo `docs/INSTAGRAM_SETUP.md` (30-45 min desde el teléfono).
 2. **Usuario:** enviar App Review de Meta (paso 8 de la guía) para que los DMs funcionen con el público.
-3. Los 3 archivos de `plan/` (calendario editorial, estrategia, guías↔keywords) — si no están en este commit, ver §7.
+3. ~~Los 3 archivos de `plan/`~~ ✅ HECHO (commit 3): `plan/calendario-editorial.md` (30 días), `plan/estrategia-captacion.md` (funnel completo + guiones de DM + oferta 3 niveles + métricas), `plan/guias-mapa.md` (8 guías ↔ keywords).
 4. (Mejora futura) Subida de imágenes directa a R2 desde la UI en vez de pegar URLs (`src/lib/r2.ts` ya existe).
 5. (Mejora futura) Renovación automática del token de 60 días + aviso de vencimiento en Dashboard.
 6. (Mejora futura) Insights de posts publicados (`GET /{ig-media-id}/insights`) en tab Actividad.
@@ -104,4 +104,9 @@ Resumen del orden:
 
 | Commit | Contenido |
 |---|---|
-| (1) | ESTADO.md inicial — consolidación verificada |
+| `d59234f` | ESTADO.md inicial — consolidación del repo verificada (P1) |
+| `84eca78` | Módulo Instagram completo: 4 modelos Prisma + migración idempotente + `src/lib/instagram.ts` + 8 grupos de API + webhook + cron + setup DB + UI 5 tabs + Sidebar/ACL + `docs/INSTAGRAM_SETUP.md` + fixes tsc pre-existentes (P2+P3+P4) |
+| `a763f90` | `plan/`: calendario editorial 30 días + estrategia de captación + mapa 8 guías↔keywords (P5) |
+| (4) | Cierre: MEMORY.md §4/§5 + CONTEXT.md (sesión + SIGUIENTE PASO) + este archivo |
+
+**Verificación final:** `npx tsc --noEmit` → exit 0 · `npm run build` → exit 0 · matcher keywords 9/9 tests OK · push a `origin/claude/rai-instagram-crm-automation-ykkwg2` ✅
