@@ -108,5 +108,6 @@ Resumen del orden:
 | `84eca78` | Módulo Instagram completo: 4 modelos Prisma + migración idempotente + `src/lib/instagram.ts` + 8 grupos de API + webhook + cron + setup DB + UI 5 tabs + Sidebar/ACL + `docs/INSTAGRAM_SETUP.md` + fixes tsc pre-existentes (P2+P3+P4) |
 | `a763f90` | `plan/`: calendario editorial 30 días + estrategia de captación + mapa 8 guías↔keywords (P5) |
 | (4) | Cierre: MEMORY.md §4/§5 + CONTEXT.md (sesión + SIGUIENTE PASO) + este archivo |
+| (5) | `plan/copys/dia-29-carrusel-diagnostico.md` — caption listo para publicar del carrusel día 29 (mini-guía auto-auditoría, keyword EMBUDO, 2150 caracteres exactos) |
 
 **Verificación final:** `npx tsc --noEmit` → exit 0 · `npm run build` → exit 0 · matcher keywords 9/9 tests OK · push a `origin/claude/rai-instagram-crm-automation-ykkwg2` ✅
