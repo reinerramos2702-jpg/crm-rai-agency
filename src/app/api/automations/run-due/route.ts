@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { runDueWorkflows } from '@/lib/automations/engine';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/automations/run-due

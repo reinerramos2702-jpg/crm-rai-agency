@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getRoleContext } from '@/lib/roles';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/me — datos del usuario autenticado: identidad, workspace y rol efectivo.
