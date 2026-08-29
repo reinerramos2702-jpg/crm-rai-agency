@@ -1,4 +1,4 @@
-# Roadmap — Módulo Automatización (RAI Content Engine)
+# Roadmap — Módulo Automatización (CRM RAI Agency)
 
 Spec de implementación. Decisiones ya cerradas con el cliente (Dr. SizeStreet). Esto es la fuente de verdad para las próximas sesiones — cada fase se marca ✅ al certificarse.
 

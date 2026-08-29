@@ -368,7 +368,7 @@ function generateHTMLReport(analysis: AdsAnalysis, scrapedOk: boolean, searchUrl
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meta Ads Library — ${analysis.brandName} | RAI Content Engine</title>
+  <title>Meta Ads Library — ${analysis.brandName} | CRM RAI Agency</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     :root {
@@ -770,7 +770,7 @@ function generateHTMLReport(analysis: AdsAnalysis, scrapedOk: boolean, searchUrl
     <div class="header-meta">
       <span><span class="status-dot"></span> ${scrapedOk ? 'Datos extraídos en tiempo real' : 'Análisis con datos de entrenamiento'}</span>
       <span>📅 Generado el ${now}</span>
-      <span>🤖 Powered by RAI Content Engine</span>
+      <span>🤖 Powered by CRM RAI Agency</span>
     </div>
   </div>
 </div>
@@ -885,7 +885,7 @@ function generateHTMLReport(analysis: AdsAnalysis, scrapedOk: boolean, searchUrl
 <div class="container">
   <div class="footer">
     <div>
-      <div class="footer-brand">RAI Content Engine</div>
+      <div class="footer-brand">CRM RAI Agency</div>
       <p>Reporte generado automáticamente • ${now}</p>
     </div>
     <a href="${searchUrl}" target="_blank" class="footer-link">Ver en Meta Ads Library →</a>

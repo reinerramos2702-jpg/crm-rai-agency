@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { getOrCreateWorkspace } from '@/lib/workspace';
+import { getOrCreateWorkspace, getOrCreateWorkspaceFull } from '@/lib/workspace';
 import { extractTextFromDocx } from '@/lib/docx-extract';
 
 export const runtime = 'nodejs';
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   const auth = await getAuth(req);
   if (!auth) return new Response('Unauthorized', { status: 401 });
 
-  const ws = await getOrCreateWorkspace(auth.userId);
+  const ws = await getOrCreateWorkspaceFull(auth.userId);
   return Response.json({
     brandDocName: ws.brandDocName,
     brandDocText: ws.brandDocText,

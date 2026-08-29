@@ -1,6 +1,6 @@
 # RAI Agency — Guía de Marca
 
-Guía de referencia rápida para mantener consistencia visual en todo el CRM (Content Engine, Marketing, Facturación, Conversaciones y futuros módulos).
+Guía de referencia rápida para mantener consistencia visual en todo el CRM (Contenido, Marketing, Facturación, Conversaciones y futuros módulos).
 
 ## 1. Logo
 

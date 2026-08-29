@@ -5,7 +5,7 @@
   "installCommand": "npm install",
   "regions": ["iad1"],
   "env": {
-    "NEXT_PUBLIC_APP_URL": "https://rai-content-engine.vercel.app"
+    "NEXT_PUBLIC_APP_URL": "https://crm-rai-agency.vercel.app"
   },
   "functions": {
     "src/app/api/events/[campaignId]/route.ts": {

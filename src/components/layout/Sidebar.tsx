@@ -148,7 +148,7 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
               RAI
             </div>
             <div style={{ fontSize: 10, color: 'var(--rai-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              Content Engine
+              Agency CRM
             </div>
           </div>
         </div>

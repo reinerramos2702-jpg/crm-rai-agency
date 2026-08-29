@@ -74,7 +74,7 @@ Cuando recibas orden tipo **"replica /pasajeros — carpeta `ghl-capturas/05-pas
 
 - **Migración Agentes de IA en DB:** ejecutar en Windows PowerShell:
   ```powershell
-  cd content-engine-mvp
+  cd crm-rai-agency
   npx prisma migrate deploy   # aplica 20260612060000_add_ai_agents_module
   npx prisma generate
   ```
@@ -134,6 +134,37 @@ Cuando recibas orden tipo **"replica /pasajeros — carpeta `ghl-capturas/05-pas
 
 ## Historial de sesiones
 
+### Sesión ago 29 2026 — v2.0 · BLOQUE 0: renombrado de marca a "CRM RAI Agency"
+
+**Contexto:** el 29 ago 2026 se renombraron el repo de GitHub, el proyecto de Vercel y el
+proyecto de Supabase de `content-engine-mvp` / "RAI Content Engine" a **CRM RAI Agency**
+(slug `crm-rai-agency`). Este bloque barre el nombre viejo del código antes de construir
+nada nuevo encima. Trabajo hecho en el worktree aislado `crm-rai-agency-v2`, rama
+`v2/renombrado-marca`. Nada mergeado ni deployado — queda como PR abierto.
+
+**Entregables:**
+
+- Nombre visible al usuario actualizado en `layout.tsx` (metadata title), `page.tsx` (TopBar),
+  `Sidebar.tsx` (lockup del logo: "RAI / AGENCY CRM"), y en el HTML que genera
+  `api/research/ads-library` (title + 2 footers).
+- Prompt del copiloto de IA en `api/content-grids/[id]/chat` actualizado al nombre nuevo.
+- `package.json` → `"name": "crm-rai-agency"` + descripción nueva; `package-lock.json`
+  regenerado con `npm install` (no editado a mano).
+- `vercel.json` → `NEXT_PUBLIC_APP_URL` apunta a `https://crm-rai-agency.vercel.app`.
+- 44 SVG de `public/tutorials/` + su generador `scripts/generate-tutorial-slides.py`
+  actualizados ("CONTENT ENGINE" → "AGENCY CRM" en el lockup del sidebar dibujado).
+- Documentación (`README.md`, `ROADMAP_AUTOMATIZACION.md`, `CLAUDE.md`, `MEMORY.md`,
+  `CONTEXT.md`, `BRAND_GUIDE.md`) — rutas `cd content-engine-mvp` → `cd crm-rai-agency`.
+- **Fix de deuda:** 5 errores de `tsc` que ya venían rotos en `main` (`src/lib/workspace.ts`
+  devolvía un tipo unión inconsistente, y `payments/[id]/transition` pasaba
+  `Record<string, unknown>` a un campo Json de Prisma). Sin esto no se podía cumplir la
+  regla nº 7 de la sesión v2.0.
+- `historial-entregas.md` creado.
+
+**Verificación:** `npx tsc --noEmit` exit 0 (primera vez limpio) · `npm run build` exit 0 ·
+barrido del nombre viejo vacío.
+
+
 ### Sesión jun 20 2026 — Planificación Pipeline IG (Hotel MPV) + handoff a Claude Code
 
 **Contexto:** usuario pidió armar pipeline completo de contenido IG multi-agente con orquestador + 11 subagentes para Hotel Muévete por Vargas (cliente piloto), que debe quedar como módulo vendible del CRM RAI Agency. Sesión en Cowork mode (Claude desktop). Plan completo entregado, código pendiente — handoff técnico a CC.
@@ -190,7 +221,7 @@ Cuando recibas orden tipo **"replica /pasajeros — carpeta `ghl-capturas/05-pas
 
 **Migration SQL:** `prisma/migrations/20260619000000_add_hotel_module/migration.sql` — PENDIENTE: usuario corre en Windows PowerShell:
 ```powershell
-cd content-engine-mvp
+cd crm-rai-agency
 npx prisma migrate deploy
 npx prisma generate
 ```
@@ -362,7 +393,7 @@ npx prisma generate
 
 ### P1 — Migración Agentes de IA (URGENTE antes de usar el módulo)
 ```powershell
-cd content-engine-mvp
+cd crm-rai-agency
 npx prisma migrate deploy
 npx prisma generate
 npx tsc --noEmit     # verificar que compila limpio
@@ -404,7 +435,7 @@ Usuario debe correr `npm run dev` local y revisar:
 - `tsconfig.e2e.json` existe en raíz del proyecto — no rompe nada, es helper para `scripts/e2e-automations.ts`
 - Página `/book/[slug]` usa el layout raíz (con Sidebar) pero lo oculta con `position:fixed; inset:0; z-index:9999` — si se necesita página pública "limpia" hay que mover rutas CRM a route group `(app)` con layout propio
 - n8n webhook correcto: ruta `/webhook/<path>` (producción). La ruta `/mcp-server/http` es el protocolo MCP, no sirve para webhooks
-- `content-engine-mvp` es el proyecto principal. La raíz del workspace (`Sistema de Automatización de Contenido/`) contiene archivos legacy/tools; no mezclar
+- `crm-rai-agency` es el proyecto principal. La raíz del workspace (`Sistema de Automatización de Contenido/`) contiene archivos legacy/tools; no mezclar
 
 ---
 

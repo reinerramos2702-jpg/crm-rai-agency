@@ -1,6 +1,6 @@
-# RAI Content Engine — MVP
+# CRM RAI Agency
 
-Submódulo de Pipeline de Automatización de Contenido para el CRM de RAI Agency.
+CRM SaaS multi-tenant de RAI Agency: contactos, conversaciones, calendarios, facturación, automatizaciones, agentes de IA y pipeline de automatización de contenido.
 
 **Stack**: Next.js 14 (App Router) · Postgres + Prisma · BullMQ + Redis (Upstash) · Cloudflare R2 · Vercel AI SDK · SSE.
 
