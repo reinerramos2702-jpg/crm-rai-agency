@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { getOrCreateWorkspace } from '@/lib/workspace';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/automations/runs?workflowId=...&status=...&limit=50

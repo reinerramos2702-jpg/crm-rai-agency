@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/ai-agents/dashboard?agentId=all|<id>&days=30
