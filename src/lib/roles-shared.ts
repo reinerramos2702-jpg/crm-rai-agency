@@ -161,11 +161,11 @@ export function canWrite(role: Role): boolean {
 }
 
 export function isAdmin(role: Role): boolean {
-  return role === 'admin';
+  return role === 'admin' || role === 'super_admin' || role === 'agency_owner';
 }
 
 export function isAdminOrManager(role: Role): boolean {
-  return role === 'admin' || role === 'gerente';
+  return isAdmin(role) || role === 'gerente';
 }
 
 export function hasModuleAccess(role: Role, path: string): boolean {
