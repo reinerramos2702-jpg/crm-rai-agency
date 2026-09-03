@@ -64,16 +64,22 @@ export default function CalendarioContenidoPage() {
   }
 
   async function handleMovePost(postId: string, newDay: string) {
+    // Conserva la hora ya programada del post, solo cambia el día. Si no tenía
+    // hora (estaba en borrador), usa 09:00 por default.
+    const moved = posts.find((p) => p.id === postId);
+    const time = moved?.time || '09:00';
+    const newScheduledFor = `${newDay}T${time}:00.000Z`;
+
     // Optimista: refleja el movimiento antes de la respuesta del servidor.
     const prev = posts;
     setPosts((current) =>
-      current.map((p) => (p.id === postId ? { ...p, day: newDay, scheduledFor: `${newDay}T${p.time || '09:00'}:00.000Z` } : p))
+      current.map((p) => (p.id === postId ? { ...p, day: newDay, scheduledFor: newScheduledFor } : p))
     );
     try {
       const res = await fetch(`/api/content-posts/${postId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scheduledFor: `${newDay}T${new Date().toISOString().slice(11, 16)}:00.000Z` }),
+        body: JSON.stringify({ scheduledFor: newScheduledFor }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
