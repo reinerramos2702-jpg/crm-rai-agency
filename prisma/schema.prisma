@@ -64,6 +64,12 @@ model Workspace {
   payments          Payment[]
   auditEvents       AuditEvent[]
 
+  // Módulo Calendario de Contenido (Automatizaciones)
+  contentCalendar   ContentCalendarSettings?
+  contentPosts      ContentPost[]
+  contentBlackouts  ContentBlackoutDate[]
+  contentPostEvents ContentPostEvent[]
+
   @@index([ownerId])
 }
 
@@ -271,6 +277,9 @@ model Settings {
   id                       String   @id @default("global")
   n8nWebhookUrl            String?
   igBusinessId             String?
+  // ID de la página de Facebook usada por el Calendario de Contenido para
+  // publicar en Facebook (#11 multi-red desde una tarjeta).
+  fbPageId                 String?
   // Configuración del módulo Conversaciones (ANS / SLA)
   slaFirstResponseMins     Int? // ANS a punto de expirar: minutos para primera respuesta
   slaOverdueMins           Int? // ANS atrasado: minutos tras los cuales se marca como atrasado
@@ -897,4 +906,188 @@ model AuditEvent {
   @@index([workspaceId, createdAt])
   @@index([entityType, entityId])
   @@index([userId])
+}
+
+
+// ============================================
+// MÓDULO CALENDARIO DE CONTENIDO
+// Submódulo de Automatizaciones. El cliente sube contenido, lo programa día a
+// día en tarjetas tipo slider y lo publica en Instagram/Facebook vía Graph API.
+//
+// Diseñado single-workspace (modelo actual). Cuando aterrice el multi-tenant
+// del Bloque 1, `workspaceId` pasa a colgar del tenant sin rehacer esta UI.
+// ============================================
+
+/// Configuración del calendario de contenido — una fila por workspace.
+model ContentCalendarSettings {
+  id          String @id @default(cuid())
+  workspaceId String @unique
+
+  /// Zona horaria IANA con la que se interpretan y muestran todas las fechas
+  /// del calendario. Default del producto: America/Caracas.
+  timezone String @default("America/Caracas")
+
+  /// #14 Límite de frecuencia: máximo de publicaciones por día.
+  maxPostsPerDay Int @default(3)
+
+  /// #15 Aprobación en dos pasos: si está activo, un post programado por un
+  /// agente queda en 'pending_approval' hasta que un admin/gerente lo aprueba.
+  requireApproval Boolean @default(false)
+
+  /// Hora por defecto (HH:mm, en `timezone`) al soltar contenido en un día
+  /// sin especificar hora.
+  defaultPostTime String @default("18:00")
+
+  /// #18 Marco con paleta de marca del cliente: cada tenant ve las tarjetas y
+  /// el preview de feed con sus propios colores.
+  brandName       String?
+  brandHandle     String?
+  brandAvatarUrl  String?
+  brandPrimary    String? // hex, ej. "#C9A84C"
+  brandAccent     String? // hex
+  brandBackground String? // hex
+
+  /// #20 Recorrido guiado: se marca al completar/omitir el tour de 5 pasos.
+  onboardingCompletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+/// Una pieza de contenido: programada en el calendario (scheduledFor != null)
+/// o guardada en el banco de contenido sin fecha (#12, inBank = true).
+model ContentPost {
+  id          String @id @default(cuid())
+  workspaceId String
+
+  title   String?
+  caption String? @db.Text
+
+  /// #12 Banco de contenido: piezas aprobadas sin fecha, que se arrastran al slider.
+  inBank       Boolean   @default(false)
+  scheduledFor DateTime?
+
+  /// Orden dentro del día (drag & drop reordena esto).
+  sortIndex Int @default(0)
+
+  /// 'draft' | 'pending_approval' | 'scheduled' | 'publishing' | 'published' | 'error'
+  status String @default("draft")
+
+  /// #11 Multi-red desde una tarjeta: ['instagram'] | ['instagram','facebook'] | ['facebook']
+  networks String[] @default(["instagram"])
+
+  /// 'image' | 'carousel' | 'reel' | 'video'
+  mediaType String @default("image")
+
+  /// #15 Aprobación en dos pasos
+  submittedById String?
+  approvedById  String?
+  approvedAt    DateTime?
+  rejectedById  String?
+  rejectedAt    DateTime?
+  rejectionNote String?
+
+  /// #9 Reintento inteligente: reintenta automático y solo avisa tras 2 fallos.
+  publishAttempts Int       @default(0)
+  lastError       String?   @db.Text
+  nextRetryAt     DateTime?
+  failureNotified Boolean   @default(false)
+
+  publishedAt DateTime?
+  /// Resultado por red: { instagram: { mediaId, permalink }, facebook: {...} }
+  publishResult Json?
+
+  /// Marca de datos ficticios de demo — permite borrarlos de un tirón.
+  isDemo Boolean @default(false)
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace          @relation(fields: [workspaceId], references: [id])
+  media     ContentPostMedia[]
+  events    ContentPostEvent[]
+
+  @@index([workspaceId, scheduledFor])
+  @@index([workspaceId, status])
+  @@index([workspaceId, inBank])
+  @@index([status, nextRetryAt])
+}
+
+/// Archivo montado en una tarjeta. Varias filas = carrusel (sortIndex ordena).
+model ContentPostMedia {
+  id     String @id @default(cuid())
+  postId String
+
+  url       String
+  thumbUrl  String?
+  /// 'image' | 'video'
+  kind      String  @default("image")
+  mimeType  String?
+  fileName  String?
+  sizeBytes Int?
+  width     Int?
+  height    Int?
+  /// Duración en segundos para video.
+  durationSec Float?
+  sortIndex   Int    @default(0)
+
+  /// #10 Cortapega de video: si esta pieza salió de un corte propuesto sobre un
+  /// video largo, aquí queda el rango original (segundos) para trazabilidad.
+  clipFromSec Float?
+  clipToSec   Float?
+  sourceUrl   String?
+
+  createdAt DateTime @default(now())
+
+  post ContentPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId, sortIndex])
+}
+
+/// #13 Bloqueo de fechas: días marcados por el cliente como "sin publicación".
+model ContentBlackoutDate {
+  id          String @id @default(cuid())
+  workspaceId String
+
+  /// Día bloqueado, en formato YYYY-MM-DD interpretado en la timezone del
+  /// calendario. Se guarda como texto para que no se corra de día al cambiar
+  /// de zona horaria.
+  day    String
+  reason String?
+  isDemo Boolean @default(false)
+
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@unique([workspaceId, day])
+  @@index([workspaceId])
+}
+
+/// Log de actividad del calendario (quién creó, movió, aprobó, publicó o falló).
+model ContentPostEvent {
+  id          String  @id @default(cuid())
+  workspaceId String
+  postId      String?
+
+  actorUserId String?
+  /// 'created' | 'updated' | 'moved' | 'duplicated' | 'submitted' | 'approved'
+  /// | 'rejected' | 'publish_started' | 'published' | 'publish_failed'
+  /// | 'retry_scheduled' | 'ai_caption' | 'ai_best_time' | 'ai_video_cuts'
+  action String
+  detail String? @db.Text
+  meta   Json    @default("{}")
+  isDemo Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  workspace Workspace    @relation(fields: [workspaceId], references: [id])
+  post      ContentPost? @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+  @@index([postId])
 }
