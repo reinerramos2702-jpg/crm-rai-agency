@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission, isRoleContext } from '@/lib/roles';
 import { getMetaConnectionRaw } from '@/repositories/workspaceMetaRepository';
-import { GRAPH_VERSION, OAUTH_SCOPES } from '@/lib/meta-oauth';
+import { GRAPH_VERSION, OAUTH_SCOPES, encodeOAuthState } from '@/lib/meta-oauth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
