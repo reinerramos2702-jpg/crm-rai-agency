@@ -154,4 +154,8 @@ Ninguno — bloque de solo lectura/documentación, sin dependencias externas.
 
 **Ningún dato de producción tocado, ninguna migración aplicada a una DB real, ningún merge ni deploy hecho por esta sesión.**
 
+### Adenda (mantenimiento post-cierre): fix de CI real en PR #6/#9
+
+Un chequeo automático posterior detectó que el deploy de Vercel fallaba en PR #6 y #9. Diagnóstico: `vitest@5` requiere `@types/node ^22||>=24` (peer opcional), pero el repo tenía `^20` fijado — el `npm install --legacy-peer-deps` local lo ocultó, pero el `npm install` limpio que corre Vercel fallaba con `ERESOLVE`. Fix: `@types/node` subido a `^22` + `package-lock.json` regenerado con instalación limpia verificada (sin el flag). Confirmado con reinstalación desde cero: `npm install` limpio, `tsc`, `build` y `vitest` (43/43) en verde. PR #9 se rebaseó sobre la rama ya arreglada para heredar el fix. **Los 8 PRs de esta noche (#2-#9) ahora tienen Vercel en verde** — el único check que sigue en rojo en todos es "Workers Builds: crm-rai-agency" (Cloudflare), hallazgo ya conocido y no bloqueante de sesiones anteriores, sin relación con el código de esta noche.
+
 ---
