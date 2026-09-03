@@ -22,11 +22,18 @@ export async function GET(req: NextRequest) {
   if (!auth) return new Response('Unauthorized', { status: 401 });
 
   const ws = await getOrCreateWorkspace(auth.userId);
+  // getOrCreateWorkspace cachea solo { id, name, ownerId } — el doc de marca
+  // cambia con frecuencia (POST/DELETE), así que se consulta aparte para no
+  // servir una versión cacheada y desactualizada.
+  const doc = await prisma.workspace.findUnique({
+    where: { id: ws.id },
+    select: { brandDocName: true, brandDocText: true, brandDocUpdatedAt: true },
+  });
   return Response.json({
-    brandDocName: ws.brandDocName,
-    brandDocText: ws.brandDocText,
-    brandDocUpdatedAt: ws.brandDocUpdatedAt,
-    hasBrandDoc: !!ws.brandDocText,
+    brandDocName: doc?.brandDocName ?? null,
+    brandDocText: doc?.brandDocText ?? null,
+    brandDocUpdatedAt: doc?.brandDocUpdatedAt ?? null,
+    hasBrandDoc: !!doc?.brandDocText,
   });
 }
 
