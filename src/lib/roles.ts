@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from './db';
 import { getAuth, AuthContext } from './auth';
 import { getOrCreateWorkspace } from './workspace';
-import { ROLES, type Role } from './roles-shared';
+import { ROLES, hasPermission, type Role, type Permission } from './roles-shared';
 
 export * from './roles-shared';
 
