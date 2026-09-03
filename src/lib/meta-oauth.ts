@@ -50,9 +50,6 @@ export function decodeOAuthState(state: string | null): { workspaceId: string } 
   const [payload, sig] = state.split('.');
   if (!payload || !sig) return null;
   const expectedSig = crypto.createHmac('sha256', stateSecret()).update(payload).digest('base64url');
-  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig).subarray(0, Buffer.from(sig).length))) {
-    // Longitudes distintas ya delatan manipulación — comparar solo si calzan.
-  }
   if (sig.length !== expectedSig.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig))) {
     return null;
   }
