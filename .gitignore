@@ -13,6 +13,9 @@ dist
 next-env.d.ts
 _checkpoints
 .claude
+test-results
+playwright-report
+.tmpwork
 
 # Capturas de referencia GHL (local only — no versionar)
 ghl-capturas/**/*.png
