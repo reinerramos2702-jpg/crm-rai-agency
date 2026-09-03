@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission, isRoleContext } from '@/lib/roles';
-import { decrypt } from '@/lib/crypto';
 import { getMetaConnectionRaw } from '@/repositories/workspaceMetaRepository';
+import { GRAPH_VERSION, OAUTH_SCOPES } from '@/lib/meta-oauth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-const GRAPH_VERSION = 'v19.0';
-const OAUTH_SCOPES = 'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement';
 
 /**
  * GET /api/workspace/meta/oauth/start
