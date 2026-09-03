@@ -53,6 +53,7 @@ export function PostEditor({ open, onClose, post, defaultDay, onSaved }: PostEdi
   const [scheduledFor, setScheduledFor] = useState('');
   const [saving, setSaving] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   useEffect(() => {
     if (!open) return;
