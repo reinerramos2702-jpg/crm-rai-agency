@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Rocket,
   Calendar,
+  CalendarClock,
   Zap,
   ShieldCheck,
   Images,
