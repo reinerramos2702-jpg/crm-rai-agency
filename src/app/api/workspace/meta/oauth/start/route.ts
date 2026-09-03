@@ -53,9 +53,11 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // state = workspaceId, para que el callback sepa a qué tenant conectar el
-  // token sin depender de una sesión de cookies compartida entre requests.
-  const state = Buffer.from(JSON.stringify({ workspaceId: ctx.workspace.id })).toString('base64url');
+  // state firmado (HMAC) = workspaceId, para que el callback sepa a qué tenant
+  // conectar el token sin depender de cookies de sesión (el callback es un
+  // redirect de browser sin el header Authorization del JWT del CRM) y sin
+  // que se pueda forjar para robar la conexión de otro tenant.
+  const state = encodeOAuthState(ctx.workspace.id);
 
   const authUrl = new URL(`https://www.facebook.com/${GRAPH_VERSION}/dialog/oauth`);
   authUrl.searchParams.set('client_id', appId);
