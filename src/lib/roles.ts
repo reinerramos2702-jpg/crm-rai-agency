@@ -67,3 +67,25 @@ export async function requireRole(
 export function isRoleContext(x: RoleContext | NextResponse): x is RoleContext {
   return !(x instanceof NextResponse);
 }
+
+/**
+ * Guard por PERMISO explícito (sección 3 del master prompt), hermano de
+ * `requireRole` — nunca reemplazo. Preferir esta función en rutas nuevas;
+ * `requireRole` sigue siendo válido donde ya existe (32 rutas), migrar
+ * incrementalmente en vez de refactor masivo (regla no negociable #5).
+ * Autorización siempre en backend — nunca confiar solo en ocultar un botón.
+ */
+export async function requirePermission(
+  req: NextRequest,
+  permission: Permission
+): Promise<RoleContext | NextResponse> {
+  const ctx = await getRoleContext(req);
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!hasPermission(ctx.role, permission)) {
+    return NextResponse.json(
+      { error: 'No tienes permisos suficientes para realizar esta acción.' },
+      { status: 403 }
+    );
+  }
+  return ctx;
+}
