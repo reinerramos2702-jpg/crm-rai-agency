@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { isRoleContext, requireRole } from '@/lib/roles';
 import { logAudit } from '@/lib/audit';
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       action,
       fromStatus: existing.status,
       toStatus: next,
-      meta: eventMeta,
+      meta: eventMeta as unknown as Prisma.InputJsonValue,
     },
   });
   await logAudit({
