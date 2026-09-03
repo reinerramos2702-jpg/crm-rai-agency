@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
+import { requirePermission, isRoleContext } from '@/lib/roles';
 import { prisma } from '@/lib/db';
 import { decrypt } from '@/lib/crypto';
+import { logAudit } from '@/lib/audit';
+import { getMetaConnectionRaw } from '@/repositories/workspaceMetaRepository';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/publish/instagram
@@ -14,12 +17,14 @@ export const runtime = 'nodejs';
  * 2. Publica el container: POST /{ig-user-id}/media_publish
  * 3. Actualiza el Asset en DB con el permalink de Instagram
  *
- * El access token viene del ApiKey 'instagram' del usuario (BYOK, desencriptado)
- * El ig-user-id viene de Settings.igBusinessId
+ * Bloque 1 (v3.0-master-prompt): el access token y el ig-user-id ahora vienen
+ * de `WorkspaceMetaConnection`, scoped por workspace — reemplaza el patrón
+ * anterior (ApiKey 'instagram' por usuario + Settings.igBusinessId global)
+ * que mezclaba credenciales de Instagram entre tenants. Ver auditoría Bloque 0.5.
  */
 export async function POST(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requirePermission(req, 'canManageContent');
+  if (!isRoleContext(ctx)) return ctx;
 
   const { taskId, assetUrl, caption, assetType } = await req.json();
 
@@ -30,30 +35,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Obtener access token de Instagram desde BYOK
-  const igKeyRecord = await prisma.apiKey.findFirst({
-    where: { userId: auth.userId, provider: 'instagram', validated: true },
-  });
-
-  if (!igKeyRecord) {
+  const connection = await getMetaConnectionRaw(ctx.workspace.id);
+  if (!connection?.accessTokenCipher || !connection.igBusinessId) {
     return NextResponse.json(
-      { error: 'No hay Instagram Access Token configurado. Ve a Claves de IA y agrega tu token.' },
+      { error: 'Este workspace no tiene Instagram conectado. Ve a Configuración → Meta para conectarlo.' },
       { status: 422 }
     );
   }
 
-  const accessToken = decrypt(igKeyRecord.ciphertext, igKeyRecord.iv, igKeyRecord.authTag);
-
-  // Obtener Business Account ID desde Settings
-  const settings = await prisma.settings.findUnique({ where: { id: 'global' } });
-  const igBusinessId = settings?.igBusinessId;
-
-  if (!igBusinessId) {
-    return NextResponse.json(
-      { error: 'No hay Instagram Business Account ID configurado. Ve a Configuración.' },
-      { status: 422 }
-    );
-  }
+  const accessToken = decrypt(connection.accessTokenCipher, connection.accessTokenIv!, connection.accessTokenTag!);
+  const igBusinessId = connection.igBusinessId;
 
   // === Paso 1: Crear media container ===
   const containerBody: Record<string, string> = {
@@ -81,6 +72,14 @@ export async function POST(req: NextRequest) {
 
   if (!containerRes.ok) {
     const errData = await containerRes.json();
+    await logAudit({
+      workspaceId: ctx.workspace.id,
+      userId: ctx.auth.userId,
+      action: 'content.publish.instagram.failed',
+      entityType: 'asset',
+      entityId: taskId,
+      meta: { step: 'create_container', error: errData },
+    });
     return NextResponse.json(
       { error: 'Error creando media container en Instagram', details: errData },
       { status: 500 }
@@ -111,6 +110,14 @@ export async function POST(req: NextRequest) {
 
   if (!publishRes.ok) {
     const errData = await publishRes.json();
+    await logAudit({
+      workspaceId: ctx.workspace.id,
+      userId: ctx.auth.userId,
+      action: 'content.publish.instagram.failed',
+      entityType: 'asset',
+      entityId: taskId,
+      meta: { step: 'media_publish', error: errData },
+    });
     return NextResponse.json(
       { error: 'Error publicando en Instagram', details: errData },
       { status: 500 }
@@ -133,6 +140,15 @@ export async function POST(req: NextRequest) {
         permalink,
       },
     },
+  });
+
+  await logAudit({
+    workspaceId: ctx.workspace.id,
+    userId: ctx.auth.userId,
+    action: 'content.publish.instagram.success',
+    entityType: 'asset',
+    entityId: taskId,
+    meta: { mediaId, permalink },
   });
 
   return NextResponse.json({ success: true, mediaId, permalink });
