@@ -125,3 +125,33 @@ Ninguno — bloque de solo lectura/documentación, sin dependencias externas.
 - `npx playwright test` → login 3/3 passed, tenant-isolation 4/4 skipped (sin DB, documentado), core-flows 1/2 passed (1 falla documentando un bug real preexistente).
 
 ---
+
+## 3 sep 2026 — CIERRE DE LA NOCHE
+
+**Bloques completados:** 0, 0.5, 1, 2A, 2B (primera pieza acotada). Ver detalle de cada uno arriba (Bloques 0/0.5/1) y en `historial-entregas.md` del worktree `crm-rai-agency-v2` (Bloques 2A/2B, rama distinta esa noche).
+
+**Bloques 3, 4, 5, 6 — bloqueados, no iniciados, decisión deliberada:** todos dependen explícitamente en el propio master prompt de que el Bloque 1 esté "completo" (Bloque 4: "requiere Bloque 1 completo primero") y/o el Bloque 4 esté completo (Bloques 5 y 6). El Bloque 1 sigue como PR abierto sin revisar (#6) — construir Captación de Asesores/RRHH-lite (rol `STAFF`, `AGENCY_OWNER`) sobre un RBAC que todavía puede cambiar en revisión habría arriesgado exactamente lo que la sección 3 del master prompt más cuida: arquitecturas paralelas y deuda técnica compuesta. Se decidió no forzarlo — regla no negociable #4 ("cuando exista conflicto entre velocidad y arquitectura, gana arquitectura") y Principio de Evolución del Producto (sección 13).
+
+**PRs abiertos al cierre (ninguno mergeado, todos esperando revisión — regla no negociable #2):**
+1. #1 — fix build Fase 1 → **ya mergeado antes de esta noche**, no aplica.
+2. #2 — Bloque 0 renombrado de marca (v2.0-master-prompt) → sigue abierto, anterior a esta noche.
+3. #3 — Revisión rama Instagram huérfana → abierto esta noche, informativo (decidir integrar/descartar).
+4. #4 — Bloque 0: diagnóstico, sincronización, fix `tsc` repo-wide.
+5. #5 — Bloque 0.5: auditoría de arquitectura + plan de inserción.
+6. #6 — Bloque 1: multi-tenant + RBAC + Meta híbrido (43 tests unitarios, Playwright configurado).
+7. #7 — Bloque 2A: Calendario de Contenido, núcleo (slider, drag&drop, estados, API CRUD).
+8. #8 — Bloque 2B (pieza): botón Publicar ahora.
+
+**Total: 6 PRs nuevos esta noche (#3-#8) + 1 preexistente (#2) — 7 esperando tu revisión.**
+
+**Decisiones que necesitan tu aprobación mañana:**
+- Borrar manualmente la variable de entorno de usuario `GITHUB_TOKEN` (inválida, Windows) — bloqueaba `gh`, hay workaround de sesión pero no es permanente.
+- Orden de revisión sugerido: #4 → #5 → #6 (son secuenciales/apilados) → #7 → #8 (secuenciales) → #2 y #3 (independientes, cuando quieras).
+- Correr `npx prisma migrate deploy` + `npx prisma generate` en Windows PowerShell contra la DB real (Bloque 1 agrega `WorkspaceMetaConnection` y `ApiKey.workspaceId`; Bloque 2A ya tenía su migración de una sesión previa) — nada de esto se aplicó a una DB real esta noche, solo se escribió el SQL.
+- Decidir si `Settings` (singleton global, leak cross-tenant documentado en la auditoría) se scoping en un bloque dedicado próximo, o se pospone.
+- Decidir si el bug real encontrado por testing (botón "Crear" de oportunidades en `/clientes-potenciales` no persiste, solo `toast`) se arregla como parte de un futuro Bloque 2A/4, o antes.
+- Credenciales reales de una app de Meta verificada — el flujo OAuth híbrido del Bloque 1 está completo en código pero nunca se probó contra Meta real (no hay app verificada en este entorno).
+
+**Ningún dato de producción tocado, ninguna migración aplicada a una DB real, ningún merge ni deploy hecho por esta sesión.**
+
+---
