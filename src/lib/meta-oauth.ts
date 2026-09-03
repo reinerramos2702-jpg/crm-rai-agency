@@ -24,11 +24,40 @@ export function resolveAppSecret(
   return process.env.META_SHARED_APP_SECRET;
 }
 
-/** Decodifica el `state` del dialog OAuth de vuelta al workspaceId que lo inició. */
+/**
+ * `state` del dialog OAuth firmado con HMAC (usa JWT_SECRET, ya presente en el
+ * entorno — sin variable nueva). El callback de Meta es un redirect de browser
+ * sin el header `Authorization` de la sesión JWT del CRM, así que el workspaceId
+ * viaja aquí — pero debe venir firmado para que nadie pueda forjar un `state`
+ * apuntando al workspace de otro tenant y robarle la conexión de Instagram
+ * (validación de autenticidad de integraciones externas, sección 3 del master prompt).
+ */
+function stateSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET no configurado — requerido para firmar el state de OAuth');
+  return secret;
+}
+
+export function encodeOAuthState(workspaceId: string): string {
+  const payload = Buffer.from(JSON.stringify({ workspaceId })).toString('base64url');
+  const sig = crypto.createHmac('sha256', stateSecret()).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+/** Decodifica y verifica la firma del `state` del dialog OAuth. Devuelve null si es inválido o fue alterado. */
 export function decodeOAuthState(state: string | null): { workspaceId: string } | null {
   if (!state) return null;
+  const [payload, sig] = state.split('.');
+  if (!payload || !sig) return null;
+  const expectedSig = crypto.createHmac('sha256', stateSecret()).update(payload).digest('base64url');
+  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig).subarray(0, Buffer.from(sig).length))) {
+    // Longitudes distintas ya delatan manipulación — comparar solo si calzan.
+  }
+  if (sig.length !== expectedSig.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig))) {
+    return null;
+  }
   try {
-    const parsed = JSON.parse(Buffer.from(state, 'base64url').toString('utf8'));
+    const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
     if (typeof parsed?.workspaceId === 'string' && parsed.workspaceId) return { workspaceId: parsed.workspaceId };
     return null;
   } catch {
