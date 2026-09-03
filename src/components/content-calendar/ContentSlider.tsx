@@ -327,7 +327,7 @@ function PostMiniCard({ post, dragging }: { post: PostDTO; dragging?: boolean })
         </div>
         <div className="row-between" style={{ marginTop: 4 }}>
           <span style={{ fontSize: 11, color: 'var(--rai-muted)' }}>{post.time || '—'}</span>
-          <Badge variant={meta.badge.replace('badge-', '') as any}>{meta.label}</Badge>
+          <Badge variant={statusBadgeVariant(post.status)}>{meta.label}</Badge>
         </div>
       </div>
     </div>
