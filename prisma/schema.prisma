@@ -63,8 +63,47 @@ model Workspace {
   bookings          Booking[]
   payments          Payment[]
   auditEvents       AuditEvent[]
+  apiKeys           ApiKey[]
+  metaConnection    WorkspaceMetaConnection?
 
   @@index([ownerId])
+}
+
+// ============================================
+// META/INSTAGRAM HÍBRIDO (Bloque 1, v3.0-master-prompt, decisión cerrada 1 sep 2026)
+// 'shared_app': app RAI única + OAuth dinámico por tenant (default, sin Business
+//   Verification/App Review por cada venta).
+// 'own_app': el tenant conecta su propia app de Meta (App ID + Secret propios).
+// Reemplaza el patrón anterior (Settings.igBusinessId global + ApiKey por usuario)
+// que mezclaba credenciales de Instagram entre tenants — ver auditoría Bloque 0.5.
+// ============================================
+model WorkspaceMetaConnection {
+  id          String @id @default(cuid())
+  workspaceId String @unique
+
+  metaMode String @default("shared_app") // 'shared_app' | 'own_app'
+
+  // own_app: credenciales propias del tenant. App ID no es secreto, App Secret sí.
+  ownAppId           String?
+  ownAppSecretCipher String? // hex
+  ownAppSecretIv     String? // hex
+  ownAppSecretTag    String? // hex
+
+  // Conexión activa (ambos modos): access token de larga duración + cuenta de IG.
+  igBusinessId       String?
+  pageId             String?
+  accessTokenCipher  String? // hex
+  accessTokenIv      String? // hex
+  accessTokenTag     String? // hex
+  tokenExpiresAt     DateTime?
+
+  connectedAt       DateTime?
+  connectedByUserId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
 }
 
 // ============================================
