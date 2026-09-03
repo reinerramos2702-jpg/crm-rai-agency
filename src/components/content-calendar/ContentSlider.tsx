@@ -15,7 +15,16 @@ import {
 import { ChevronLeft, ChevronRight, Plus, ImageOff } from 'lucide-react';
 import { HelpTip } from '@/components/ui/HelpTip';
 import { Badge } from '@/components/ui/Badge';
-import { PostDTO, STATUS_META, TIPS } from '@/lib/content-calendar/types';
+import { PostDTO, PostStatus, STATUS_META, TIPS } from '@/lib/content-calendar/types';
+
+type BadgeVariant = 'success' | 'error' | 'warning' | 'gold' | 'purple' | 'muted';
+
+/** Traduce el `badge` de STATUS_META (p.ej. "badge-success") a la variant de <Badge>. */
+function statusBadgeVariant(status: PostStatus): BadgeVariant {
+  const raw = STATUS_META[status].badge.replace('badge-', '');
+  const valid: BadgeVariant[] = ['success', 'error', 'warning', 'gold', 'purple', 'muted'];
+  return (valid as string[]).includes(raw) ? (raw as BadgeVariant) : 'muted';
+}
 
 /** Lunes de la semana que contiene `date`. */
 export function startOfWeek(date: Date) {
