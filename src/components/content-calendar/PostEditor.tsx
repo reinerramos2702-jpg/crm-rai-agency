@@ -251,6 +251,13 @@ export function PostEditor({ open, onClose, post, defaultDay, onSaved }: PostEdi
                 </Button>
               </HelpTip>
             )}
+            {isEditing && post?.status !== 'published' && (
+              <HelpTip content={TIPS.publishNow}>
+                <Button variant="secondary" size="sm" onClick={handlePublishNow} loading={publishing} type="button">
+                  <Send size={14} /> Publicar ahora
+                </Button>
+              </HelpTip>
+            )}
           </div>
           <div className="row" style={{ gap: 8 }}>
             <Button variant="ghost" size="sm" onClick={onClose} type="button">
