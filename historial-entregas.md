@@ -41,3 +41,26 @@
 - Flujo principal (crear → ver en el slider → arrastrar a otro día → editar) verificado por construcción de la UI contra el contrato real de la API (mismo bloque, mismos agentes/sesión) — pendiente de una pasada de Playwright dedicada como la del Bloque 1 (no incluida en este bloque para no extender más el alcance esta noche, regla no negociable #4).
 
 ---
+
+## 3 sep 2026 — BLOQUE 2B (primera pieza): botón "Publicar ahora"
+
+**Rama:** `v2/bloque-2b-calendario-automatizacion` (sobre 2A). Alcance deliberadamente acotado — el resto de 2B (auto-caption IA, sugeridor de hora, cortapega de video, guía integrada) queda diferido, ver "Bloqueado/diferido" abajo.
+
+### Completado
+
+- `POST /api/content-posts/[id]/publish-now` — dispara `publishPost()` de `publisher.ts` (ya existía, construido en una sesión previa: contenedores Graph API, reintento inteligente #09, estados por color). No se tocó `publisher.ts` ni su mecanismo de credenciales (documentado en su propio comentario: usa el patrón BYOK+Settings actual a propósito, con nota explícita de migrar a Meta-por-tenant cuando el Bloque 1 se mergee — no se duplicó esa lógica aquí).
+- Botón "Publicar ahora" en `PostEditor` (icono `Send`, tooltip `TIPS.publishNow` ya existente), con confirmación, manejo de fallo controlado (el mensaje real del motivo queda visible, nunca se simula un éxito falso — comportamiento ya garantizado por `publisher.ts`).
+
+### Bloqueado / diferido (decisión deliberada de alcance, no un olvido)
+
+Se decidió cerrar esta pieza pequeña y completa en vez de seguir construyendo el resto de 2B a mitad de noche con la base de Meta todavía sin mergear (regla no negociable #4: mejor entregar poco y completo que mucho a medias). Quedan para una sesión futura, ya con el Bloque 1 revisado/mergeado:
+- Auto-caption con IA (#08) — requiere decidir si pasa por `/services/ai` del Bloque 1 (no mergeado) o se conecta directo a `llm-providers.ts` existente como puente temporal.
+- Sugeridor de mejor hora (#07), cortapega de video (#10) — features P2, correctamente después en la cola.
+- Banco de contenido UI (#12, modelo ya existe pero sin pantalla), pantallas de configuración de límite de frecuencia/aprobación en dos pasos (backend ya existe, falta UI), recorrido guiado (#20).
+- Migrar `resolveCredentials()` de `publisher.ts` a `WorkspaceMetaConnection` del Bloque 1 en cuanto esa rama se mergee a `main` — está documentado en el propio archivo desde antes de esta noche.
+
+### Verificación
+
+- `npx tsc --noEmit` → exit 0.
+
+---
