@@ -169,6 +169,7 @@ export function isAdminOrManager(role: Role): boolean {
 }
 
 export function hasModuleAccess(role: Role, path: string): boolean {
+  if (role === 'super_admin') return true; // cross-tenant, siempre pasa
   const allowed = MODULE_ACCESS[path];
   if (!allowed) return true;
   return allowed.includes(role);
