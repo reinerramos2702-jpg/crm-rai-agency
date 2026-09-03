@@ -34,9 +34,12 @@ describe('hasPermission', () => {
 
     it(`role '${role}' returns false for a permission it does not have by default`, () => {
       if (notGranted.length === 0) {
-        // super_admin has all permissions; skip the false case for it here,
-        // but still assert it doesn't fall through unexpectedly.
-        expect(notGranted.length).toBe(0);
+        // super_admin has every permission by default, so there is no
+        // "not granted" case to test without an override. Use an override
+        // that revokes one to still exercise the false path for this role.
+        expect(
+          hasPermission(role, allPermissions[0], { [allPermissions[0]]: false })
+        ).toBe(false);
         return;
       }
       expect(hasPermission(role, notGranted[0])).toBe(false);
