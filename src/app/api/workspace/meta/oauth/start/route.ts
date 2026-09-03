@@ -66,12 +66,3 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.redirect(authUrl.toString());
 }
-
-/** Resuelve el App Secret real (own_app descifrado, o el de la app compartida vía env). Uso interno del callback. */
-export function resolveAppSecret(metaMode: string, ownAppSecretCipher?: string | null, ownAppSecretIv?: string | null, ownAppSecretTag?: string | null): string | undefined {
-  if (metaMode === 'own_app') {
-    if (!ownAppSecretCipher || !ownAppSecretIv || !ownAppSecretTag) return undefined;
-    return decrypt(ownAppSecretCipher, ownAppSecretIv, ownAppSecretTag);
-  }
-  return process.env.META_SHARED_APP_SECRET;
-}
