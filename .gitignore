@@ -13,6 +13,7 @@ dist
 next-env.d.ts
 _checkpoints
 .claude
+.tmpwork
 
 # Capturas de referencia GHL (local only — no versionar)
 ghl-capturas/**/*.png
