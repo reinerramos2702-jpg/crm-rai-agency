@@ -47,6 +47,7 @@ const NAV_ITEMS = [
   { href: '/agentes-ia', label: 'Agentes de IA', icon: Bot },
   { href: '/conversaciones', label: 'Conversaciones', icon: MessageSquare },
   { href: '/calendarios', label: 'Calendarios', icon: Calendar },
+  { href: '/calendario-contenido', label: 'Calendario de Contenido', icon: CalendarClock },
   { href: '/contactos', label: 'Contactos', icon: Users },
   { href: '/clientes-potenciales', label: 'Clientes Potenciales', icon: Target },
   { href: '/pasajeros', label: 'Pasajeros', icon: UserCheck },
