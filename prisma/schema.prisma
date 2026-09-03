@@ -122,6 +122,11 @@ model ContentGridAsset {
 model ApiKey {
   id         String    @id @default(cuid())
   userId     String
+  // Bloque 1 (v3.0-master-prompt, multi-tenant): las keys BYOK quedaban ligadas
+  // solo al usuario, compartidas entre TODOS sus workspaces. Nullable por ahora
+  // para no romper filas existentes sin backfill — nueva escritura debe setearlo.
+  // Ver docs/AUDITORIA-ARQUITECTURA-BLOQUE-0.5.md punto 1.
+  workspaceId String?
   provider   String // 'openai' | 'anthropic' | 'google' | 'deepseek' | 'elevenlabs' | 'suno' | 'instagram'
   label      String? // alias opcional
   ciphertext String // hex
@@ -131,10 +136,12 @@ model ApiKey {
   lastUsedAt DateTime?
   createdAt  DateTime  @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
+  workspace Workspace? @relation(fields: [workspaceId], references: [id])
 
   @@unique([userId, provider, label])
   @@index([userId])
+  @@index([workspaceId])
 }
 
 // ============================================
