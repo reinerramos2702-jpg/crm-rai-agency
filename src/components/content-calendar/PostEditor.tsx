@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Copy } from 'lucide-react';
+import { Copy, Send } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
@@ -53,6 +53,7 @@ export function PostEditor({ open, onClose, post, defaultDay, onSaved }: PostEdi
   const [scheduledFor, setScheduledFor] = useState('');
   const [saving, setSaving] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -159,6 +160,30 @@ export function PostEditor({ open, onClose, post, defaultDay, onSaved }: PostEdi
     }
   }
 
+  async function handlePublishNow() {
+    if (!post) return;
+    if (!confirm('¿Publicar esta tarjeta ahora mismo en las redes marcadas?')) return;
+    setPublishing(true);
+    try {
+      const res = await fetch(`/api/content-posts/${post.id}/publish-now`, { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        toast.success('Publicado correctamente.');
+        onSaved();
+        onClose();
+      } else {
+        // Falla controlada esperada sin credenciales de Meta conectadas — ver
+        // publisher.ts: nunca se simula un éxito falso, el motivo queda visible.
+        toast.error(data.error || 'No se pudo publicar. Revisa el error en la tarjeta.');
+        onSaved();
+      }
+    } catch {
+      toast.error('Error de red: no se pudo contactar al servidor.');
+    } finally {
+      setPublishing(false);
+    }
+  }
+
   return (
     <Modal open={open} onClose={onClose} title={isEditing ? 'Editar publicación' : 'Nueva publicación'} size="md">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -223,6 +248,13 @@ export function PostEditor({ open, onClose, post, defaultDay, onSaved }: PostEdi
               <HelpTip content={TIPS.duplicate}>
                 <Button variant="secondary" size="sm" onClick={handleDuplicate} loading={duplicating} type="button">
                   <Copy size={14} /> Duplicar
+                </Button>
+              </HelpTip>
+            )}
+            {isEditing && post?.status !== 'published' && (
+              <HelpTip content={TIPS.publishNow}>
+                <Button variant="secondary" size="sm" onClick={handlePublishNow} loading={publishing} type="button">
+                  <Send size={14} /> Publicar ahora
                 </Button>
               </HelpTip>
             )}
