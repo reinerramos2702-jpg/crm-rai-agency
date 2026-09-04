@@ -84,3 +84,29 @@
 - `tsc`/`build`: este bloque no tocó código de producto (solo diagnóstico + este archivo), no aplica.
 
 ---
+
+## 3 sep 2026 — BLOQUE 0.5: Auditoría de arquitectura
+
+**Rama:** `v3/bloque-0.5-auditoria-arquitectura` (apilada sobre `v3/bloque-0-diagnostico-sincronizacion`) · **Doc completo:** `docs/AUDITORIA-ARQUITECTURA-BLOQUE-0.5.md`
+
+### Completado
+
+Inventario de los 8 puntos exigidos por el master prompt (modelo Prisma, auth, roles, middleware, estructura de carpetas, patrones de API, componentes reutilizables, estado del frontend) + plan de inserción de multi-tenant/RBAC sobre el código real. Hallazgos clave:
+
+- **`Workspace` ya es el tenant** — no hace falta crear un modelo `Tenant`/`tenantId` nuevo, solo tratar `Workspace` como el tenant del master prompt.
+- **2 fugas cross-tenant reales a cerrar primero en el Bloque 1:** `Settings` (singleton global compartido por todos los tenants) y `ApiKey` (ligado a `User`, no a `Workspace`).
+- **Roles:** enum plano de 4 (`admin/gerente/agente/viewer`), sin permisos granulares, usado en 32 rutas API vía `requireRole`/`isRoleContext` — el RBAC formal debe extender esto (7 roles + permisos explícitos), no reemplazarlo, para no forzar una migración masiva de las 32 rutas en una noche.
+- **Sin middleware, sin capa repository/service** — acceso a Prisma directo desde cada route handler. Punto de inserción recomendado: `src/middleware.ts` nuevo + `src/repositories/` incremental, migrando módulo por módulo.
+- **`AuditEvent`/`logAudit()` ya funcionan** (17 usos, módulo hotelero) — reusar tal cual para las acciones críticas de los bloques 1-6, no crear un sistema paralelo.
+- **Playwright instalado pero sin configurar** — el Bloque 1 debe crear `playwright.config.ts` + `tests/e2e/` desde cero.
+
+### Bloqueado
+
+Ninguno — bloque de solo lectura/documentación, sin dependencias externas.
+
+### Verificación
+
+- `npx tsc --noEmit` → exit 0 (bloque no tocó código de producto).
+- Inventario de los 8 puntos + plan de inserción documentados en `docs/AUDITORIA-ARQUITECTURA-BLOQUE-0.5.md`.
+
+---
