@@ -7,7 +7,7 @@
 
 ## 1. Visión del producto
 
-**RAI Agency Content Engine** — CRM SaaS tipo GoHighLevel, multi-tenant, para negocios con ingresos activos. Gestiona clientes, conversaciones, campañas, marketing, facturación, automatizaciones y agentes de IA, todo centralizado. Objetivo: vendible como producto a terceros.
+**CRM RAI Agency** — CRM SaaS tipo GoHighLevel, multi-tenant, para negocios con ingresos activos. Gestiona clientes, conversaciones, campañas, marketing, facturación, automatizaciones y agentes de IA, todo centralizado. Objetivo: vendible como producto a terceros.
 
 Principios: escalable, modular, UX sin fricción para usuarios no técnicos, datos reales (cero datos hardcodeados/demo en UI de producción).
 
@@ -350,7 +350,7 @@ type TopTab = (typeof TOP_TABS)[number]['id'];
 ## 9. Bugs de entorno conocidos (permanentes)
 
 **B1 — Prisma en sandbox Linux:**
-El mount de Windows no permite `unlink`/`rm`/`mv` dentro de `content-engine-mvp/` (EPERM). `prisma generate` y `prisma migrate dev` fallan porque necesitan borrar archivos.
+El mount de Windows no permite `unlink`/`rm`/`mv` dentro de `crm-rai-agency/` (EPERM). `prisma generate` y `prisma migrate dev` fallan porque necesitan borrar archivos.
 **Solución**: el usuario corre `npx prisma generate` y `npx prisma migrate deploy` en Windows PowerShell directamente. Nunca desde el sandbox.
 
 **B2 — Procesos persistentes en sandbox:**

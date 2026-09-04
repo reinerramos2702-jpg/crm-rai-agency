@@ -4,7 +4,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Toaster } from 'react-hot-toast';
 
 export const metadata: Metadata = {
-  title: 'RAI Content Engine — Pipeline de Automatización de Contenido',
+  title: 'CRM RAI Agency — Pipeline de Automatización de Contenido',
   description:
     'Genera campañas de contenido completas con IA: copy, imágenes, vídeos y publicación automática en Instagram.',
   keywords: ['contenido', 'automatización', 'IA', 'instagram', 'marketing', 'RAI Agency'],

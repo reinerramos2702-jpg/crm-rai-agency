@@ -147,7 +147,7 @@ export default function DashboardPage() {
   return (
     <>
       <TopBar
-        title="RAI Content Engine"
+        title="CRM RAI Agency"
         subtitle="Dashboard de campañas de contenido automatizado"
         actions={
           <>

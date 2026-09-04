@@ -7,7 +7,7 @@
 ## 0. ANTES DE TODO (migración de cuentas — jun 19 2026 en adelante)
 
 **Este proyecto vive en GitHub.** Si estás en una cuenta nueva de Claude (web/Cursor):
-1. Verifica el repo clonado: `content-engine-mvp/` con todos los archivos.
+1. Verifica el repo clonado: `crm-rai-agency/` con todos los archivos.
 2. La carpeta umbrella `RAI Agency/` contiene un `MEMORY.md` y un `CLAUDE.md` adicionales (cross-project) — léelos si existen.
 3. **Nunca** crees handoff files nuevos. Todo va en estos 3 docs + los 2 umbrella.
 
@@ -68,7 +68,7 @@ Al terminar cualquier sesión con cambios significativos:
 
 ```bash
 # En Windows PowerShell (no en sandbox):
-cd content-engine-mvp
+cd crm-rai-agency
 npx tsc --noEmit   # debe salir limpio, exit 0
 ```
 
@@ -78,7 +78,7 @@ Si hay errores de TypeScript, resolverlos antes de cerrar. No marcar tarea como 
 
 Pega esto al empezar un chat nuevo:
 
-> "Lee CLAUDE.md, MEMORY.md y CONTEXT.md en content-engine-mvp. Luego continúa desde el SIGUIENTE PASO definido en CONTEXT.md."
+> "Lee CLAUDE.md, MEMORY.md y CONTEXT.md en crm-rai-agency. Luego continúa desde el SIGUIENTE PASO definido en CONTEXT.md."
 
 ---
 

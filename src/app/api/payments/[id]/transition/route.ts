@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { isRoleContext, requireRole } from '@/lib/roles';
 import { logAudit } from '@/lib/audit';
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const data: Record<string, unknown> = { status: next };
-  const eventMeta: Record<string, unknown> = { from: existing.status, to: next };
+  const eventMeta: Prisma.JsonObject = { from: existing.status, to: next };
 
   if (action === 'approve') {
     data.paidAt = new Date();
