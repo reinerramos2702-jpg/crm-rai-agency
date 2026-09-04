@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { getOrCreateWorkspace } from '@/lib/workspace';
+import { getOrCreateWorkspace, getOrCreateWorkspaceFull } from '@/lib/workspace';
 import { extractTextFromDocx } from '@/lib/docx-extract';
 
 export const runtime = 'nodejs';
@@ -21,14 +21,9 @@ export async function GET(req: NextRequest) {
   const auth = await getAuth(req);
   if (!auth) return new Response('Unauthorized', { status: 401 });
 
-  const ws = await getOrCreateWorkspace(auth.userId);
-  // getOrCreateWorkspace cachea solo { id, name, ownerId } — el doc de marca
-  // cambia con frecuencia (POST/DELETE), así que se consulta aparte para no
-  // servir una versión cacheada y desactualizada.
-  const doc = await prisma.workspace.findUnique({
-    where: { id: ws.id },
-    select: { brandDocName: true, brandDocText: true, brandDocUpdatedAt: true },
-  });
+  // getOrCreateWorkspaceFull consulta fresco (no cache) — el doc de marca
+  // cambia con frecuencia (POST/DELETE), no debe servirse desactualizado.
+  const doc = await getOrCreateWorkspaceFull(auth.userId);
   return Response.json({
     brandDocName: doc?.brandDocName ?? null,
     brandDocText: doc?.brandDocText ?? null,

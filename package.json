@@ -1,8 +1,8 @@
 {
-  "name": "rai-content-engine-mvp",
+  "name": "crm-rai-agency",
   "version": "0.1.0",
   "private": true,
-  "description": "RAI Agency — Pipeline de Automatización de Contenido (submódulo CRM)",
+  "description": "CRM RAI Agency — CRM SaaS multi-tenant con automatización de contenido e IA",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

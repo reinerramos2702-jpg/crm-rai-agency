@@ -1,4 +1,4 @@
-// RAI Content Engine — Schema de base de datos
+// CRM RAI Agency — Schema de base de datos
 // Diseñado para integración con CRM RAI Agency vía SSO
 
 generator client {

@@ -390,7 +390,7 @@ def render_slide(item_title, nav_label, step_num, slide):
   <line x1="220" y1="0" x2="220" y2="720" stroke="{BORDER}" stroke-width="1"/>
   <rect x="20" y="24" width="40" height="40" rx="8" fill="url(#goldGrad)"/>
   <text x="72" y="44" fill="{GOLD}" font-size="18" font-weight="800">RAI</text>
-  <text x="72" y="60" fill="{MUTED}" font-size="9" letter-spacing="1">CONTENT ENGINE</text>
+  <text x="72" y="60" fill="{MUTED}" font-size="9" letter-spacing="1">AGENCY CRM</text>
   <line x1="20" y1="86" x2="200" y2="86" stroke="{BORDER}" stroke-width="1"/>
   {nav_svg}
 
