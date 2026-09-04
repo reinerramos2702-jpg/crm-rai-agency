@@ -78,7 +78,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       action,
       fromStatus: existing.status,
       toStatus: next,
-      meta: eventMeta,
+      meta: eventMeta as unknown as Prisma.InputJsonValue,
     },
   });
   await logAudit({

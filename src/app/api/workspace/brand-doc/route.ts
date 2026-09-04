@@ -21,12 +21,14 @@ export async function GET(req: NextRequest) {
   const auth = await getAuth(req);
   if (!auth) return new Response('Unauthorized', { status: 401 });
 
-  const ws = await getOrCreateWorkspaceFull(auth.userId);
+  // getOrCreateWorkspaceFull consulta fresco (no cache) — el doc de marca
+  // cambia con frecuencia (POST/DELETE), no debe servirse desactualizado.
+  const doc = await getOrCreateWorkspaceFull(auth.userId);
   return Response.json({
-    brandDocName: ws.brandDocName,
-    brandDocText: ws.brandDocText,
-    brandDocUpdatedAt: ws.brandDocUpdatedAt,
-    hasBrandDoc: !!ws.brandDocText,
+    brandDocName: doc?.brandDocName ?? null,
+    brandDocText: doc?.brandDocText ?? null,
+    brandDocUpdatedAt: doc?.brandDocUpdatedAt ?? null,
+    hasBrandDoc: !!doc?.brandDocText,
   });
 }
 
