@@ -50,5 +50,13 @@
     "typescript": "^5.9.3",
     "vite": "^6.4.3",
     "vitest": "^5.0.0"
+  },
+  "allowScripts": {
+    "@prisma/client@5.22.0": true,
+    "@prisma/engines@5.22.0": true,
+    "prisma@5.22.0": true,
+    "esbuild@0.28.2": true,
+    "esbuild@0.25.12": true,
+    "msgpackr-extract@3.0.4": true
   }
 }

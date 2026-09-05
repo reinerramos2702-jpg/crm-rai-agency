@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
       orderBy: { updatedAt: 'desc' },
       include: { _count: { select: { runs: true } } },
     }),
-    prisma.settings.findUnique({ where: { id: 'global' } }),
+    prisma.settings.findUnique({ where: { workspaceId: ws.id } }),
   ]);
 
   return NextResponse.json(

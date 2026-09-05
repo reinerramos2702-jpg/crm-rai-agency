@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { isRoleContext, requireRole } from '@/lib/roles';
+import { getRoleContext, isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
 /**
- * GET  /api/settings — leer configuración global
- * POST /api/settings — guardar configuración global
+ * GET  /api/settings — leer configuración del workspace del usuario autenticado
+ * POST /api/settings — guardar configuración del workspace del usuario autenticado
+ *
+ * Bloque 1: Settings dejó de ser un singleton global (`id='global'` compartido
+ * por todos los tenants — ver auditoría Bloque 0.5) y pasó a estar scopeado
+ * por `workspaceId`. Nunca volver a leer/escribir por `id: 'global'` aquí.
  */
 
 export async function GET(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await getRoleContext(req);
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const settings = await prisma.settings.findUnique({ where: { id: 'global' } });
+  const settings = await prisma.settings.findUnique({ where: { workspaceId: ctx.workspace.id } });
   return NextResponse.json({ settings });
 }
 
@@ -45,8 +48,8 @@ export async function POST(req: NextRequest) {
   };
 
   const settings = await prisma.settings.upsert({
-    where: { id: 'global' },
-    create: { id: 'global', ...data },
+    where: { workspaceId: ctx.workspace.id },
+    create: { workspaceId: ctx.workspace.id, ...data },
     update: data,
   });
 

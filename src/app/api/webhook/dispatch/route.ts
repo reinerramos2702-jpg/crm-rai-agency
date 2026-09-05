@@ -36,9 +36,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Sin acceso' }, { status: 403 });
   }
 
-  // Obtener URL del webhook desde Settings o master JSON
+  // Obtener URL del webhook desde Settings del workspace de la campaña o master JSON
   const master = task.execution.campaign.masterJson as Record<string, unknown>;
-  const settings = await prisma.settings.findUnique({ where: { id: 'global' } });
+  const settings = await prisma.settings.findUnique({
+    where: { workspaceId: task.execution.campaign.workspaceId },
+  });
   const webhookUrl =
     (master?.n8nWebhookUrl as string) ||
     settings?.n8nWebhookUrl ||
