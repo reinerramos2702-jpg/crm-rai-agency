@@ -63,8 +63,48 @@ model Workspace {
   bookings          Booking[]
   payments          Payment[]
   auditEvents       AuditEvent[]
+  apiKeys           ApiKey[]
+  metaConnection    WorkspaceMetaConnection?
+  settings          Settings?
 
   @@index([ownerId])
+}
+
+// ============================================
+// META/INSTAGRAM HÍBRIDO (Bloque 1, v3.0-master-prompt, decisión cerrada 1 sep 2026)
+// 'shared_app': app RAI única + OAuth dinámico por tenant (default, sin Business
+//   Verification/App Review por cada venta).
+// 'own_app': el tenant conecta su propia app de Meta (App ID + Secret propios).
+// Reemplaza el patrón anterior (Settings.igBusinessId global + ApiKey por usuario)
+// que mezclaba credenciales de Instagram entre tenants — ver auditoría Bloque 0.5.
+// ============================================
+model WorkspaceMetaConnection {
+  id          String @id @default(cuid())
+  workspaceId String @unique
+
+  metaMode String @default("shared_app") // 'shared_app' | 'own_app'
+
+  // own_app: credenciales propias del tenant. App ID no es secreto, App Secret sí.
+  ownAppId           String?
+  ownAppSecretCipher String? // hex
+  ownAppSecretIv     String? // hex
+  ownAppSecretTag    String? // hex
+
+  // Conexión activa (ambos modos): access token de larga duración + cuenta de IG.
+  igBusinessId       String?
+  pageId             String?
+  accessTokenCipher  String? // hex
+  accessTokenIv      String? // hex
+  accessTokenTag     String? // hex
+  tokenExpiresAt     DateTime?
+
+  connectedAt       DateTime?
+  connectedByUserId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
 }
 
 // ============================================
@@ -122,6 +162,11 @@ model ContentGridAsset {
 model ApiKey {
   id         String    @id @default(cuid())
   userId     String
+  // Bloque 1 (v3.0-master-prompt, multi-tenant): las keys BYOK quedaban ligadas
+  // solo al usuario, compartidas entre TODOS sus workspaces. Nullable por ahora
+  // para no romper filas existentes sin backfill — nueva escritura debe setearlo.
+  // Ver docs/AUDITORIA-ARQUITECTURA-BLOQUE-0.5.md punto 1.
+  workspaceId String?
   provider   String // 'openai' | 'anthropic' | 'google' | 'deepseek' | 'elevenlabs' | 'suno' | 'instagram'
   label      String? // alias opcional
   ciphertext String // hex
@@ -131,10 +176,12 @@ model ApiKey {
   lastUsedAt DateTime?
   createdAt  DateTime  @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
+  workspace Workspace? @relation(fields: [workspaceId], references: [id])
 
   @@unique([userId, provider, label])
   @@index([userId])
+  @@index([workspaceId])
 }
 
 // ============================================
@@ -267,21 +314,30 @@ model InventoryItem {
 // ============================================
 // CONFIGURACIÓN GLOBAL
 // ============================================
+// Config por tenant (Bloque 1 — ya NO es singleton global, ver auditoría Bloque
+// 0.5: era la fuga cross-tenant más peligrosa del repo, junto con ApiKey.userId).
+// `workspaceId` nullable solo para preservar la fila legacy id='global' pre-Bloque-1
+// (huérfana, ya no se lee ni se escribe por código nuevo — ver migración
+// 20260904090000_scope_settings_by_workspace). Todo código nuevo debe tratar
+// workspaceId como requerido en la práctica.
 model Settings {
-  id                       String   @id @default("global")
+  id                       String    @id @default(cuid())
+  workspaceId              String?   @unique
   n8nWebhookUrl            String?
   igBusinessId             String?
   // Configuración del módulo Conversaciones (ANS / SLA)
   slaFirstResponseMins     Int? // ANS a punto de expirar: minutos para primera respuesta
   slaOverdueMins           Int? // ANS atrasado: minutos tras los cuales se marca como atrasado
-  aiCountsAsResponse       Boolean  @default(false)
+  aiCountsAsResponse       Boolean   @default(false)
   // Configuración del módulo Calendarios
-  calendarHideEventDetails Boolean  @default(true) // "Modo privado": ocultar detalles de eventos sincronizados
+  calendarHideEventDetails Boolean   @default(true) // "Modo privado": ocultar detalles de eventos sincronizados
   // Configuración del módulo Automatización
-  automationsEnabled       Boolean  @default(true) // kill switch global: pausar todos los flujos
+  automationsEnabled       Boolean   @default(true) // kill switch del workspace: pausar sus flujos
   automationNotifyEmail    String? // destino de notificaciones internas (alertas a gerente)
   aiBuilderProvider        String? // 'anthropic' | null - si hay API key configurada en /keys
-  updatedAt                DateTime @updatedAt
+  updatedAt                DateTime  @updatedAt
+
+  workspace                Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }
 
 // ============================================

@@ -110,3 +110,53 @@ Ninguno — bloque de solo lectura/documentación, sin dependencias externas.
 - Inventario de los 8 puntos + plan de inserción documentados en `docs/AUDITORIA-ARQUITECTURA-BLOQUE-0.5.md`.
 
 ---
+
+## 3 sep 2026 — BLOQUE 1: Fundación multi-tenant + RBAC + Meta híbrido
+
+**Rama:** `v3/bloque-1-multitenant-rbac-meta` (apilada sobre 0.5) · Siguiendo el plan de inserción de la auditoría — sin reescritura masiva (regla no negociable #5).
+
+### Completado
+
+**Multi-tenant (Fase 2):**
+- Confirmado `Workspace` = tenant (sin modelo `Tenant` nuevo).
+- Cerrada la fuga cross-tenant de `ApiKey`: agregado `workspaceId` (nullable, migración aditiva, sin backfill automático — ver `prisma/migrations/20260903120000_add_meta_hybrid_and_apikey_workspace/migration.sql`).
+- Capa `repository`/`service` **iniciada** en `src/repositories/` (`base.ts` con `assertWorkspaceScope`, `workspaceMetaRepository.ts`) — patrón de referencia aplicado al módulo Meta (nuevo esta noche), **no retrofit de las 32 rutas existentes** (mega-refactor prohibido). Sigue como deuda documentada, migración incremental futura.
+- La fuga de `Settings` (singleton global compartido entre tenants) **queda documentada, no resuelta** — tocar sus 10 archivos consumidores era más alcance del que este bloque podía cerrar con calidad esta noche (regla #4: mejor entregar la mitad completa que todo a medias). Ver "Bloqueado" abajo.
+
+**RBAC formal (Fase 3):**
+- `src/lib/roles-shared.ts` extendido de 4 a los 7 roles del master prompt (`super_admin`, `agency_owner`, `admin`, `gerente`, `agente`, `staff`, `viewer`) **sin renombrar los 4 originales** — mantiene compatibilidad con las 32 rutas que ya usan esos strings.
+- 8 permisos explícitos (`canCreateLead`, `canViewReports`, `canManageTeam`, `canManageBilling`, `canConnectMeta`, `canManageContent`, `canApproveContent`, `canManageAdvisors`) + `PERMISSIONS_BY_ROLE` (default por rol) + `hasPermission()` con soporte de overrides puntuales.
+- `requirePermission()` nuevo en `src/lib/roles.ts`, hermano de `requireRole` (no reemplazo) — autorización siempre en backend.
+- **Pruebas:** 43/43 unit tests pasando (`npx vitest run`) — `src/lib/__tests__/roles-shared.test.ts` (37, cobertura de `hasPermission`/`isAdmin`/`hasModuleAccess` para los 7 roles) + `src/lib/__tests__/roles.test.ts` (6, `requireRole`/`requirePermission` devolviendo 401/403/RoleContext correctamente vía mocks).
+
+**Meta híbrido (Fase 4):**
+- Modelo `WorkspaceMetaConnection` nuevo (1:1 con `Workspace`): `metaMode` (`shared_app`/`own_app`), credenciales own_app cifradas (AES-256-GCM, `src/lib/crypto.ts` reusado), access token cifrado, `igBusinessId`, `pageId`, expiración.
+- `GET/PATCH/DELETE /api/workspace/meta` — gestión del modo y credenciales, permiso `canConnectMeta`, audit log en cada cambio.
+- `GET /api/workspace/meta/oauth/start` + `/oauth/callback` — flujo OAuth dinámico completo (Container API, canje de token corto→largo, resolución de página/IG business), `state` firmado con HMAC (reusa `JWT_SECRET`) para que el callback (redirect de browser sin header `Authorization`) no pueda forjarse hacia el workspace de otro tenant.
+- **Fix real del leak identificado en la auditoría:** `POST /api/publish/instagram` migrado de `Settings.igBusinessId` global + `ApiKey` por usuario → `WorkspaceMetaConnection` por workspace. Agrega audit log de éxito/fallo de publicación (adelanta un requisito del Bloque 2B).
+- Variables nuevas documentadas en `.env.example`: `META_SHARED_APP_ID`, `META_SHARED_APP_SECRET`, `META_OAUTH_REDIRECT_URI`.
+- **No probado en vivo:** requiere una app de Meta real verificada (Business Verification) que no existe en este entorno — el código sigue la spec del Graph API v19 correctamente, pero el flujo OAuth completo (start→Meta→callback) no se ejecutó contra Meta real esta noche. Riesgo conocido a validar por el usuario con credenciales reales.
+
+**Testing (Fase 5 — obligatorio por bloque, sección 3):**
+- `vitest` + `@playwright/test` instalados y configurados desde cero (`vitest.config.ts`, `playwright.config.ts` con proyectos desktop + mobile `hasTouch`/`isMobile` para paridad móvil del Bloque 3).
+- `tests/e2e/login.spec.ts` — **3/3 passed, ejecutado de verdad** contra el dev server real. Hallazgo: no existe login UI real (auth JWT-bearer desde SSO externo, sin form propio) — el test cubre el bypass de dev y documenta cómo se probaría un JWT real.
+- `tests/e2e/tenant-isolation.spec.ts` — prueba más crítica del bloque (2 workspaces demo, confirma que ninguno ve datos del otro), con cleanup completo. **Skip-guardado por falta de `DATABASE_URL`** en este sandbox — no es un falso positivo, es una skip explícita y documentada.
+- `tests/e2e/core-flows.spec.ts` — 1/2 passed. El de publicación (sin Meta conectado → 401/422 claro) pasa. **El de creación de lead encontró un bug real preexistente, no introducido esta noche:** el botón "Crear" de `AddOpportunityModal` (`src/app/clientes-potenciales/page.tsx`) es un placeholder de Fase 1 — solo hace `toast.success(...)` sin persistir nada vía API. El test falla intencionalmente con mensaje diagnóstico claro apuntando al archivo/línea exacta, en vez de dar falso positivo. **Queda como hallazgo para un bloque futuro** (Bloque 2A/4), no se arregló aquí (fuera del alcance de multi-tenant/RBAC/Meta).
+- `npx tsc --noEmit` y `npm run build` limpios con todo lo anterior integrado.
+
+### Bloqueado / diferido (documentado, no abandonado)
+
+- **`Settings` (leak cross-tenant) sin resolver** — 10 archivos consumidores (`llm-providers.ts`, `automations/engine.ts`, `automations/actions.ts`, `webhook/dispatch`, `settings/route.ts`, `keys/route.ts`, `automations/route.ts`, `music-agent.ts`, `audio-agent.ts`, más el ya migrado `publish/instagram`). Requiere su propio bloque de migración incremental — anotado como deuda técnica explícita, no un olvido.
+- **OAuth Meta no probado contra la API real** — requiere credenciales de una app de Meta verificada que no existen en este entorno. Riesgo conocido, documentado arriba.
+- **Migración a `repository`/`service` solo del módulo Meta** — las 32 rutas existentes con `prisma` directo quedan igual, siguiendo el patrón documentado en `docs/AUDITORIA-ARQUITECTURA-BLOQUE-0.5.md` para migración incremental futura.
+- **Bug preexistente descubierto por testing** (creación de oportunidad no persiste) — documentado arriba, no corregido en este bloque (fuera de alcance).
+- **`npx prisma migrate deploy` + `npx prisma generate` contra la DB real** — la migración quedó escrita a mano (`prisma/migrations/20260903120000_.../migration.sql`) siguiendo la regla de migraciones seguras del master prompt; **el usuario debe correrla en Windows PowerShell** contra la DB real antes de que el código nuevo (`WorkspaceMetaConnection`, `ApiKey.workspaceId`) funcione en un entorno con datos reales. `npx prisma generate` (solo client, sin tocar DB) sí se corrió aquí para que `tsc` compile.
+
+### Verificación
+
+- `npx tsc --noEmit` → exit 0.
+- `npm run build` → exit 0 (tras limpiar `.next` corrupto de un build previo — no relacionado con este bloque).
+- `npx vitest run` → 43/43 passed.
+- `npx playwright test` → login 3/3 passed, tenant-isolation 4/4 skipped (sin DB, documentado), core-flows 1/2 passed (1 falla documentando un bug real preexistente).
+
+---

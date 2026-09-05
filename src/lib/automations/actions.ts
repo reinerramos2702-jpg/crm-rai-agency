@@ -98,7 +98,7 @@ async function updateAppointmentStatus(ctx: AutomationContext, cfg: any): Promis
 }
 
 async function sendWebhook(ctx: AutomationContext, cfg: any): Promise<ActionResult> {
-  const settings = await prisma.settings.findUnique({ where: { id: 'global' } });
+  const settings = await prisma.settings.findUnique({ where: { workspaceId: ctx.workspaceId } });
   const url = settings?.n8nWebhookUrl;
   if (!url) {
     return { ok: true, detail: 'send_webhook: sin URL de webhook configurada en Settings — paso omitido (placeholder)' };

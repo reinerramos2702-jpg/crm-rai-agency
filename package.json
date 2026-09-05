@@ -13,7 +13,10 @@
     "prisma:migrate": "prisma migrate deploy",
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:validate": "prisma validate",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.0.0",
@@ -25,10 +28,10 @@
     "@aws-sdk/s3-request-presigner": "^3.600.0",
     "@prisma/client": "^5.20.0",
     "ai": "^4.0.0",
-    "jszip": "^3.10.1",
     "bullmq": "^5.20.0",
     "ioredis": "^5.4.1",
     "jose": "^5.9.0",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.400.0",
     "next": "^14.2.15",
     "playwright": "^1.60.0",
@@ -38,11 +41,22 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^22.0.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "prisma": "^5.20.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^6.4.3",
+    "vitest": "^5.0.0"
+  },
+  "allowScripts": {
+    "@prisma/client@5.22.0": true,
+    "@prisma/engines@5.22.0": true,
+    "prisma@5.22.0": true,
+    "esbuild@0.28.2": true,
+    "esbuild@0.25.12": true,
+    "msgpackr-extract@3.0.4": true
   }
 }

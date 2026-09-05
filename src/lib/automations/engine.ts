@@ -28,7 +28,7 @@ export async function runWorkflowsForEvent(
   ctx: AutomationContext & { source?: string; calendarId?: string }
 ): Promise<void> {
   try {
-    const settings = await prisma.settings.findUnique({ where: { id: 'global' } });
+    const settings = await prisma.settings.findUnique({ where: { workspaceId } });
     if (settings && settings.automationsEnabled === false) return;
 
     const workflows = await prisma.workflow.findMany({
@@ -140,12 +140,25 @@ function serializeCtx(ctx: AutomationContext) {
 
 const DEDUPE_WINDOW_MS = 6 * 60 * 60 * 1000; // no re-disparar el mismo workflow para el mismo recurso en <6h
 
+/**
+ * Cache en memoria de Settings por workspace, con vida acotada a UNA corrida
+ * del cron (Bloque 1: Settings ya no es singleton global — cada workspace
+ * tiene el suyo, así que el gate `automationsEnabled` y el SLA se evalúan
+ * por workspace, nunca de forma compartida entre tenants).
+ */
+async function getWorkspaceSettings(
+  workspaceId: string,
+  cache: Map<string, Awaited<ReturnType<typeof prisma.settings.findUnique>>>
+) {
+  if (cache.has(workspaceId)) return cache.get(workspaceId)!;
+  const settings = await prisma.settings.findUnique({ where: { workspaceId } });
+  cache.set(workspaceId, settings);
+  return settings;
+}
+
 /** Punto de entrada del cron `/api/automations/run-due`. */
 export async function runDueWorkflows(): Promise<{ resumed: number; triggered: number }> {
-  const settings = await prisma.settings.findUnique({ where: { id: 'global' } });
-  if (settings && settings.automationsEnabled === false) {
-    return { resumed: 0, triggered: 0 };
-  }
+  const settingsCache = new Map<string, Awaited<ReturnType<typeof prisma.settings.findUnique>>>();
 
   let resumed = 0;
   let triggered = 0;
@@ -159,6 +172,8 @@ export async function runDueWorkflows(): Promise<{ resumed: number; triggered: n
   for (const run of due) {
     const wf = run.workflow;
     if (wf.status !== 'active') continue;
+    const wsSettings = await getWorkspaceSettings(wf.workspaceId, settingsCache);
+    if (wsSettings && wsSettings.automationsEnabled === false) continue;
     const steps = (wf.steps as unknown as WorkflowStep[]) || [];
     const trigger = run.trigger as any;
 
@@ -185,6 +200,9 @@ export async function runDueWorkflows(): Promise<{ resumed: number; triggered: n
   const workflows = await prisma.workflow.findMany({ where: { status: 'active' } });
 
   for (const wf of workflows) {
+    const wsSettings = await getWorkspaceSettings(wf.workspaceId, settingsCache);
+    if (wsSettings && wsSettings.automationsEnabled === false) continue;
+
     const trigger = wf.trigger as unknown as WorkflowTrigger;
     const steps = (wf.steps as unknown as WorkflowStep[]) || [];
 
@@ -199,7 +217,7 @@ export async function runDueWorkflows(): Promise<{ resumed: number; triggered: n
         triggered += await handleContactInactive(wf.id, wf.workspaceId, trigger, steps);
         break;
       case 'conversation.sla_overdue':
-        triggered += await handleConversationSlaOverdue(wf.id, wf.workspaceId, trigger, steps, settings);
+        triggered += await handleConversationSlaOverdue(wf.id, wf.workspaceId, trigger, steps, wsSettings);
         break;
       case 'conversation.no_response':
         triggered += await handleConversationNoResponse(wf.id, wf.workspaceId, trigger, steps);
