@@ -50,8 +50,6 @@ interface Category {
   items: ChecklistItem[];
 }
 
-const STORAGE_KEY = 'rai_launchpad_progress';
-
 const CATEGORIES: Category[] = [
   {
     id: 'base',
@@ -255,19 +253,30 @@ export default function LaunchpadPage() {
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].id);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
+  const [manualItemIds, setManualItemIds] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [manifest, setManifest] = useState<TutorialManifest>({});
   const [tutorialItem, setTutorialItem] = useState<ChecklistItem | null>(null);
   const [slideIndex, setSlideIndex] = useState(0);
 
+  // Progreso real por workspace (antes vivía solo en localStorage del
+  // navegador, por eso siempre arrancaba en 0/22 · 0% sin importar la
+  // actividad real). Ver src/app/api/launchpad/route.ts.
+  const loadProgress = () => {
+    fetch('/api/launchpad')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) {
+          setCompleted(data.completed || []);
+          setManualItemIds(data.manualItemIds || []);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  };
+
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) setCompleted(JSON.parse(raw));
-    } catch {
-      // localStorage no disponible
-    }
-    setLoaded(true);
+    loadProgress();
 
     fetch('/tutorials/manifest.json')
       .then((r) => (r.ok ? r.json() : null))
@@ -277,21 +286,17 @@ export default function LaunchpadPage() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    if (!loaded) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(completed));
-    } catch {
-      // localStorage no disponible
-    }
-  }, [completed, loaded]);
-
   const category = CATEGORIES.find((c) => c.id === activeCategory) ?? CATEGORIES[0];
 
   const toggleComplete = (id: string) => {
-    setCompleted((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    if (!manualItemIds.includes(id)) return; // ítem automático: no se puede marcar a mano
+    const nextDone = !completed.includes(id);
+    setCompleted((prev) => (nextDone ? [...prev, id] : prev.filter((x) => x !== id))); // optimista
+    fetch('/api/launchpad', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId: id, done: nextDone }),
+    }).catch(() => loadProgress()); // si falla, recarga el estado real del servidor
   };
 
   const categoryProgress = (cat: Category) =>
@@ -326,7 +331,7 @@ export default function LaunchpadPage() {
         <div className="row-between mb-2">
           <span className="muted" style={{ fontSize: 12 }}>Progreso general de la plataforma</span>
           <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--rai-gold)' }}>
-            {completed.length} / {allItems.length} pasos · {overallProgress}%
+            {loaded ? `${completed.length} / ${allItems.length} pasos · ${overallProgress}%` : 'Calculando…'}
           </span>
         </div>
         <div className="lp-progress-track">
@@ -392,6 +397,7 @@ export default function LaunchpadPage() {
             {category.items.map((item, i) => {
               const isOpen = expanded === item.id;
               const isDone = completed.includes(item.id);
+              const isManual = manualItemIds.includes(item.id);
               const Icon = item.icon;
               const tutorial = manifest[item.id];
               return (
@@ -413,22 +419,29 @@ export default function LaunchpadPage() {
                       onClick={() => setExpanded(isOpen ? null : item.id)}
                     >
                       <div
-                        role="button"
-                        tabIndex={0}
+                        role={isManual ? 'button' : undefined}
+                        tabIndex={isManual ? 0 : undefined}
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleComplete(item.id);
+                          if (isManual) toggleComplete(item.id);
                         }}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
+                          if (isManual && (e.key === 'Enter' || e.key === ' ')) {
                             e.preventDefault();
                             e.stopPropagation();
                             toggleComplete(item.id);
                           }
                         }}
                         className="lp-ring"
-                        aria-label={isDone ? 'Marcar como pendiente' : 'Marcar como completado'}
-                        style={{ marginTop: 1 }}
+                        aria-label={
+                          isManual
+                            ? isDone
+                              ? 'Marcar como pendiente'
+                              : 'Marcar como completado'
+                            : 'Se completa automáticamente según tu actividad'
+                        }
+                        title={isManual ? undefined : 'Se completa automáticamente según tu actividad'}
+                        style={{ marginTop: 1, cursor: isManual ? 'pointer' : 'default' }}
                       >
                         <svg width="32" height="32" viewBox="0 0 32 32">
                           <circle className="lp-ring-track" cx="16" cy="16" r="13" strokeWidth="3" />
