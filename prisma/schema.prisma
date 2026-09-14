@@ -67,6 +67,13 @@ model Workspace {
   metaConnection    WorkspaceMetaConnection?
   settings          Settings?
 
+  // Guía de Inicio (/launchpad): overrides manuales para los ítems del checklist
+  // que no tienen una condición verificable en la base de datos hoy (ej. "conecta
+  // anuncios de Meta"). Shape: { [itemId: string]: boolean }. Los ítems con
+  // condición real (contactos, campañas, etc.) NUNCA se leen de aquí — se calculan
+  // en vivo por workspaceId. Ver src/app/api/launchpad/route.ts.
+  launchpadManual   Json      @default("{}")
+
   @@index([ownerId])
 }
 
