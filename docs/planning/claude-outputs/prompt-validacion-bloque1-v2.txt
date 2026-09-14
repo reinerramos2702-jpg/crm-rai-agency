@@ -1,0 +1,25 @@
+Antes de nada, ubicate en el repo correcto: buscá el worktree o clon local que tenga la rama v3/bloque-1-multitenant-rbac-meta (la del PR #6, "BLOQUE 1 — Fundación multi-tenant + RBAC + Meta híbrido"), cd ahí, y confirmame con git branch --show-current y git status que estás parado en esa rama exacta, limpia, antes de tocar nada. Si no la encontrás localmente, decime y la traemos con git fetch/checkout.
+
+Una vez confirmado que estás en la rama correcta, necesito que valides de verdad el aislamiento multi-tenant del Bloque 1 antes de que se apruebe el merge a main. No mergees nada al terminar — esto es solo validación, el merge se decide después con el resultado en mano.
+
+Contexto: el PR quedó con tenant-isolation.spec.ts SKIP-guardado porque no había DB disponible en la sesión nocturna. Eso no es prueba de que funcione — es ausencia de prueba. Necesito la prueba real.
+
+Hacé esto en orden, documentando el resultado de cada paso (no solo "listo", quiero el resultado real: qué corriste, qué devolvió):
+
+1. Aplicar la migración de Prisma (prisma/migrations/20260903120000_add_meta_hybrid_and_apikey_workspace/) contra una base de datos de prueba limpia — no contra producción. Si no hay una DB de prueba lista, decime qué necesitás para levantar una (puede ser local con Docker/SQLite si el proyecto lo soporta, o una instancia separada de Supabase).
+
+2. Crear al menos 2 tenants (Workspace) independientes en esa DB, cada uno con su propio usuario.
+
+3. Correr tenant-isolation.spec.ts de verdad contra esa DB (ya no como skip) y confirmar con el resultado real que el Tenant A no puede leer, modificar ni listar datos del Tenant B — en las rutas API, no solo en teoría.
+
+4. Revisar los 10 archivos que consumen el modelo Settings (el que la auditoría del Bloque 0.5 marcó como singleton global sin scoping por tenant) y corregir el leak cross-tenant en cada uno. Si alguno no se puede corregir sin refactor mayor, documentalo aparte como riesgo pendiente en vez de forzarlo.
+
+5. Buscar en todo el código cualquier query directa a Prisma que esté fuera de la capa repository/service y que pueda saltarse el filtro por tenantId — especialmente en las 32 rutas API originales que no pasaron por el módulo Meta nuevo.
+
+6. Verificar que RBAC y los permisos (hasPermission/requirePermission) funcionan de verdad llamando a las rutas API reales con distintos roles — no solo los unit tests mockeados que ya pasaron (43/43, pero mockeados).
+
+7. Confirmar que el audit log registra acciones críticas (login, cambios de permisos, acceso a datos de otro tenant si se llegara a intentar).
+
+Al terminar, dame un resumen claro: qué se confirmó funcionando de verdad, qué se corrigió, y qué queda como riesgo documentado pendiente — para yo decidir con Reiner si se aprueba el merge del PR #6 con eso.
+
+No merges ni pusheas nada a menos que te lo pida explícitamente después de ver el resultado.
