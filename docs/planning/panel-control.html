@@ -314,7 +314,7 @@ footer{
   <div class="meta-row">
     <div class="meta-item">REPO: <span>crm-rai-agency</span> <span style="color:var(--dim)">(renombrado 29 ago 2026, antes content-engine-mvp)</span></div>
     <div class="meta-item">DEPLOY: <span>Vercel — crm-rai-agency.vercel.app</span></div>
-    <div class="meta-item">ÚLTIMA ACTUALIZACIÓN: <span id="updated-date">14 septiembre 2026 — <a href="https://github.com/reinerramos2702-jpg/crm-rai-agency/pull/11" target="_blank">PR #11</a> (centralización de <code>docs/planning/</code> y <code>docs/ESTADO-SESION.md</code>) MERGEADO a <code>main</code> (commit a64e528). <a href="https://github.com/reinerramos2702-jpg/crm-rai-agency/pull/10" target="_blank">PR #10</a> (fix bug visual de Launchpad — progreso calculado contra la DB en vez de <code>localStorage</code>, incluye limpieza de 2 campañas demo en producción) MERGEADO a <code>main</code> (commit 480500c). Sede única del proyecto pasa a ser esta laptop (<code>C:\Users\PC\Documents\RAI Agency\CRM RAI Agency</code>) — la carpeta de la computadora vieja (<code>C:\Users\RAI Agency\crm-rai-agency</code>) queda de respaldo, sin uso activo. <code>GITHUB_TOKEN</code> inválido de la compu vieja, resuelto. Pendiente: crear el <code>.env</code> real en esta laptop (en curso, valores por pasar aparte). Catálogo GHL: 8 fichas completas. Retargeting Fase 1 construido, PR abierto, esperando credenciales</span></div>
+    <div class="meta-item">ÚLTIMA ACTUALIZACIÓN: <span id="updated-date">15 septiembre 2026 — <strong>producción restablecida</strong>: las 3 migraciones pendientes de Bloque 1 (incluida la columna <code>Workspace.launchpadManual</code>) ya están aplicadas contra la DB real de Supabase, y <code>/api/me</code> vuelve a responder <code>200 OK</code> tras un incidente de credenciales de 3 resets de password (ver sección 15 SEP más abajo). Sesión anterior (14 sep): <a href="https://github.com/reinerramos2702-jpg/crm-rai-agency/pull/11" target="_blank">PR #11</a> (centralización de <code>docs/planning/</code> y <code>docs/ESTADO-SESION.md</code>) MERGEADO a <code>main</code> (commit a64e528). <a href="https://github.com/reinerramos2702-jpg/crm-rai-agency/pull/10" target="_blank">PR #10</a> (fix bug visual de Launchpad — progreso calculado contra la DB en vez de <code>localStorage</code>, incluye limpieza de 2 campañas demo en producción) MERGEADO a <code>main</code> (commit 480500c). Sede única del proyecto: esta laptop (<code>C:\Users\PC\Documents\RAI Agency\CRM RAI Agency</code>) — la carpeta de la computadora vieja (<code>C:\Users\RAI Agency\crm-rai-agency</code>) queda de respaldo, sin uso activo. Catálogo GHL: 8 fichas completas. Retargeting Fase 1 construido, PR abierto, esperando credenciales</span></div>
   </div>
 
   <div class="progress-wrap">
@@ -611,7 +611,74 @@ footer{
     <div class="check-item done" data-status="done"><div class="checkbox"></div><div class="check-body"><div class="check-title">PR #11 y PR #10 confirmados mergeados a <code>main</code></div><div class="check-desc"><a href="https://github.com/reinerramos2702-jpg/crm-rai-agency/pull/11" target="_blank">PR #11</a> (commit a64e528, centralización de <code>docs/planning/</code> y <code>docs/ESTADO-SESION.md</code>) y <a href="https://github.com/reinerramos2702-jpg/crm-rai-agency/pull/10" target="_blank">PR #10</a> (commit 480500c, fix de progreso real de Launchpad + limpieza de las 2 campañas demo en producción). <code>git pull origin main</code> confirmado en esta laptop, ambos sets de archivos presentes en el árbol.</div></div><span class="tag tag-decided">confirmado</span></div>
     <div class="check-item done" data-status="done"><div class="checkbox"></div><div class="check-body"><div class="check-title">Sede única del proyecto pasa a ser esta laptop</div><div class="check-desc"><code>C:\Users\PC\Documents\RAI Agency\CRM RAI Agency</code> es ahora el único working directory activo del repo. La carpeta de la computadora vieja (<code>C:\Users\RAI Agency\crm-rai-agency</code>) queda de respaldo, sin uso activo de aquí en adelante.</div></div><span class="tag tag-decided">decidido</span></div>
     <div class="check-item done" data-status="done"><div class="checkbox"></div><div class="check-body"><div class="check-title"><code>GITHUB_TOKEN</code> inválido en la compu vieja — resuelto</div><div class="check-desc">Ver ficha en Hallazgos de sesión más arriba.</div></div><span class="tag tag-decided">resuelto</span></div>
-    <div class="check-item" data-status="pending"><div class="checkbox"></div><div class="check-body"><div class="check-title">Crear el <code>.env</code> real en esta laptop</div><div class="check-desc">En curso — Reiner pasa los valores reales por fuera del chat/repo. Sin esto la laptop no puede correr el proyecto localmente pese a tener el código al día.</div></div><span class="tag tag-open">en curso</span></div>
+    <div class="check-item" data-status="pending"><div class="checkbox"></div><div class="check-body"><div class="check-title">Crear el <code>.env</code> real en esta laptop</div><div class="check-desc">Parcial — <code>.env.production</code> ya existe local con <code>DATABASE_URL</code>/<code>DIRECT_URL</code> reales (ver sesión 15 sep). Faltan las demás vars: <code>UPSTASH_REDIS_REST_URL</code>/<code>TOKEN</code>, <code>R2_*</code>, <code>JWT_SECRET</code>, <code>DEV_BYPASS_AUTH</code>, <code>KEYS_ENCRYPTION_KEY</code>, <code>HARD_CAP_USD_PER_EXECUTION</code>, <code>N8N_WEBHOOK_URL</code> (opcional), <code>NEXT_PUBLIC_APP_URL</code>, <code>META_SHARED_APP_ID</code>/<code>SECRET</code>/<code>OAUTH_REDIRECT_URI</code>.</div></div><span class="tag tag-open">en curso</span></div>
+  </div>
+</section>
+
+<!-- SESION 15 SEP -->
+<section>
+  <div class="section-head">
+    <span class="phase-num">15 SEP</span>
+    <span class="section-title">Sesión 15 sep — migración a producción e incidente de credenciales</span>
+    <span class="section-note">producción restablecida — 1 hallazgo sin resolver (backups de Supabase)</span>
+  </div>
+  <div class="check-list">
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">3 migraciones de Prisma pendientes aplicadas contra producción (incluye <code>Workspace.launchpadManual</code>)</div>
+        <div class="check-desc">Bloqueador: <code>npx prisma migrate deploy</code> fallaba con <code>P1001: Can't reach database server</code> desde esta laptop pese a que el handshake TCP crudo (<code>Test-NetConnection</code>) sí conectaba en los puertos 5432 y 6543 — diagnosticado por Claude Code local como firewall/DPI bloqueando específicamente el protocolo Postgres, no el puerto. Workaround: SQL de las 3 migraciones aplicado directo vía Supabase MCP/API (sin pasar por el driver de Prisma), más inserción manual de las filas correspondientes en <code>_prisma_migrations</code> con sus checksums SHA-256 correctos — equivalente en resultado a <code>prisma migrate deploy</code>. Verificado: columna <code>launchpadManual</code> presente en <code>Workspace</code>, <code>prisma generate</code> corrió limpio en local.</div>
+      </div>
+      <span class="tag tag-decided">aplicado</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Incidente de password de Supabase — 3 resets hasta dar con la causa</div>
+        <div class="check-desc">La password original nunca quedó guardada: ni Vercel (variables marcadas "Sensitive" no se pueden copiar ni leer vía <code>vercel env pull</code>, devuelve <code>[SENSITIVE]</code>) ni Supabase (el password de DB no es visible después de creado, solo reseteable) la exponían. Reset 1: perdida por no copiarla del modal de revelado único antes de navegar fuera. Reset 2: pegado por error el placeholder literal <code>[YOUR-PASSWORD]</code> del template de la pestaña ORM en vez del valor real. Reset 3: generada sin caracteres especiales (solo letras/números) para descartar corrupción del connection string por símbolos sin URL-encodear — <strong>esa fue la causa raíz confirmada</strong> del <code>PrismaClientInitializationError: Authentication failed</code> que venía devolviendo producción.</div>
+      </div>
+      <span class="tag tag-decided">resuelto</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title"><code>DATABASE_URL</code>/<code>DIRECT_URL</code> actualizadas en Vercel — producción confirmada sana</div>
+        <div class="check-desc"><code>DATABASE_URL</code> (pooler modo transacción, puerto 6543, con <code>?pgbouncer=true</code>) y <code>DIRECT_URL</code> (pooler modo sesión, puerto 5432, sin <code>pgbouncer</code>) reconstruidas con la password limpia del reset 3, guardadas en Vercel → Environment Variables → redeploy. <code>GET /api/me</code> contra <code>crm-rai-agency.vercel.app</code> confirmado <code>200 OK</code>, devuelve <code>{"userId":"dev-user-001","role":"admin","workspaceId":"cmq7cxoh3000111520w1ar79p","workspaceName":"Default Workspace"}</code> — sesión de <code>DEV_BYPASS_AUTH</code>, no auth real (esperado, ver hallazgo abajo).</div>
+      </div>
+      <span class="tag tag-decided">confirmado</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title"><code>.env.production</code> confirmado protegido — nunca expuesto en el repo</div>
+        <div class="check-desc">Verificado por Claude Code local: <code>.env.production</code> ya estaba cubierto en <code>.gitignore</code> (línea explícita + patrón <code>.env*</code>), <code>git check-ignore -v .env.production</code> lo confirma ignorado. <code>git log --all --full-history -- .env.production</code> no devolvió ningún commit — la password nueva (texto plano en ese archivo) nunca se subió al historial, ni siquiera en un commit viejo. No hace falta rotar nada por este motivo.</div>
+      </div>
+      <span class="tag tag-decided">verificado</span>
+    </div>
+    <div class="check-item blocked" data-status="blocked">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Proyecto Supabase sin backups configurados</div>
+        <div class="check-desc"><code>bskdozxkgbxifftuulvc</code> muestra "Last backup: No backups" en el dashboard. Señalado como riesgo durante el workaround de migración (si algo salía mal aplicando SQL a mano, no había respaldo del cual restaurar) — no bloqueó la tarea de hoy, pero sigue sin resolverse.</div>
+      </div>
+      <span class="tag tag-blocked">sin resolver</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Auditoría del número "33" (funciones/módulos GHL) — descartado</div>
+        <div class="check-desc">Reiner recordaba un conteo de "33 funciones/módulos GHL" de alguna sesión pasada. Búsqueda exhaustiva (sin filtrar extensión) en todo el repo, incluyendo este panel: <code>ghl-capturas/</code> tiene <strong>18</strong> carpetas de módulos capturados (00-sidebar a 17-facturacion); <code>MEMORY.md</code> §4 "Módulos del CRM" lista <strong>24</strong> filas; este panel tiene <strong>49</strong> ítems de checklist (<code>.check-item</code>) y <strong>53</strong> tarjetas de funcionalidad propuesta (<code>.feature-card</code>, repartidas en 21 del módulo Calendario de Contenido + 22 de Captación de Asesores/Equipo/Fidelización + 8 de N1-N8). Ninguno de estos conteos, ni sumados, da 33 — y no hay coincidencia literal de "33" en ningún <code>.md</code> ni en este HTML. <strong>Conclusión: el 33 no corresponde a ningún conteo real del repo, se descarta como fuente de verdad.</strong></div>
+      </div>
+      <span class="tag tag-decided">descartado</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Investigación de bug "0%" fijo en tarjetas de leads/KPI — sin bug nuevo encontrado</div>
+        <div class="check-desc">Sospecha: reaparición del patrón de <a href="https://github.com/reinerramos2702-jpg/crm-rai-agency/pull/10" target="_blank">PR #10</a> (progreso calculado contra <code>localStorage</code> en vez de la DB) en otro componente. Barrido completo de <code>src/</code> por <code>%</code>, <code>leads</code>, <code>localStorage</code>, patrones <code>/total*100</code>: <code>/launchpad</code> ya está arreglado (PR #10, confirmado por <code>git log</code>) — el mecanismo de cálculo (13/22 pasos posibles en vivo por <code>workspaceId</code>) fue confirmado leyendo el código, no midiendo producción en ese momento. El "0%" de la captura de pantalla corresponde al botón de categoría "Marketing y generación de leads" del sidebar de <code>/launchpad</code> (label truncado visualmente) — sus 3 ítems (<code>redes-sociales</code>, <code>anuncios-meta</code>, <code>campana-sms</code>) son 100% manuales (<code>src/lib/launchpad-items.ts</code>), sin señal automática en el schema de Prisma. Verificación posterior en vivo contra la DB real de producción (Supabase MCP directo desde Cowork, workspace <code>cmq7cxoh3000111520w1ar79p</code>): Contactos 0, Campañas 0, Workflows 0, Citas 0, Pagos 0, Miembros 0, Settings 0, Integraciones 0, Meta 0, <code>launchpadManual</code> vacío (Agentes IA 1 y Content Grids 1 no forman parte del checklist de 22 pasos) — confirma que el workspace real está genuinamente en 0/22, no hay bug de caché ni de cálculo. El único otro "0%" hardcodeado encontrado es el tab Pronóstico de <code>/clientes-potenciales</code> (línea ~722 de <code>page.tsx</code>) — stub estático intencional del protocolo de replicación GHL (frontend sin lógica), no el bug de PR #10.</div>
+      </div>
+      <span class="tag tag-decided">sin bug encontrado</span>
+    </div>
   </div>
 </section>
 
