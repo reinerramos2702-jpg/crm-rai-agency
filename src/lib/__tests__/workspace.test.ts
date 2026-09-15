@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AuthContext } from '@/lib/auth';
 
 vi.mock('@/lib/db', () => ({
@@ -36,6 +36,40 @@ describe('workspace.ts — resolveActiveWorkspace', () => {
     vi.mocked(prisma.workspace.create).mockReset();
     vi.mocked(prisma.workspaceMember.findFirst).mockReset();
     invalidateWorkspaceCache();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('super admin (SUPER_ADMIN_EMAILS) con header a workspace ajeno → acceso sin membresía', async () => {
+    vi.stubEnv('SUPER_ADMIN_EMAILS', 'ops@rai.agency, U1@rai.local');
+    vi.mocked(prisma.workspace.findUnique).mockResolvedValue(OTHER_WS as any);
+
+    const ws = await resolveActiveWorkspace(reqWith({ 'x-workspace-id': 'ws-other' }), AUTH);
+
+    expect(ws.id).toBe('ws-other');
+    expect(prisma.workspaceMember.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('super admin sin header → su workspace propio (el cross-tenant siempre es explícito)', async () => {
+    vi.stubEnv('SUPER_ADMIN_EMAILS', 'u1@rai.local');
+    vi.mocked(prisma.workspace.findFirst).mockResolvedValue(OWN_WS as any);
+
+    const ws = await resolveActiveWorkspace(reqWith(), AUTH);
+
+    expect(ws.id).toBe('ws-own');
+    expect(prisma.workspace.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('agency_owner/admin de OTRO workspace sin estar en SUPER_ADMIN_EMAILS → 403 (sin bypass)', async () => {
+    vi.stubEnv('SUPER_ADMIN_EMAILS', 'ops@rai.agency');
+    vi.mocked(prisma.workspace.findUnique).mockResolvedValue(OTHER_WS as any);
+    vi.mocked(prisma.workspaceMember.findFirst).mockResolvedValue(null);
+
+    await expect(
+      resolveActiveWorkspace(reqWith({ 'x-workspace-id': 'ws-other' }), AUTH)
+    ).rejects.toMatchObject({ status: 403 });
   });
 
   it('sin header → workspace propio (comportamiento legacy, sin tocar membresías)', async () => {

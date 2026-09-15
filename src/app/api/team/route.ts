@@ -54,6 +54,12 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
+  if (role === 'super_admin') {
+    return NextResponse.json(
+      { error: 'El rol Super Admin no se asigna desde el equipo del workspace.' },
+      { status: 400 }
+    );
+  }
 
   const normalizedEmail = email.trim().toLowerCase();
 

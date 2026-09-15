@@ -6,7 +6,33 @@ vi.mock('@/lib/db', () => ({
   },
 }));
 
-import { getAuth, isDevBypassActive } from '@/lib/auth';
+import { getAuth, isDevBypassActive, isPlatformSuperAdmin } from '@/lib/auth';
+
+describe('auth.ts — isPlatformSuperAdmin (SUPER_ADMIN_EMAILS)', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('matchea ignorando mayúsculas y espacios de la lista', () => {
+    vi.stubEnv('SUPER_ADMIN_EMAILS', ' Ops@RAI.agency ,  reiner@rai.agency ');
+    expect(isPlatformSuperAdmin('ops@rai.agency')).toBe(true);
+    expect(isPlatformSuperAdmin('REINER@rai.agency')).toBe(true);
+  });
+
+  it('email fuera de la lista, variable vacía o sin email → false', () => {
+    vi.stubEnv('SUPER_ADMIN_EMAILS', 'ops@rai.agency');
+    expect(isPlatformSuperAdmin('otro@cliente.com')).toBe(false);
+    expect(isPlatformSuperAdmin(undefined)).toBe(false);
+
+    vi.stubEnv('SUPER_ADMIN_EMAILS', '');
+    expect(isPlatformSuperAdmin('ops@rai.agency')).toBe(false);
+  });
+
+  it('no hay match parcial: un email que contiene al permitido no alcanza', () => {
+    vi.stubEnv('SUPER_ADMIN_EMAILS', 'ops@rai.agency');
+    expect(isPlatformSuperAdmin('ops@rai.agency.evil.com')).toBe(false);
+  });
+});
 
 const REQ_SIN_TOKEN = { headers: new Headers() } as any;
 

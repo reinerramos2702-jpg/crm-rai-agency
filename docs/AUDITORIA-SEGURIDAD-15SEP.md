@@ -223,6 +223,22 @@ request ──► getAuth(req) ──► ¿autenticado? ──no──► 401
 
 Consecuencia sobre la clave Stripe (§7): si `DEV_BYPASS_AUTH` contiene hoy un `sk_live_...`, su valor no es `'true'` y el bypass **ya estaba inactivo** — la autenticación no quedó abierta por eso. El riesgo de ese hallazgo es la exposición del secreto, no un bypass de auth.
 
-### Deuda explícita: bypass cross-tenant de `super_admin`
+### Decisión: `super_admin` vía `SUPER_ADMIN_EMAILS` (Reiner, 15 sep)
 
-Hoy el rol se guarda por workspace (`WorkspaceMember.role`), y no hay ningún flag global de "super admin de la plataforma" en `User`. Por eso `resolveActiveWorkspace()` **no** le da a ningún rol acceso a un workspace sin ser owner o miembro activo — ni siquiera a `super_admin`. Implementar el acceso cross-tenant exclusivo de `super_admin` (confirmado por Reiner como privilegio exclusivo de ese rol) requiere primero decidir dónde vive esa marca global (p.ej. `User.isPlatformSuperAdmin` o una allowlist en env). Queda pendiente; mientras tanto, la opción segura por defecto es sin bypass.
+**Decisión:** los super admins de la plataforma (RAI Agency, acceso a cualquier workspace) se definen **solo** con la variable de entorno `SUPER_ADMIN_EMAILS`, una lista de emails separados por coma. No hay campo en la DB ni migración.
+
+**Implementación** (`isPlatformSuperAdmin(email)` en `src/lib/auth.ts`):
+- La comparación ignora mayúsculas y espacios, y el email tiene que coincidir entero (no alcanza con que lo contenga).
+- `resolveActiveWorkspace()`: un super admin puede mandar `X-Workspace-Id` de cualquier workspace sin ser miembro. Si no manda el header, cae en su propio workspace, así que el acceso a otros workspaces siempre es explícito.
+- `getRole()`: si el email está en la lista, el rol es `super_admin`. Esa es la única forma de obtener ese rol.
+- `agency_owner` **no** tiene este bypass (decisión confirmada): solo opera en workspaces donde es dueño o miembro.
+
+**Hallazgo corregido junto con la decisión — escalada de privilegios vía Team:** `POST /api/team` y `PATCH /api/team/[id]` solo rechazaban asignar el rol `admin`, así que cualquier admin de un workspace podía darle a alguien `super_admin`. `getRole()` lo respetaba, y ese rol tiene todos los permisos más el bypass de `hasModuleAccess`. No llegaba a otros workspaces, pero sí saltaba todo el RBAC. Ahora:
+1. las dos rutas de Team rechazan `super_admin` con 400;
+2. `getRole()` ignora un `super_admin` guardado en `WorkspaceMember.role` y lo trata como `viewer`. Así se neutralizan filas que ya se hayan creado antes del fix, sin tocar datos.
+
+**Supuesto de seguridad:** el email sale del JWT firmado por el SSO del CRM. La lista solo es confiable si el emisor firma emails **verificados** y no permite que un usuario cambie el suyo al de un super admin. Hay que confirmarlo del lado del SSO antes de cargar emails en la variable en producción.
+
+**Revisar más adelante:** si la cantidad de super admins crece (más de un puñado, rotación frecuente, necesidad de auditar altas y bajas), migrar a un campo en `User` (p.ej. `isPlatformSuperAdmin`) gestionado con `logAudit`. Cambiar la variable exige redeploy y no deja traza de quién otorgó el acceso.
+
+**Pendiente de decisión (no corregido):** Team todavía permite asignar `agency_owner`, que `isAdmin()` trata como equivalente a `admin`. Es el mismo tipo de hueco que se cerró para `admin` y `super_admin`: un admin puede otorgar un rol que la propia ruta dice que no se invita directamente.

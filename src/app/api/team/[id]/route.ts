@@ -23,7 +23,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const data: { role?: string; status?: string } = {};
 
   if (role !== undefined) {
-    if (!(ROLES as string[]).includes(role) || role === 'admin') {
+    if (!(ROLES as string[]).includes(role) || role === 'admin' || role === 'super_admin') {
       return NextResponse.json({ error: 'Rol inválido' }, { status: 400 });
     }
     data.role = role;

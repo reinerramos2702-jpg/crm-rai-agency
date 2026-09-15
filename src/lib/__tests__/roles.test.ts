@@ -6,6 +6,7 @@ import type { AuthContext } from '@/lib/auth';
 
 vi.mock('@/lib/auth', () => ({
   getAuth: vi.fn(),
+  isPlatformSuperAdmin: vi.fn(),
 }));
 
 vi.mock('@/lib/workspace', () => {
@@ -29,7 +30,7 @@ vi.mock('@/lib/db', () => ({
   },
 }));
 
-import { getAuth } from '@/lib/auth';
+import { getAuth, isPlatformSuperAdmin } from '@/lib/auth';
 import { resolveActiveWorkspace, WorkspaceAccessError } from '@/lib/workspace';
 import { prisma } from '@/lib/db';
 import { requireRole, requirePermission, isRoleContext, getRoleContext } from '@/lib/roles';
@@ -46,6 +47,30 @@ describe('roles.ts — requireRole / requirePermission', () => {
 
     vi.mocked(getAuth).mockResolvedValue(FAKE_AUTH);
     vi.mocked(resolveActiveWorkspace).mockResolvedValue(FAKE_WORKSPACE);
+    vi.mocked(isPlatformSuperAdmin).mockReset();
+    vi.mocked(isPlatformSuperAdmin).mockReturnValue(false);
+  });
+
+  it('email en SUPER_ADMIN_EMAILS → super_admin aunque no tenga membresía', async () => {
+    vi.mocked(isPlatformSuperAdmin).mockReturnValue(true);
+
+    const ctx = await getRoleContext(FAKE_REQ);
+
+    expect(isPlatformSuperAdmin).toHaveBeenCalledWith(FAKE_AUTH.email);
+    expect(ctx?.role).toBe('super_admin');
+    expect(prisma.workspaceMember.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('role super_admin guardado en WorkspaceMember se ignora → viewer (no hay escalada vía Team)', async () => {
+    vi.mocked(prisma.workspaceMember.findFirst).mockResolvedValue({
+      role: 'super_admin',
+      status: 'active',
+    } as any);
+
+    const result = await requireRole(FAKE_REQ, ['super_admin', 'admin']);
+
+    expect(isRoleContext(result)).toBe(false);
+    expect((result as NextResponse).status).toBe(403);
   });
 
   it('getRoleContext resuelve el workspace vía resolveActiveWorkspace (mecanismo único)', async () => {

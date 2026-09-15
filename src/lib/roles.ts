@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from './db';
-import { getAuth, AuthContext } from './auth';
+import { getAuth, isPlatformSuperAdmin, AuthContext } from './auth';
 import { resolveActiveWorkspace, WorkspaceAccessError, type ActiveWorkspace } from './workspace';
 import { ROLES, hasPermission, type Role, type Permission } from './roles-shared';
 
@@ -8,18 +8,20 @@ export * from './roles-shared';
 
 /**
  * Resuelve el rol efectivo de un usuario dentro de un workspace.
- * El owner del workspace es siempre 'admin' (no necesita fila en WorkspaceMember).
- * Si el usuario no tiene membresía activa, se le trata como 'viewer' (acceso mínimo
- * de solo lectura) para no romper invitaciones pendientes ni accesos legacy.
+ * - Email en SUPER_ADMIN_EMAILS → 'super_admin' (único origen de ese rol).
+ * - Owner del workspace → 'admin' (no necesita fila en WorkspaceMember).
+ * - Membresía activa → su rol; un 'super_admin' guardado en DB se ignora.
+ * - Sin membresía válida → 'viewer' (acceso mínimo de solo lectura).
  */
-export async function getRole(userId: string, ws: { id: string; ownerId: string }): Promise<Role> {
-  if (ws.ownerId === userId) return 'admin';
+export async function getRole(auth: AuthContext, ws: { id: string; ownerId: string }): Promise<Role> {
+  if (isPlatformSuperAdmin(auth.email)) return 'super_admin';
+  if (ws.ownerId === auth.userId) return 'admin';
 
   const member = await prisma.workspaceMember.findFirst({
-    where: { workspaceId: ws.id, userId, status: 'active' },
+    where: { workspaceId: ws.id, userId: auth.userId, status: 'active' },
   });
 
-  if (member && (ROLES as string[]).includes(member.role)) {
+  if (member && member.role !== 'super_admin' && (ROLES as string[]).includes(member.role)) {
     return member.role as Role;
   }
 
@@ -50,7 +52,7 @@ export async function getRoleContext(req: NextRequest): Promise<RoleContext | nu
     throw e;
   }
 
-  const role = await getRole(auth.userId, workspace);
+  const role = await getRole(auth, workspace);
   return { auth, workspace, role };
 }
 

@@ -36,6 +36,21 @@ const AUTH_CACHE_TTL_MS = 5 * 60 * 1000; // 5 min
 const authCache = new Map<string, { ctx: AuthContext; expiresAt: number }>();
 let devUserSynced = false;
 
+/**
+ * Super admin de la plataforma (RAI Agency, cross-tenant). Se decide SOLO por
+ * la env var SUPER_ADMIN_EMAILS (emails separados por coma), nunca por
+ * WorkspaceMember.role: un admin de workspace no puede crear super admins.
+ * El email sale del JWT verificado (o del usuario dummy de dev).
+ */
+export function isPlatformSuperAdmin(email: string | undefined): boolean {
+  if (!email) return false;
+  const allowed = (process.env.SUPER_ADMIN_EMAILS ?? '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return allowed.includes(email.trim().toLowerCase());
+}
+
 let bypassIgnoredWarned = false;
 
 /**

@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { prisma } from './db';
-import type { AuthContext } from './auth';
+import { isPlatformSuperAdmin, type AuthContext } from './auth';
 
 /**
  * Cache en memoria de workspace por userId. El workspace por defecto no cambia,
@@ -84,16 +84,13 @@ export class WorkspaceAccessError extends Error {
  * Reglas:
  *  1. Sin header X-Workspace-Id -> workspace propio (getOrCreateWorkspace),
  *     retrocompatibilidad total con el comportamiento actual.
- *  2. Con header -> válido solo si el usuario es ownerId de ese workspace o
- *     tiene una fila WorkspaceMember activa ahí. Si no, WorkspaceAccessError
- *     (403/404) — nunca un fallback silencioso a otro workspace.
+ *  2. Con header -> válido solo si el usuario es ownerId de ese workspace,
+ *     tiene una fila WorkspaceMember activa ahí, o es super admin de la
+ *     plataforma (SUPER_ADMIN_EMAILS). Si no, WorkspaceAccessError (403/404)
+ *     — nunca un fallback silencioso a otro workspace.
  *
- * Nota: el bypass cross-tenant de super_admin (poder operar sobre cualquier
- * workspace sin membership) queda deliberadamente sin implementar acá — hoy
- * el rol es una fila de WorkspaceMember.role específica de UN workspace, no
- * existe un flag global de "super_admin de la plataforma" en el modelo User.
- * Definir ese flag es una decisión de schema pendiente, documentada como
- * deuda en docs/AUDITORIA-SEGURIDAD-15SEP.md.
+ * El super admin también cae en su workspace propio si no manda header: el
+ * acceso cross-tenant siempre es explícito.
  */
 export async function resolveActiveWorkspace(
   req: NextRequest,
@@ -107,7 +104,7 @@ export async function resolveActiveWorkspace(
 
   const ws = await prisma.workspace.findUnique({ where: { id: requestedId } });
   if (!ws) throw new WorkspaceAccessError(404, 'Workspace no encontrado.');
-  if (ws.ownerId === auth.userId) return ws;
+  if (ws.ownerId === auth.userId || isPlatformSuperAdmin(auth.email)) return ws;
 
   const member = await prisma.workspaceMember.findFirst({
     where: { workspaceId: ws.id, userId: auth.userId, status: 'active' },
