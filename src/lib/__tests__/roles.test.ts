@@ -8,9 +8,18 @@ vi.mock('@/lib/auth', () => ({
   getAuth: vi.fn(),
 }));
 
-vi.mock('@/lib/workspace', () => ({
-  getOrCreateWorkspace: vi.fn(),
-}));
+vi.mock('@/lib/workspace', () => {
+  class WorkspaceAccessError extends Error {
+    constructor(public status: 403 | 404, message: string) {
+      super(message);
+    }
+  }
+  return {
+    getOrCreateWorkspace: vi.fn(),
+    resolveActiveWorkspace: vi.fn(),
+    WorkspaceAccessError,
+  };
+});
 
 vi.mock('@/lib/db', () => ({
   prisma: {
@@ -21,9 +30,9 @@ vi.mock('@/lib/db', () => ({
 }));
 
 import { getAuth } from '@/lib/auth';
-import { getOrCreateWorkspace } from '@/lib/workspace';
+import { resolveActiveWorkspace, WorkspaceAccessError } from '@/lib/workspace';
 import { prisma } from '@/lib/db';
-import { requireRole, requirePermission, isRoleContext } from '@/lib/roles';
+import { requireRole, requirePermission, isRoleContext, getRoleContext } from '@/lib/roles';
 
 const FAKE_AUTH: AuthContext = { userId: 'user-1', email: 'test@rai.local' };
 const FAKE_WORKSPACE = { id: 'ws-1', ownerId: 'owner-1', name: 'Test WS' };
@@ -32,11 +41,44 @@ const FAKE_REQ = {} as any;
 describe('roles.ts — requireRole / requirePermission', () => {
   beforeEach(() => {
     vi.mocked(getAuth).mockReset();
-    vi.mocked(getOrCreateWorkspace).mockReset();
+    vi.mocked(resolveActiveWorkspace).mockReset();
     vi.mocked(prisma.workspaceMember.findFirst).mockReset();
 
     vi.mocked(getAuth).mockResolvedValue(FAKE_AUTH);
-    vi.mocked(getOrCreateWorkspace).mockResolvedValue(FAKE_WORKSPACE as any);
+    vi.mocked(resolveActiveWorkspace).mockResolvedValue(FAKE_WORKSPACE);
+  });
+
+  it('getRoleContext resuelve el workspace vía resolveActiveWorkspace (mecanismo único)', async () => {
+    vi.mocked(prisma.workspaceMember.findFirst).mockResolvedValue(null);
+
+    const ctx = await getRoleContext(FAKE_REQ);
+
+    expect(resolveActiveWorkspace).toHaveBeenCalledWith(FAKE_REQ, FAKE_AUTH);
+    expect(ctx?.workspace).toEqual(FAKE_WORKSPACE);
+  });
+
+  it('el owner del workspace resuelto es admin sin fila de membresía', async () => {
+    vi.mocked(resolveActiveWorkspace).mockResolvedValue({ ...FAKE_WORKSPACE, ownerId: FAKE_AUTH.userId });
+
+    const ctx = await getRoleContext(FAKE_REQ);
+
+    expect(ctx?.role).toBe('admin');
+    expect(prisma.workspaceMember.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('workspace no accesible (WorkspaceAccessError 403) → requireRole responde 401, nunca otro workspace', async () => {
+    vi.mocked(resolveActiveWorkspace).mockRejectedValue(new WorkspaceAccessError(403, 'sin acceso'));
+
+    const result = await requireRole(FAKE_REQ, ['admin', 'viewer']);
+
+    expect(isRoleContext(result)).toBe(false);
+    expect((result as NextResponse).status).toBe(401);
+  });
+
+  it('errores que no son de acceso (p.ej. DB caída) se propagan, no se tragan como 401', async () => {
+    vi.mocked(resolveActiveWorkspace).mockRejectedValue(new Error('db down'));
+
+    await expect(getRoleContext(FAKE_REQ)).rejects.toThrow('db down');
   });
 
   it('requireRole devuelve 403 cuando el rol no alcanza', async () => {

@@ -1,4 +1,6 @@
+import type { NextRequest } from 'next/server';
 import { prisma } from './db';
+import type { AuthContext } from './auth';
 
 /**
  * Cache en memoria de workspace por userId. El workspace por defecto no cambia,
@@ -53,4 +55,64 @@ export async function getOrCreateWorkspaceFull(userId: string) {
 export function invalidateWorkspaceCache(userId?: string) {
   if (userId) workspaceCache.delete(userId);
   else workspaceCache.clear();
+}
+
+export interface ActiveWorkspace {
+  id: string;
+  name: string;
+  ownerId: string;
+}
+
+/**
+ * Error de autorización al resolver el workspace activo. `status` distingue
+ * "no existe" (404) de "existe pero no tenés acceso" (403) — el caller decide
+ * cuánta fidelidad de error propagar (ver getRoleContext en roles.ts).
+ */
+export class WorkspaceAccessError extends Error {
+  constructor(public status: 403 | 404, message: string) {
+    super(message);
+    this.name = 'WorkspaceAccessError';
+  }
+}
+
+/**
+ * ÚNICA función que resuelve en qué workspace opera el request actual.
+ * Consumida por getRoleContext() (roles.ts), por el claim de RLS
+ * (app.current_workspace_id, ver sub-fase 0.4) y por las rutas migradas en
+ * la sub-fase 0.5 — nunca debe haber una segunda ruta paralela para esto.
+ *
+ * Reglas:
+ *  1. Sin header X-Workspace-Id -> workspace propio (getOrCreateWorkspace),
+ *     retrocompatibilidad total con el comportamiento actual.
+ *  2. Con header -> válido solo si el usuario es ownerId de ese workspace o
+ *     tiene una fila WorkspaceMember activa ahí. Si no, WorkspaceAccessError
+ *     (403/404) — nunca un fallback silencioso a otro workspace.
+ *
+ * Nota: el bypass cross-tenant de super_admin (poder operar sobre cualquier
+ * workspace sin membership) queda deliberadamente sin implementar acá — hoy
+ * el rol es una fila de WorkspaceMember.role específica de UN workspace, no
+ * existe un flag global de "super_admin de la plataforma" en el modelo User.
+ * Definir ese flag es una decisión de schema pendiente, documentada como
+ * deuda en docs/AUDITORIA-SEGURIDAD-15SEP.md.
+ */
+export async function resolveActiveWorkspace(
+  req: NextRequest,
+  auth: AuthContext
+): Promise<ActiveWorkspace> {
+  const requestedId = req.headers.get('x-workspace-id');
+
+  if (!requestedId) {
+    return getOrCreateWorkspace(auth.userId);
+  }
+
+  const ws = await prisma.workspace.findUnique({ where: { id: requestedId } });
+  if (!ws) throw new WorkspaceAccessError(404, 'Workspace no encontrado.');
+  if (ws.ownerId === auth.userId) return ws;
+
+  const member = await prisma.workspaceMember.findFirst({
+    where: { workspaceId: ws.id, userId: auth.userId, status: 'active' },
+  });
+  if (member) return ws;
+
+  throw new WorkspaceAccessError(403, 'No tenés acceso a este workspace.');
 }

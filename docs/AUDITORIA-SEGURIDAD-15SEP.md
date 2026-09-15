@@ -92,6 +92,17 @@
 
 **Grep de control** (`getOrCreateWorkspace|getRoleContext|requireRole|requirePermission` sobre `src/app/api`): no se detectó una 17ª ruta con el mismo patrón de filtro por `userId` en datos de tenant fuera de las 16 listadas arriba y las 6 indirectamente afectadas por `llm-providers.ts`.
 
+### 3b. Hallazgo adicional (sub-fase 0.2): rutas que se saltean `getRoleContext`
+
+19 archivos de ruta resuelven el workspace llamando a `getOrCreateWorkspace(auth.userId)` directamente, sin pasar por `getRoleContext`/`requireRole`/`requirePermission`. Filtran correctamente por `workspaceId` (por eso no están en la tabla de 16), pero:
+
+1. **Muchas de sus operaciones de escritura no tienen ningún control de rol** — p.ej. `contacts` POST, `contacts/[id]` PATCH/DELETE, `notes` POST/DELETE, `appointments/[id]` PATCH/DELETE usan solo `getAuth` + `getOrCreateWorkspace`.
+2. Quedan fuera del mecanismo único de resolución de workspace activo: un miembro nunca opera en el workspace pedido vía `X-Workspace-Id`, siempre cae en el suyo propio.
+
+Hoy **no es explotable** (un miembro no-owner siempre aterriza en su propio workspace, así que no puede tocar datos ajenos), pero es exactamente el patrón de "soluciones paralelas" que esta fase elimina. Archivos: `launchpad`, `workspace/brand-doc`, `snippets`, `notes`, `conversations/[id]`, `conversations/[id]/messages`, `content-grids` (también en la tabla de 16), `contacts`, `contacts/[id]`, `contact-tasks`, `calendars`, `calendars/[id]`, `calendar-groups`, `automations`, `automations/runs`, `automations/[id]` (mezcla `requireRole` + `getOrCreateWorkspace` en el mismo handler), `appointments`, `appointments/[id]`, `activation-links`.
+
+**Se corrige en la sub-fase 0.3**, que aplica el guard de permisos a todas las rutas de escritura: cada una pasa a obtener `workspace` y `role` desde `requirePermission`/`getRoleContext`.
+
 ## 4. Procesos batch/cron/worker que necesitan bypass de RLS controlado
 
 | Proceso | Archivo | Comportamiento hoy |
@@ -116,14 +127,20 @@ Roles (`src/lib/roles-shared.ts`): `super_admin`, `agency_owner`, `admin`, `gere
 | Workflows | RW | RW | RW | RW | R | R | R |
 | Citas (Calendarios) | RW | RW | RW | RW | RW | RW | R |
 | Pagos | RW | RW | RW | R | — | — | R |
-| Configuración | RW | RW | RW | R | — | — | — |
+| Configuración | RW | RW | RW | R | — | R | — |
 | Equipo / Team | RW | RW | RW | — | — | — | — |
 | Facturación | RW | RW | RW | — | — | — | — |
 | Reportes | RW | RW | RW | RW | R | — | R |
 | Agentes de IA | RW | RW | RW | RW | R | — | R |
 | Conversaciones | RW | RW | RW | RW | RW | R | R |
 
-> Esta matriz es el input directo de la sub-fase 0.3 (`MODULE_ACCESS`, `PERMISSIONS_BY_ROLE` en `roles-shared.ts`). Antes de codificar, confirmar celda por celda con Reiner — en particular `staff` en Pagos/Configuración, que hoy no está definido en ningún lado del código existente, y la equivalencia `super_admin`/`agency_owner` (¿son siempre idénticos en permisos, o `agency_owner` debería estar acotado a su propio workspace mientras `super_admin` es cross-tenant? El código actual (`hasModuleAccess`) ya trata a `super_admin` como bypass total — `agency_owner` no tiene ese trato especial hoy).
+> Esta matriz es el input directo de la sub-fase 0.3 (`MODULE_ACCESS`, `PERMISSIONS_BY_ROLE` en `roles-shared.ts`).
+>
+> **Decisiones confirmadas por Reiner (15 sep, durante la sub-fase 0.2):**
+> - `agency_owner` **no** tiene bypass cross-tenant: tiene todos los permisos, pero solo dentro de su propio workspace. El acceso cross-tenant es exclusivo de `super_admin`.
+> - `staff` **sin acceso** a Pagos; en Configuración **como máximo lectura**, nunca edición.
+>
+> Las demás celdas se toman como propuestas y se validan al revisar el PR de la sub-fase 0.3.
 
 **Estado actual del código** (antes de la sub-fase 0.3): `MODULE_ACCESS` solo lista roles para `admin | gerente | agente | viewer` — a los 3 roles nuevos (`super_admin`, `agency_owner`, `staff`) les falta entrada explícita en cada módulo. Además `hasModuleAccess()` tiene **fail-open**: `if (!allowed) return true` — cualquier ruta no mapeada en `MODULE_ACCESS` permite acceso a cualquier rol. Esto se cierra en la sub-fase 0.3.
 
@@ -154,4 +171,58 @@ Roles (`src/lib/roles-shared.ts`): `super_admin`, `agency_owner`, `admin`, `gere
 
 ## 10. Diseño: resolución de workspace activo
 
-*(Pendiente — se completa en la sub-fase 0.2.)*
+*(Sub-fase 0.2 — implementado en `src/lib/workspace.ts::resolveActiveWorkspace`.)*
+
+### Opciones evaluadas
+
+| Opción | Veredicto |
+|---|---|
+| Header `X-Workspace-Id` validado contra `WorkspaceMember` | **Elegida.** Sin estado, sin migración de schema, y es el mismo dato que después necesita el claim de RLS (`app.current_workspace_id`). Si no se manda, el comportamiento es idéntico al actual. |
+| Workspace por defecto guardado en el perfil del usuario | Descartada como mecanismo de autorización: requiere migración y duplica lo que ya dice `WorkspaceMember`. Puede servir más adelante como *preferencia de UI* para decidir qué header manda el cliente. |
+| Selector obligatorio en la UI | Descartada: fricción para el 100% de los usuarios actuales, que tienen un único workspace. Cuando exista multi-workspace real, el selector solo decide qué valor de header enviar. |
+
+### Cómo se resuelve el workspace activo
+
+**Un usuario dueño de su workspace** (el 100% de los usuarios reales hoy) no manda ningún header. `resolveActiveWorkspace()` cae al camino legacy — `getOrCreateWorkspace(auth.userId)` — y obtiene exactamente el mismo workspace que antes. No nota ninguna diferencia. Si igual manda `X-Workspace-Id` con el id de su propio workspace, se valida por `ownerId` y también funciona.
+
+**Un usuario miembro (no dueño) de otro workspace** manda `X-Workspace-Id: <id>`. El servidor busca ese workspace y lo acepta solo si el usuario es su `ownerId` o tiene una fila `WorkspaceMember` con `status: 'active'` ahí (una invitación pendiente o una membresía suspendida no alcanza). Si el workspace no existe → 404; si existe pero no hay acceso → 403. **Nunca hay fallback silencioso al workspace propio**: esa sustitución silenciosa es justamente el tipo de bug que esta fase cierra. Con el workspace ya resuelto, `getRole()` calcula el rol dentro de ese workspace (owner → `admin`; si no, el `role` de su membresía).
+
+```
+request ──► getAuth(req) ──► ¿autenticado? ──no──► 401
+                                   │ sí
+                                   ▼
+               resolveActiveWorkspace(req, auth)
+                 │
+                 ├─ sin X-Workspace-Id ──► getOrCreateWorkspace(userId)   (legacy)
+                 │
+                 └─ con X-Workspace-Id ──► workspace existe? ──no──► 404
+                                              │ sí
+                                              ├─ ownerId == userId ────────► OK
+                                              ├─ WorkspaceMember active ───► OK
+                                              └─ ninguno ──────────────────► 403
+                                   │
+                                   ▼
+                 getRole(userId, workspace)  ──► RoleContext { auth, workspace, role }
+                                   │
+          ┌────────────────────────┼──────────────────────────┐
+          ▼                        ▼                          ▼
+   RBAC (0.3)            RLS: SET LOCAL                16 rutas corregidas
+   requirePermission     app.current_workspace_id      (0.5) usan
+                         (0.4)                         ctx.workspace.id
+```
+
+### Un solo punto de consumo
+
+`getRoleContext()` es el único caller de `resolveActiveWorkspace()`. RBAC (0.3), el `SET LOCAL app.current_workspace_id` de RLS (0.4) y las rutas corregidas (0.5) toman el workspace de `ctx.workspace` — nunca lo vuelven a calcular. Las rutas de §3b que hoy llaman a `getOrCreateWorkspace` directamente se migran a este punto en la 0.3.
+
+**Fidelidad de error:** para no romper la firma `RoleContext | null` que usan decenas de rutas, `getRoleContext()` convierte un `WorkspaceAccessError` en `null`, y quien llama responde 401. Un error que no sea de acceso (p.ej. la base de datos caída) se propaga y no se disfraza de 401.
+
+### DEV_BYPASS_AUTH endurecido
+
+`isDevBypassActive()` en `src/lib/auth.ts`: el bypass solo tiene efecto si `DEV_BYPASS_AUTH === 'true'` **y** `NODE_ENV !== 'production'`. En producción se ignora aunque la variable quede en `true` (se registra un `console.error` una sola vez) y se exige JWT real. Next.js fija `NODE_ENV=production` en `next build`/`next start`, así que un deploy en Vercel queda cubierto sin configurar nada extra.
+
+Consecuencia sobre la clave Stripe (§7): si `DEV_BYPASS_AUTH` contiene hoy un `sk_live_...`, su valor no es `'true'` y el bypass **ya estaba inactivo** — la autenticación no quedó abierta por eso. El riesgo de ese hallazgo es la exposición del secreto, no un bypass de auth.
+
+### Deuda explícita: bypass cross-tenant de `super_admin`
+
+Hoy el rol se guarda por workspace (`WorkspaceMember.role`), y no hay ningún flag global de "super admin de la plataforma" en `User`. Por eso `resolveActiveWorkspace()` **no** le da a ningún rol acceso a un workspace sin ser owner o miembro activo — ni siquiera a `super_admin`. Implementar el acceso cross-tenant exclusivo de `super_admin` (confirmado por Reiner como privilegio exclusivo de ese rol) requiere primero decidir dónde vive esa marca global (p.ej. `User.isPlatformSuperAdmin` o una allowlist en env). Queda pendiente; mientras tanto, la opción segura por defecto es sin bypass.

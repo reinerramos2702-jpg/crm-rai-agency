@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from './db';
 import { getAuth, AuthContext } from './auth';
-import { getOrCreateWorkspace } from './workspace';
+import { resolveActiveWorkspace, WorkspaceAccessError, type ActiveWorkspace } from './workspace';
 import { ROLES, hasPermission, type Role, type Permission } from './roles-shared';
 
 export * from './roles-shared';
@@ -28,18 +28,28 @@ export async function getRole(userId: string, ws: { id: string; ownerId: string 
 
 export interface RoleContext {
   auth: AuthContext;
-  workspace: { id: string; ownerId: string; name: string };
+  workspace: ActiveWorkspace;
   role: Role;
 }
 
 /**
- * Helper para rutas de API: obtiene auth + workspace + rol del usuario actual.
- * Devuelve null si no está autenticado (el caller debe responder 401).
+ * Helper para rutas de API: obtiene auth + workspace activo + rol del usuario actual.
+ * Devuelve null si no está autenticado o si el workspace pedido vía
+ * X-Workspace-Id no es accesible para este usuario (el caller responde 401).
+ * Mantiene la firma `RoleContext | null` para no romper a los callers existentes.
  */
 export async function getRoleContext(req: NextRequest): Promise<RoleContext | null> {
   const auth = await getAuth(req);
   if (!auth) return null;
-  const workspace = await getOrCreateWorkspace(auth.userId);
+
+  let workspace: ActiveWorkspace;
+  try {
+    workspace = await resolveActiveWorkspace(req, auth);
+  } catch (e) {
+    if (e instanceof WorkspaceAccessError) return null;
+    throw e;
+  }
+
   const role = await getRole(auth.userId, workspace);
   return { auth, workspace, role };
 }

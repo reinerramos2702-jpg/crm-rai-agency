@@ -36,12 +36,30 @@ const AUTH_CACHE_TTL_MS = 5 * 60 * 1000; // 5 min
 const authCache = new Map<string, { ctx: AuthContext; expiresAt: number }>();
 let devUserSynced = false;
 
+let bypassIgnoredWarned = false;
+
+/**
+ * El bypass solo tiene efecto fuera de producción: si DEV_BYPASS_AUTH quedara
+ * en 'true' por error en un deploy productivo, se ignora y se exige JWT real.
+ */
+export function isDevBypassActive(): boolean {
+  if (process.env.DEV_BYPASS_AUTH !== 'true') return false;
+  if (process.env.NODE_ENV === 'production') {
+    if (!bypassIgnoredWarned) {
+      console.error('[auth] DEV_BYPASS_AUTH=true ignorado: NODE_ENV=production exige JWT real.');
+      bypassIgnoredWarned = true;
+    }
+    return false;
+  }
+  return true;
+}
+
 /**
  * Extrae el contexto del usuario desde JWT del CRM (SSO).
  * En dev, si DEV_BYPASS_AUTH=true, devuelve un user dummy y lo crea si hace falta.
  */
 export async function getAuth(req: NextRequest): Promise<AuthContext | null> {
-  if (process.env.DEV_BYPASS_AUTH === 'true') {
+  if (isDevBypassActive()) {
     const ctx: AuthContext = {
       userId: 'dev-user-001',
       email: 'dev@rai.local',
