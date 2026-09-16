@@ -28,3 +28,5 @@ ghl-capturas/**/*.webp
 !ghl-capturas/**/_notas.md
 
 .vercel
+.env*
+!.env*.example
