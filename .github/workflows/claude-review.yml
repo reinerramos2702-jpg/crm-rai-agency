@@ -48,7 +48,7 @@ jobs:
           )
 
           key = os.environ["GEMINI_API_KEY"]
-          model = "gemini-flash-latest"
+          model = "gemini-2.5-flash"
           url = (
               "https://generativelanguage.googleapis.com/v1beta/models/"
               + model + ":generateContent?key=" + key
