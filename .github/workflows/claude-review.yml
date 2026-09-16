@@ -1,4 +1,4 @@
-name: Claude Code Review
+name: Gemini Code Review
 
 on:
   pull_request:
@@ -7,10 +7,9 @@ on:
 permissions:
   contents: read
   pull-requests: write
-  id-token: write
 
 jobs:
-  claude-review:
+  review:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -18,26 +17,55 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Claude Code Review
-        uses: anthropics/claude-code-action@v1
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: |
-            REPO: ${{ github.repository }}
-            PR NUMBER: ${{ github.event.pull_request.number }}
+      - name: Get PR diff
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=50
+          git diff origin/${{ github.base_ref }}...HEAD > diff.txt
+          head -c 100000 diff.txt > diff_trimmed.txt
 
-            Revisa el diff de este Pull Request contra main siguiendo BUENAS-PRACTICAS-CLAUDE-CODE.md del repo:
-            - Bugs y errores de logica
-            - Vulnerabilidades de seguridad (secretos hardcodeados, inyeccion, auth)
-            - Cumplimiento de buenas practicas del proyecto (RBAC, roles, .env, Prisma)
-            - Calidad general de codigo y legibilidad
+      - name: Review diff with Gemini
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python3 - <<'PYEOF'
+          import json
+          import os
+          import urllib.request
 
-            Si hay algo bloqueante, empieza el comentario con "BLOQUEANTE:".
-            Si el codigo esta limpio y listo, dilo explicitamente: "APROBADO - codigo limpio y optimo".
-            Esto es solo informativo: nunca apruebes ni mergees el PR vos mismo, solo comenta.
+          diff_text = open("diff_trimmed.txt", "r", encoding="utf-8", errors="ignore").read()
 
-            El PR ya esta clonado en el directorio actual.
+          prompt = (
+              "Revisa este diff de Pull Request del proyecto CRM RAI Agency "
+              "(Next.js, Prisma, Supabase). Sigue las buenas practicas del repo: "
+              "sin secretos hardcodeados, RBAC correcto, rutas API con export const dynamic "
+              "cuando corresponda, sin codigo muerto. Reporta bugs, riesgos de seguridad "
+              "y calidad general. Si algo es bloqueante, empieza tu respuesta con BLOQUEANTE: "
+              "y explica por que. Si esta todo limpio, empieza con APROBADO - codigo limpio "
+              "y optimo. Nunca digas que aprobaste el merge, solo evalua el codigo.\n\n"
+              "DIFF:\n" + diff_text
+          )
 
-                        Usa `gh pr comment` para dejar el comentario. No publiques el review como mensaje de chat, solo como comentario de GitHub.
-          claude_args: |
-            --allowedTools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+          key = os.environ["GEMINI_API_KEY"]
+          model = "gemini-flash-latest"
+          url = (
+              "https://generativelanguage.googleapis.com/v1beta/models/"
+              + model + ":generateContent?key=" + key
+          )
+          payload = json.dumps({
+              "contents": [{"parts": [{"text": prompt}]}]
+          }).encode("utf-8")
+          req = urllib.request.Request(
+              url, data=payload, headers={"Content-Type": "application/json"}
+          )
+          with urllib.request.urlopen(req) as resp:
+              result = json.loads(resp.read())
+
+          text = result["candidates"][0]["content"]["parts"][0]["text"]
+          with open("review.md", "w", encoding="utf-8") as f:
+              f.write(text)
+          PYEOF
+
+      - name: Post review comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr comment ${{ github.event.pull_request.number }} --body-file review.md
