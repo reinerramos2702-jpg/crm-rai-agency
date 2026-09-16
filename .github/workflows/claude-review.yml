@@ -30,7 +30,9 @@ jobs:
           python3 - <<'PYEOF'
           import json
           import os
+          import sys
           import urllib.request
+          import urllib.error
 
           diff_text = open("diff_trimmed.txt", "r", encoding="utf-8", errors="ignore").read()
 
@@ -57,8 +59,20 @@ jobs:
           req = urllib.request.Request(
               url, data=payload, headers={"Content-Type": "application/json"}
           )
-          with urllib.request.urlopen(req) as resp:
-              result = json.loads(resp.read())
+
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  result = json.loads(resp.read())
+          except urllib.error.HTTPError as e:
+              body = e.read().decode("utf-8", errors="ignore")
+              print("GEMINI_HTTP_ERROR", e.code, body)
+              with open("review.md", "w", encoding="utf-8") as f:
+                  f.write(
+                      "No se pudo completar la revision automatica con Gemini "
+                      "(HTTP " + str(e.code) + "). Detalle tecnico en los logs "
+                      "del workflow de GitHub Actions.\n\n" + body[:1500]
+                  )
+              sys.exit(0)
 
           text = result["candidates"][0]["content"]["parts"][0]["text"]
           with open("review.md", "w", encoding="utf-8") as f:
