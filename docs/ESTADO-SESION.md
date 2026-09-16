@@ -1,26 +1,33 @@
 # Estado de sesión — CRM RAI Agency
-Última actualización: 7 septiembre 2026
+Última actualización: 15 sep 2026 (sesión Cowork)
 
 ## Hecho en la última sesión
-- Centralizada toda la planeación (antes solo en OneDrive de una PC) en `docs/planning/` del repo: `panel-control.html`, `MASTER-PROMPT-V3-NOCTURNO.md`, 5 docs de soporte, `claude-outputs/`.
-- `v2.0-master-prompt/` fusionado como Anexo 15 dentro de `MASTER-PROMPT-V3-NOCTURNO.md` y eliminado por completo (ya no existe en ningún lado).
-- Limpiados duplicados sueltos en la carpeta OneDrive (panel-control.html en raíz, carpeta v3.0-master-prompt/, docs/*.md sueltos, Claude outputs/) — verificados byte a byte contra `docs/planning/` antes de borrar. `docs/planning/` queda como única copia.
-- `panel-control.html` actualizado con el estado real del proyecto (PR #6 mergeado, catálogo GHL 8 fichas, Retargeting Fase 1, PR #10, más una nueva sección "6-7 SEP" con todo lo de esta sesión).
-- Carpeta local de Windows renombrada: `content-engine-mvp` → `crm-rai-agency`.
-- Worktrees git obsoletos eliminados del disco: `content-engine-mvp-bloque1` (PR #6, ya mergeado) y `crm-rai-agency-v2` (PR #10, ya pusheado) — nada se perdió, todo vive en GitHub.
-- Rama `docs/centralizar-planeacion` creada en un worktree limpio, con los archivos de `docs/planning/` ya comiteados — el sandbox de Cowork no tiene credenciales de git para hacer push.
+- Creado bucket R2 `crm-rai-agency-uploads` + token API R2 `crm-rai-agency-r2` (Object Read & Write, scope solo ese bucket — mínimo privilegio).
+- Habilitada Public Development URL del bucket (`pub-67a8d996a3e0409993726b154de6b81c.r2.dev`) — Cloudflare la marca como rate-limited / no recomendada para producción; dominio custom queda pendiente como mejora futura.
+- Agregadas a Vercel (Production + Preview, mismo scope que `R2_BUCKET` existente): `R2_ACCOUNT_ID`, `R2_PUBLIC_URL`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`.
+- Usuario pegó los valores secretos, guardó y disparó redeploy en Vercel. **No verificado todavía** que el redeploy terminó bien ni que las 5 vars R2_* quedaron correctas.
+- Confirmado vía `/api/me` en producción (antes de este cambio) que Vercel está healthy — DB/auth OK.
+- Aclarado el alcance real del "cliente" a mostrar: es RAI Agency (uso interno de Reiner primero), no una demo externa pulida.
+- Confirmado que Quadro Café (cliente de RAI Agency) también recibirá este CRM instalado para gestión de su negocio, con capacitación de staff (community manager, marketing) — pero después de que Reiner lo domine usándolo con RAI Agency como primer tenant.
+- Memoria del proyecto (`overview.md`) actualizada con la relación de Quadro Café y el orden de rollout.
+- Doc "ESTADO-SESION — CRM RAI Agency.md" subido al Project Knowledge de claude.ai (cuenta) — sincronizado ahora también al archivo local del repo.
 
 ## Decisiones tomadas
-- La ruta OneDrive `C:\Users\RAI Agency\OneDrive\Documentos\RAI Agency\RAI Agency CRM` pasa a ser **para siempre** el working directory real del repo (clon git, no carpeta de docs suelta) — sincroniza sola entre computadoras. Ejecutado por Reiner directamente.
-- Consecuencia: la carpeta plana `C:\Users\RAI Agency\crm-rai-agency` (el checkout renombrado hoy) queda redundante — **pendiente decisión de Reiner** de si se borra.
+- R2 con token de mínimo privilegio (solo el bucket del proyecto), no token de cuenta completa — según sección 13 de buenas prácticas.
+- Secretos de R2 los pega el usuario directamente en Vercel; Claude nunca los escribe ni los repite.
+- Orden de rollout: 1) Reiner/RAI Agency prueba todo el CRM primero, 2) luego se instala y capacita a Quadro Café.
 
 ## Archivos/módulos tocados
-- `docs/planning/panel-control.html`, `docs/planning/MASTER-PROMPT-V3-NOCTURNO.md` (repo + OneDrive, misma ruta ahora).
-- Carpetas eliminadas: `v2.0-master-prompt/` (OneDrive), duplicados sueltos en OneDrive, `content-engine-mvp-bloque1/` y `crm-rai-agency-v2/` (disco local).
-- Cowork Project doc `Pendientes Abiertos — CRM RAI Agency.md` actualizado con todo lo anterior.
+- Vercel → Settings → Environment Variables (proyecto `crm-rai-agency`): 4 vars nuevas añadidas.
+- Cloudflare R2: bucket + token nuevos.
+- Memoria de proyecto: `overview.md` (líneas sobre Quadro Café).
+- `/docs/ESTADO-SESION.md` (este archivo).
 
 ## Pendiente para la próxima sesión
-1. **Push + PR de `docs/centralizar-planeacion`** — ejecutar desde la terminal local de Claude Code de Reiner (ahí `gh` ya está autenticado). Prompt exacto ya entregado en esta sesión.
-2. **Decidir si se borra la carpeta plana `crm-rai-agency`** (redundante con la copia de OneDrive) — pregunta pendiente de respuesta.
-3. Reconectar en Cowork la carpeta OneDrive tras cualquier operación de git pesada (verificar que el link no se cortó).
-4. El resto del backlog técnico grande (PR #3, RBAC no-owner, migración de producción, etc.) sigue en `claude/Pendientes Abiertos — CRM RAI Agency.md` del proyecto de Cowork — no se repite aquí.
+- Verificar que las 5 vars `R2_*` en Vercel quedaron guardadas correctamente (sin revelar los secretos).
+- Verificar que el redeploy disparado por el usuario terminó healthy (`/api/me` +, si se puede, un feature que use R2 — ej. subida de archivo/imagen).
+- Renombrar el workspace de producción ("Default Workspace" / `dev-user-001`) a identidad real de RAI Agency.
+- Login real del usuario y verificación visual de dashboard/launchpad/contactos en producción.
+- RBAC no-owner: roles gerente/agente/viewer actualmente no aplican restricciones — siguiente prioridad después de lo anterior.
+- PR #3 — módulo Instagram huérfano: resolver conflictos en `package-lock.json` y `run-due/route.ts`, luego merge.
+- Backlog menor: documentar el VPS de Hostinger como recurso disponible; habilitar backups en el proyecto Supabase `bskdozxkgbxifftuulvc` (actualmente sin backups).

@@ -314,7 +314,8 @@ footer{
   <div class="meta-row">
     <div class="meta-item">REPO: <span>crm-rai-agency</span> <span style="color:var(--dim)">(renombrado 29 ago 2026, antes content-engine-mvp)</span></div>
     <div class="meta-item">DEPLOY: <span>Vercel — crm-rai-agency.vercel.app</span></div>
-    <div class="meta-item">ÚLTIMA ACTUALIZACIÓN: <span id="updated-date">15 septiembre 2026 — <strong>producción restablecida</strong>: las 3 migraciones pendientes de Bloque 1 (incluida la columna <code>Workspace.launchpadManual</code>) ya están aplicadas contra la DB real de Supabase, y <code>/api/me</code> vuelve a responder <code>200 OK</code> tras un incidente de credenciales de 3 resets de password (ver sección 15 SEP más abajo). Sesión anterior (14 sep): <a href="https://github.com/reinerramos2702-jpg/crm-rai-agency/pull/11" target="_blank">PR #11</a> (centralización de <code>docs/planning/</code> y <code>docs/ESTADO-SESION.md</code>) MERGEADO a <code>main</code> (commit a64e528). <a href="https://github.com/reinerramos2702-jpg/crm-rai-agency/pull/10" target="_blank">PR #10</a> (fix bug visual de Launchpad — progreso calculado contra la DB en vez de <code>localStorage</code>, incluye limpieza de 2 campañas demo en producción) MERGEADO a <code>main</code> (commit 480500c). Sede única del proyecto: esta laptop (<code>C:\Users\PC\Documents\RAI Agency\CRM RAI Agency</code>) — la carpeta de la computadora vieja (<code>C:\Users\RAI Agency\crm-rai-agency</code>) queda de respaldo, sin uso activo. Catálogo GHL: 8 fichas completas. Retargeting Fase 1 construido, PR abierto, esperando credenciales</span></div>
+    <div class="meta-item">RAMA ACTIVA: <span>security/fase-0 <span style="color:var(--dim)">(local, sin push a remoto)</span></span></div>
+    <div class="meta-item">ÚLTIMA ACTUALIZACIÓN: <span id="updated-date">16 septiembre 2026 (sesión Cowork) — abierta <strong>FASE 00 — Seguridad crítica</strong> en rama <code>security/fase-0</code>: sub-fases 0.1 (auditoría) y 0.2 (resolución de workspace activo + cierre de <code>DEV_BYPASS_AUTH</code> en producción) <strong>cerradas y commiteadas</strong>; 0.3 (RBAC real — <code>super_admin</code>/<code>agency_owner</code>/<code>staff</code>) <strong>en curso</strong>, ver sección FASE 00 más abajo. Además, <strong>limpieza de raíz del repo</strong>: 11 <code>.md</code> sueltos movidos a <code>docs/</code>, <code>seed-brand-doc.mjs</code> a <code>scripts/</code>, <code>synctest.txt</code> (residuo de sync) borrado — cambios aún sin commitear, ver <code>git status</code>. Nada de esto subido a remoto todavía. Sigue sin tocar, máxima prioridad: RLS desactivado en las 41 tablas de producción (detectado 15 sep, requiere Plan Mode antes de cualquier cambio). Sesión anterior (15 sep): producción restablecida tras incidente de credenciales de Supabase (ver sección 15 SEP más abajo).</span></div>
   </div>
 
   <div class="progress-wrap">
@@ -324,6 +325,114 @@ footer{
 </header>
 
 <main>
+
+<!-- FASE 0 SEGURIDAD -->
+<section>
+  <div class="section-head">
+    <span class="phase-num">FASE 00</span>
+    <span class="section-title">Seguridad crítica — RLS + RBAC (rama <code>security/fase-0</code>)</span>
+    <span class="section-note">0.1 y 0.2 cerradas — 0.3 en curso — nada subido a remoto todavía</span>
+  </div>
+  <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:680px;">Abierta 15-16 sep 2026 tras detectar RLS desactivado en las 41 tablas de producción (máxima prioridad, ver abajo) y confirmar que el RBAC no-owner heredado del Bloque 1 (ver FASE 02) seguía sin efecto real. Toda la Fase 0 corre en <strong>modo manual, sin auto mode</strong>, por su carácter crítico (RLS, RBAC, Stripe key, <code>DEV_BYPASS_AUTH</code>) — no cambiar sin confirmación explícita de Reiner. Framework de 4 checkpoints vigente desde esta fase para toda sesión futura: (1) resumen fijo al cerrar cada sub-fase — qué se hizo, qué patrón sigue/introduce, tests, pendientes; (2) justificar en una línea antes de introducir un mecanismo nuevo en vez de reusar uno existente; (3) próxima prioridad post-Fase-0 — CI (<code>tsc --noEmit</code> + <code>vitest run</code> en cada push) y luego ESLint con reglas de seguridad; (4) toda decisión de arquitectura en 3 líneas — opción elegida, alternativas descartadas, motivo del descarte.</p>
+
+  <div class="check-list">
+    <div class="check-item blocked" data-status="blocked">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">🚨 CRÍTICO — RLS desactivado en las 41 tablas de producción</div>
+        <div class="check-desc">Verificado vía Supabase MCP contra <code>bskdozxkgbxifftuulvc</code>: cualquiera con la <code>anon key</code> pública (la misma que usa el frontend) puede leer/escribir cualquier fila de cualquier tenant directo contra Supabase, sin pasar por backend, RBAC ni filtro de <code>workspaceId</code>. Más grave que el RBAC no-owner o las rutas por <code>userId</code> — es la puerta de entrada directa a la base. <strong>No aplicar el SQL de activación sin más</strong> (bloquearía toda la app sin políticas). Requiere Plan Mode: definir políticas por tabla (fila visible/editable solo si <code>workspaceId</code> coincide con el workspace activo del usuario autenticado), probar contra un tenant de prueba, confirmar que ningún proceso de backend depende de leer entre tenants (crons, reportes globales) antes de restringir.</div>
+      </div>
+      <span class="tag tag-blocked">detectado 15 sep — sin tocar</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Sub-fase 0.1 — Auditoría de seguridad</div>
+        <div class="check-desc"><code>docs/AUDITORIA-SEGURIDAD-15SEP.md</code> creado. Corrigió cifras viejas ("41 tablas/13 rutas") a las reales (39 modelos/16 rutas), documentó 3 rutas no auditadas antes (<code>finalize</code>, <code>retry/[taskId]</code>, <code>webhook/dispatch</code>).</div>
+      </div>
+      <span class="tag tag-decided">cerrada — commiteada en rama local</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Sub-fase 0.2 — Resolución de workspace activo + cierre de <code>DEV_BYPASS_AUTH</code> en producción</div>
+        <div class="check-desc"><code>resolveActiveWorkspace()</code> (<code>src/lib/workspace.ts</code>) es ahora el único punto que resuelve en qué workspace opera cada request — reemplaza <code>getOrCreateWorkspace</code>, que solo miraba ownership e ignoraba <code>WorkspaceMember</code>. Retrocompatible sin header <code>X-Workspace-Id</code>; con header, exige ownership o membresía activa, si no 403/404 explícito, nunca fallback silencioso. <code>isDevBypassActive()</code> (<code>auth.ts</code>) apaga <code>DEV_BYPASS_AUTH</code> si <code>NODE_ENV=production</code>, aunque la variable quede en <code>true</code> por error.</div>
+      </div>
+      <span class="tag tag-decided">cerrada — commiteada en rama local</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Sub-fase 0.3 — RBAC real (<code>super_admin</code> / <code>agency_owner</code> / <code>staff</code>) — EN CURSO</div>
+        <div class="check-desc"><strong>Hecho:</strong> <code>super_admin</code> de plataforma vive solo en <code>SUPER_ADMIN_EMAILS</code> (sin campo en DB) — <code>isPlatformSuperAdmin(email)</code> case-insensitive, sin match parcial; <code>getRole()</code> lo chequea primero e ignora explícitamente un <code>super_admin</code> guardado en <code>WorkspaceMember.role</code>; <code>resolveActiveWorkspace()</code> deja cruzar tenant a super_admin solo con header explícito. Hallazgo cerrado de paso: <code>POST /api/team</code> y <code>PATCH /api/team/[id]</code> rechazaban asignar <code>admin</code> pero dejaban pasar <code>super_admin</code> — cerrado con doble capa (rechazo 400 en las rutas + <code>getRole()</code> ignora el valor guardado). Tests: 64 verdes, <code>tsc --noEmit</code> limpio. <strong>Falta para cerrar:</strong> bloquear asignación de <code>agency_owner</code> vía Team con el mismo patrón que <code>super_admin</code> (confirmado por Reiner); migrar las 19 rutas que hoy saltean <code>getRoleContext</code> (no explotable hoy, pero sin control de rol); completar la matriz <code>MODULE_ACCESS</code>/<code>PERMISSIONS_BY_ROLE</code> en <code>roles-shared.ts</code> para <code>super_admin</code>/<code>agency_owner</code>/<code>staff</code> (hoy solo lista <code>admin | gerente | agente | viewer</code>).</div>
+      </div>
+      <span class="tag tag-open">en curso — próxima sesión</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">13 rutas API que filtran por <code>userId</code> en vez de <code>workspaceId</code> (hallazgo previo, 5 sep)</div>
+        <div class="check-desc">No explotable hoy, misma clase de riesgo que el RLS desactivado y el RBAC no-owner. Distinto del hallazgo de las 19 rutas sin <code>getRoleContext</code> de la auditoría 0.1 — revisar ambos juntos, mismo esfuerzo de arquitectura de acceso por workspace.</div>
+      </div>
+      <span class="tag tag-open">pendiente — mismo esfuerzo que 0.3</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Confirmar del lado del SSO que los emails del JWT vienen verificados</div>
+        <div class="check-desc">Supuesto de seguridad detrás de <code>SUPER_ADMIN_EMAILS</code> en producción — documentado, no confirmado aún.</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Subir a <code>main</code> el commit local <code>96ee2c8</code> (panel-control) antes del PR de Fase 0</div>
+        <div class="check-desc">Para que no aparezca mezclado en el diff del PR de seguridad cuando se abra.</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Rotar la clave Stripe expuesta en <code>DEV_BYPASS_AUTH</code></div>
+        <div class="check-desc">Acción manual de Reiner, fuera de Claude Code — no automatizable desde acá.</div>
+      </div>
+      <span class="tag tag-open">acción manual de Reiner</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Post-Fase-0: CI (GitHub Actions) + ESLint con reglas de seguridad</div>
+        <div class="check-desc">Checkpoint 3 del framework — <code>tsc --noEmit</code> + <code>vitest run</code> en cada push, luego reglas ESLint que detecten rutas sin control de rol automáticamente en vez de auditoría manual.</div>
+      </div>
+      <span class="tag tag-open">siguiente prioridad tras cerrar Fase 0</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Limpieza de raíz del repo — docs sueltos organizados</div>
+        <div class="check-desc">11 <code>.md</code> que vivían sueltos en la raíz (<code>ARCHITECTURE.md</code>, <code>BACKLOG_NEXT_SESSION.md</code>, <code>BRAND_GUIDE.md</code>, <code>CONTEXT.md</code>, <code>HANDOFF.md</code>, <code>historial-entregas.md</code>, <code>MEMORY.md</code>, <code>PROJECT_MEMORY.md</code>, <code>ROADMAP_AUTOMATIZACION.md</code>, <code>TUTORIAL_PROMPTS.md</code>, <code>TareasPorHacer.md</code>) movidos a <code>docs/</code>; <code>seed-brand-doc.mjs</code> movido a <code>scripts/</code>; <code>synctest.txt</code> (residuo de prueba de sync de OneDrive) borrado. <code>CLAUDE.md</code> se dejó intacto en la raíz a propósito — Claude Code lo lee específicamente de ahí. Ejecutado vía script de PowerShell corrido por Reiner en la terminal local. Pendiente: commitear este cambio (queda separado del commit de RBAC de la 0.3, para no mezclar reorganización de archivos con cambios de seguridad en el mismo diff).</div>
+      </div>
+      <span class="tag tag-decided">hecho — pendiente de commit</span>
+    </div>
+  </div>
+
+  <div class="decision-grid" style="margin-top:20px;">
+    <div class="decision-card">
+      <h3>super_admin de plataforma</h3>
+      <p><strong>Elegido:</strong> env var <code>SUPER_ADMIN_EMAILS</code>, sin campo en <code>User</code>. <strong>Descartado:</strong> campo/rol en DB con migración. <strong>Motivo:</strong> evita migración en medio de Fase 0 crítica — revisar a campo en DB si crece el número de super admins o hace falta auditoría de altas/bajas desde UI.</p>
+    </div>
+    <div class="decision-card">
+      <h3>agency_owner — alcance</h3>
+      <p><strong>Elegido:</strong> todos los permisos, pero solo dentro de su propio workspace, sin bypass cross-tenant. <strong>Descartado:</strong> tratarlo como equivalente a super_admin. <strong>Motivo:</strong> cross-tenant queda exclusivo de super_admin — un agency_owner comprometido no debe poder ver otros tenants.</p>
+    </div>
+    <div class="decision-card">
+      <h3>staff — permisos</h3>
+      <p><strong>Elegido:</strong> sin acceso a Pagos; en Configuración, máximo lectura, nunca edición. <strong>Descartado:</strong> heredar los mismos permisos que agente/gerente sin diferenciar. <strong>Motivo:</strong> rol de menor confianza, no debe tocar dinero ni configuración crítica del workspace.</p>
+    </div>
+  </div>
+</section>
 
 <!-- FASE 1 -->
 <section>
@@ -474,13 +583,13 @@ footer{
       </div>
       <span class="tag tag-decided">mergeado</span>
     </div>
-    <div class="check-item" data-status="pending">
+    <div class="check-item done" data-status="done">
       <div class="checkbox"></div>
       <div class="check-body">
-        <div class="check-title">RBAC no-owner desconectado del flujo real — PRIORIDAD ALTA (nuevo, 5 sep)</div>
-        <div class="check-desc"><code>getRoleContext</code> siempre resuelve al workspace propio del usuario autenticado — los roles gerente/agente/viewer no restringen nada todavía, todo usuario actúa como admin de facto de "su" workspace. No es fuga entre tenants distintos, pero no vender roles con permisos como funcionales hasta resolverlo. Reiner decidió (5 sep) priorizar el arreglo ya — requiere resolución de workspace activo para no-owners (cambio de arquitectura). Plan Mode entregado, pendiente de ejecutar. Incluye de paso las 13 rutas que filtran por <code>userId</code> en vez de <code>workspaceId</code> (mismo esfuerzo).</div>
+        <div class="check-title">RBAC no-owner desconectado del flujo real — resuelto estructuralmente en FASE 00</div>
+        <div class="check-desc"><code>getRoleContext</code> siempre resolvía al workspace propio del usuario autenticado — los roles gerente/agente/viewer no restringían nada, todo usuario actuaba como admin de facto de "su" workspace. Resuelto por <code>resolveActiveWorkspace()</code> (sub-fase 0.2 de FASE 00, ver más arriba): ahora exige ownership o membresía activa para operar sobre un workspace ajeno, nunca fallback silencioso. Falta completar la matriz de permisos por rol (<code>MODULE_ACCESS</code>/<code>PERMISSIONS_BY_ROLE</code>) para los 3 roles nuevos — eso sigue abierto en la sub-fase 0.3. Las 13 rutas que filtran por <code>userId</code> en vez de <code>workspaceId</code> siguen pendientes, ver ítem aparte en FASE 00.</div>
       </div>
-      <span class="tag tag-open">plan entregado, prioridad alta</span>
+      <span class="tag tag-decided">resuelto — ver FASE 00</span>
     </div>
     <div class="check-item" data-status="pending">
       <div class="checkbox"></div>
