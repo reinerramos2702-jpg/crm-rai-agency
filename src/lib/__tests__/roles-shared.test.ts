@@ -5,6 +5,7 @@ import {
   isAdminOrManager,
   canWrite,
   hasModuleAccess,
+  PERMISSIONS,
   PERMISSIONS_BY_ROLE,
   MODULE_ACCESS,
   ROLES,
@@ -153,20 +154,77 @@ describe('hasModuleAccess', () => {
     expect(hasModuleAccess('super_admin', '/facturacion')).toBe(true);
   });
 
-  it("'/keys' is restricted to admin/gerente: 'agente' is denied", () => {
-    expect(MODULE_ACCESS['/keys']).toEqual(['admin', 'gerente']);
+  it("'/keys' es solo de nivel admin: 'agente' y 'gerente' quedan fuera", () => {
+    expect(MODULE_ACCESS['/keys']).toEqual(['super_admin', 'agency_owner', 'admin']);
     expect(hasModuleAccess('agente', '/keys')).toBe(false);
+    expect(hasModuleAccess('gerente', '/keys')).toBe(false);
   });
 
-  it("'/keys' is restricted to admin/gerente: 'admin' is allowed", () => {
+  it("'/keys' es solo de nivel admin: 'admin' pasa", () => {
     expect(hasModuleAccess('admin', '/keys')).toBe(true);
   });
 
-  it('a route not listed in MODULE_ACCESS is accessible to any role', () => {
+  it('fail-closed: una ruta no listada en MODULE_ACCESS se oculta a todos salvo super_admin', () => {
     const unlistedPath = '/some-unlisted-route-xyz';
     expect(MODULE_ACCESS[unlistedPath]).toBeUndefined();
     for (const role of ROLES) {
-      expect(hasModuleAccess(role, unlistedPath)).toBe(true);
+      expect(hasModuleAccess(role, unlistedPath)).toBe(role === 'super_admin');
+    }
+  });
+});
+
+describe('MODULE_ACCESS — cobertura de los 7 roles', () => {
+  it('super_admin y agency_owner están en todas las rutas', () => {
+    for (const [path, allowed] of Object.entries(MODULE_ACCESS)) {
+      expect(allowed, `super_admin falta en ${path}`).toContain('super_admin');
+      expect(allowed, `agency_owner falta en ${path}`).toContain('agency_owner');
+    }
+  });
+
+  it('cada ruta declara solo roles válidos y sin duplicados', () => {
+    for (const [path, allowed] of Object.entries(MODULE_ACCESS)) {
+      expect(new Set(allowed).size, `${path} tiene roles duplicados`).toBe(allowed.length);
+      for (const role of allowed) {
+        expect(ROLES, `${path} declara un rol inexistente: ${role}`).toContain(role);
+      }
+    }
+  });
+
+  it('staff no ve Pagos, Facturación, Claves ni Informes', () => {
+    for (const path of ['/pagos', '/facturacion', '/keys', '/informes']) {
+      expect(hasModuleAccess('staff', path), `staff no debería ver ${path}`).toBe(false);
+    }
+  });
+
+  it('staff sí ve los módulos operativos que le da la matriz', () => {
+    for (const path of ['/contactos', '/calendarios', '/conversaciones', '/settings']) {
+      expect(hasModuleAccess('staff', path), `staff debería ver ${path}`).toBe(true);
+    }
+  });
+
+  it('agency_owner ve todo lo que ve admin (sin bypass cross-tenant, que vive en otra capa)', () => {
+    for (const [path, allowed] of Object.entries(MODULE_ACCESS)) {
+      if (allowed.includes('admin')) {
+        expect(hasModuleAccess('agency_owner', path), `agency_owner falta en ${path}`).toBe(true);
+      }
+    }
+  });
+});
+
+describe('PERMISSIONS_BY_ROLE — los 3 roles nuevos', () => {
+  it('agency_owner tiene los 8 permisos', () => {
+    expect([...PERMISSIONS_BY_ROLE.agency_owner].sort()).toEqual([...PERMISSIONS].sort());
+  });
+
+  it('staff no administra facturación, equipo ni asesores', () => {
+    expect(PERMISSIONS_BY_ROLE.staff).not.toContain('canManageBilling');
+    expect(PERMISSIONS_BY_ROLE.staff).not.toContain('canManageTeam');
+    expect(PERMISSIONS_BY_ROLE.staff).not.toContain('canManageAdvisors');
+  });
+
+  it('los 7 roles tienen entrada explícita', () => {
+    for (const role of ROLES) {
+      expect(PERMISSIONS_BY_ROLE[role], `falta entrada para ${role}`).toBeDefined();
     }
   });
 });

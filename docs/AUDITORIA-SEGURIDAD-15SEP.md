@@ -142,6 +142,15 @@ Roles (`src/lib/roles-shared.ts`): `super_admin`, `agency_owner`, `admin`, `gere
 >
 > Las demás celdas se toman como propuestas y se validan al revisar el PR de la sub-fase 0.3.
 
+### 5a. Discrepancias matriz ↔ código detectadas al aplicar la sub-fase 0.3 (16 sep)
+
+| # | Discrepancia | Decisión | Estado |
+|---|---|---|---|
+| 1 | **Workflows / `agente`**: la matriz da `R`, pero el código le da `RW` (`automations` POST y `automations/[id]` PATCH/DELETE ya listan `agente` en su `requireRole`). | **Conservar el comportamiento actual (`agente` = RW).** Aplicar la matriz le quitaría a los agentes la capacidad de crear y editar automatizaciones que hoy usan; es una regresión funcional que no se mete antes de un go-live con cliente real. | **Abierta** — revisar con calma post-go-live. Si se confirma `R`, hay que tocar `MODULE_ACCESS['/automatizacion']`, los `requireRole` de las 3 rutas de automations, y avisar a los usuarios afectados. |
+| 2 | **`/keys` / `gerente`**: `MODULE_ACCESS` le daba acceso, pero `ROLE_DESCRIPTIONS` dice explícitamente que gerente "NO administra las claves de IA (BYOK)". | **Aplicar la matriz**: `/keys` queda solo en nivel admin (`super_admin`, `agency_owner`, `admin`). | **Cerrada** en la sub-fase 0.3. |
+
+> La tabla de §5 sigue siendo la fuente de verdad salvo por la fila 1, que queda explícitamente divergente hasta que se decida.
+
 **Estado actual del código** (antes de la sub-fase 0.3): `MODULE_ACCESS` solo lista roles para `admin | gerente | agente | viewer` — a los 3 roles nuevos (`super_admin`, `agency_owner`, `staff`) les falta entrada explícita en cada módulo. Además `hasModuleAccess()` tiene **fail-open**: `if (!allowed) return true` — cualquier ruta no mapeada en `MODULE_ACCESS` permite acceso a cualquier rol. Esto se cierra en la sub-fase 0.3.
 
 ## 6. Deuda de auditoría (`AuditEvent`)
