@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { getOrCreateWorkspace } from '@/lib/workspace';
+import { isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,10 +11,9 @@ export const dynamic = 'force-dynamic';
  *     opcionalmente filtrado por flujo o estado.
  */
 export async function GET(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const ws = await getOrCreateWorkspace(auth.userId);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'staff', 'viewer']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
 
   const workflowId = req.nextUrl.searchParams.get('workflowId');
   const status = req.nextUrl.searchParams.get('status');

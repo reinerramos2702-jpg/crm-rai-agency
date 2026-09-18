@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { getOrCreateWorkspace, getOrCreateWorkspaceFull } from '@/lib/workspace';
+import { isRoleContext, requireRole } from '@/lib/roles';
 import { extractTextFromDocx } from '@/lib/docx-extract';
 
 export const runtime = 'nodejs';
@@ -18,12 +17,12 @@ export const runtime = 'nodejs';
  */
 
 export async function GET(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'staff']);
+  if (!isRoleContext(ctx)) return ctx;
 
-  // getOrCreateWorkspaceFull consulta fresco (no cache) — el doc de marca
-  // cambia con frecuencia (POST/DELETE), no debe servirse desactualizado.
-  const doc = await getOrCreateWorkspaceFull(auth.userId);
+  // ctx.workspace solo trae id/name/ownerId — el doc de marca se lee fresco de
+  // la DB porque cambia con frecuencia (POST/DELETE).
+  const doc = await prisma.workspace.findUnique({ where: { id: ctx.workspace.id } });
   return Response.json({
     brandDocName: doc?.brandDocName ?? null,
     brandDocText: doc?.brandDocText ?? null,
@@ -33,10 +32,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
-
-  const ws = await getOrCreateWorkspace(auth.userId);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
 
   const contentType = req.headers.get('content-type') || '';
   if (!contentType.includes('multipart/form-data')) {
@@ -87,10 +85,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
 
-  const ws = await getOrCreateWorkspace(auth.userId);
   await prisma.workspace.update({
     where: { id: ws.id },
     data: { brandDocText: null, brandDocName: null, brandDocUpdatedAt: null },

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
-import { getOrCreateWorkspace } from '@/lib/workspace';
+import { isRoleContext, requireRole } from '@/lib/roles';
 import { prisma } from '@/lib/db';
 import { MANUAL_LAUNCHPAD_ITEM_IDS, isManualLaunchpadItemId } from '@/lib/launchpad-items';
 
@@ -77,10 +76,10 @@ async function computeAutoCompleted(workspaceId: string): Promise<string[]> {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  if (!isRoleContext(ctx)) return ctx;
+  const workspace = ctx.workspace;
 
-  const workspace = await getOrCreateWorkspace(auth.userId);
   const [autoCompleted, ws] = await Promise.all([
     computeAutoCompleted(workspace.id),
     prisma.workspace.findUnique({ where: { id: workspace.id }, select: { launchpadManual: true } }),
@@ -93,8 +92,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  if (!isRoleContext(ctx)) return ctx;
+  const workspace = ctx.workspace;
 
   const { itemId, done } = await req.json();
   if (typeof itemId !== 'string' || !isManualLaunchpadItemId(itemId)) {
@@ -104,7 +104,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const workspace = await getOrCreateWorkspace(auth.userId);
   const current = await prisma.workspace.findUnique({ where: { id: workspace.id }, select: { launchpadManual: true } });
   const manual = { ...((current?.launchpadManual as Record<string, boolean>) || {}), [itemId]: !!done };
 

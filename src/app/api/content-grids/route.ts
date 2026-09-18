@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { getOrCreateWorkspace } from '@/lib/workspace';
+import { isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
@@ -11,11 +10,11 @@ export const runtime = 'nodejs';
  */
 
 export async function GET(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'staff']);
+  if (!isRoleContext(ctx)) return ctx;
 
   const grids = await prisma.contentGrid.findMany({
-    where: { userId: auth.userId },
+    where: { userId: ctx.auth.userId },
     orderBy: { updatedAt: 'desc' },
     select: {
       id: true,
@@ -36,10 +35,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
-
-  const ws = await getOrCreateWorkspace(auth.userId);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
 
   let body: { name?: string; imageProvider?: string } = {};
   try {
@@ -49,13 +47,13 @@ export async function POST(req: NextRequest) {
   }
 
   // Nombre amistoso automático: "Grilla 1", "Grilla 2", ...
-  const count = await prisma.contentGrid.count({ where: { userId: auth.userId } });
+  const count = await prisma.contentGrid.count({ where: { userId: ctx.auth.userId } });
   const name = body.name?.trim() || `Grilla ${count + 1}`;
 
   const grid = await prisma.contentGrid.create({
     data: {
       workspaceId: ws.id,
-      userId: auth.userId,
+      userId: ctx.auth.userId,
       name,
       imageProvider: body.imageProvider || 'gemini',
     },

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { getOrCreateWorkspace } from '@/lib/workspace';
+import { isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
@@ -12,10 +11,10 @@ export const runtime = 'nodejs';
  */
 
 export async function GET(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'staff', 'viewer']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
 
-  const ws = await getOrCreateWorkspace(auth.userId);
   const snippets = await prisma.snippet.findMany({
     where: { workspaceId: ws.id },
     orderBy: { createdAt: 'desc' },
@@ -24,15 +23,15 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
 
   const { title, body } = await req.json();
   if (!title || !title.trim() || !body || !body.trim()) {
     return NextResponse.json({ error: 'title y body son requeridos' }, { status: 400 });
   }
 
-  const ws = await getOrCreateWorkspace(auth.userId);
   const snippet = await prisma.snippet.create({
     data: { workspaceId: ws.id, title: title.trim(), body: body.trim() },
   });
@@ -40,13 +39,13 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
 
   const id = req.nextUrl.searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'id es requerido' }, { status: 400 });
 
-  const ws = await getOrCreateWorkspace(auth.userId);
   const existing = await prisma.snippet.findFirst({ where: { id, workspaceId: ws.id } });
   if (!existing) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
 

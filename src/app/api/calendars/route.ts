@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { getOrCreateWorkspace } from '@/lib/workspace';
+import { isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
@@ -11,10 +10,10 @@ export const runtime = 'nodejs';
  */
 
 export async function GET(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'staff', 'viewer']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
 
-  const ws = await getOrCreateWorkspace(auth.userId);
   const calendars = await prisma.calendarResource.findMany({
     where: { workspaceId: ws.id },
     include: { group: true },
@@ -24,15 +23,14 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
 
   const { name, description, type, durationMins, groupId, availability } = await req.json();
   if (!name || !name.trim()) {
     return NextResponse.json({ error: 'name es requerido' }, { status: 400 });
   }
-
-  const ws = await getOrCreateWorkspace(auth.userId);
 
   if (groupId) {
     const group = await prisma.calendarGroup.findFirst({ where: { id: groupId, workspaceId: ws.id } });

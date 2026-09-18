@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getOrCreateWorkspace } from '@/lib/workspace';
 import { isRoleContext, requireRole } from '@/lib/roles';
 import { SUPPORTED_MODELS, type Provider } from '@/lib/llm-providers';
 

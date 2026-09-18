@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { getOrCreateWorkspace } from '@/lib/workspace';
 import { getTemplate } from '@/lib/automations/templates';
 import { isRoleContext, requireRole } from '@/lib/roles';
 
@@ -14,10 +12,9 @@ export const runtime = 'nodejs';
  */
 
 export async function GET(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const ws = await getOrCreateWorkspace(auth.userId);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'staff', 'viewer']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
 
   const [folders, workflows, settings] = await Promise.all([
     prisma.workflowFolder.findMany({ where: { workspaceId: ws.id }, orderBy: { name: 'asc' } }),
@@ -44,14 +41,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin', 'gerente', 'agente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
   if (!isRoleContext(ctx)) return ctx;
-  const auth = ctx.auth;
+  const ws = ctx.workspace;
 
   const body = await req.json();
   const { name, description, folderId, templateId, trigger, steps } = body;
-
-  const ws = await getOrCreateWorkspace(auth.userId);
 
   if (folderId) {
     const folder = await prisma.workflowFolder.findFirst({ where: { id: folderId, workspaceId: ws.id } });

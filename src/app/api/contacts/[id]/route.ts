@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { getOrCreateWorkspace } from '@/lib/workspace';
+import { isRoleContext, requireRole } from '@/lib/roles';
 import { runWorkflowsForEvent } from '@/lib/automations/engine';
 
 export const runtime = 'nodejs';
@@ -17,11 +16,11 @@ async function assertOwnership(workspaceId: string, contactId: string) {
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'staff', 'viewer']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
   const { id } = await params;
 
-  const ws = await getOrCreateWorkspace(auth.userId);
   const owned = await assertOwnership(ws.id, id);
   if (!owned) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
 
@@ -41,11 +40,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
   const { id } = await params;
 
-  const ws = await getOrCreateWorkspace(auth.userId);
   const owned = await assertOwnership(ws.id, id);
   if (!owned) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
 
@@ -79,11 +78,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
   const { id } = await params;
 
-  const ws = await getOrCreateWorkspace(auth.userId);
   const owned = await assertOwnership(ws.id, id);
   if (!owned) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
 
