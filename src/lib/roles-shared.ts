@@ -62,6 +62,28 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
 };
 
 /**
+ * Roles que el módulo Equipo puede asignar a un miembro. Los tres excluidos se
+ * obtienen por otra vía, nunca por invitación:
+ *  - 'admin'        → implícito por ser owner del workspace.
+ *  - 'super_admin'  → solo por la env var SUPER_ADMIN_EMAILS.
+ *  - 'agency_owner' → tiene todos los permisos del tenant; que un admin pueda
+ *                     otorgarlo es la misma escalada que se cerró para 'admin'.
+ * Fuente única: la consumen el desplegable de Equipo y las dos rutas de /api/team.
+ */
+export const INVITABLE_ROLES: Role[] = ROLES.filter(
+  (r) => r !== 'admin' && r !== 'super_admin' && r !== 'agency_owner'
+);
+
+/**
+ * Roles de escalada: segunda capa del bloqueo. Si una fila de WorkspaceMember
+ * ya trae uno de estos guardado (creada antes del fix, o por cualquier vía que
+ * saltee la ruta), getRole() lo ignora y trata al miembro como 'viewer'.
+ * 'admin' NO está acá a propósito: una membresía 'admin' guardada es legítima
+ * y se sigue respetando.
+ */
+export const ESCALATION_ROLES: Role[] = ['super_admin', 'agency_owner'];
+
+/**
  * Permisos explícitos (sección 3 del master prompt) — la autorización real en
  * backend SIEMPRE se valida por permiso, nunca por nombre de rol "a pelo".
  * Cada rol tiene un set de permisos por default (ver PERMISSIONS_BY_ROLE).

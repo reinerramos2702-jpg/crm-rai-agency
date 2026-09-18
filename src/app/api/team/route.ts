@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { ROLES, isRoleContext, requireRole } from '@/lib/roles';
+import { ROLES, INVITABLE_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
@@ -54,9 +54,11 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-  if (role === 'super_admin') {
+  // Capa 1 del bloqueo de escalada: super_admin y agency_owner no se invitan.
+  // Capa 2 vive en getRole(), que ignora estos roles si quedaran guardados.
+  if (!(INVITABLE_ROLES as string[]).includes(role)) {
     return NextResponse.json(
-      { error: 'El rol Super Admin no se asigna desde el equipo del workspace.' },
+      { error: 'Ese rol no se asigna desde el equipo del workspace.' },
       { status: 400 }
     );
   }

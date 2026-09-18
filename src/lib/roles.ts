@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from './db';
 import { getAuth, isPlatformSuperAdmin, AuthContext } from './auth';
 import { resolveActiveWorkspace, WorkspaceAccessError, type ActiveWorkspace } from './workspace';
-import { ROLES, hasPermission, type Role, type Permission } from './roles-shared';
+import { ROLES, ESCALATION_ROLES, hasPermission, type Role, type Permission } from './roles-shared';
 
 export * from './roles-shared';
 
@@ -10,7 +10,8 @@ export * from './roles-shared';
  * Resuelve el rol efectivo de un usuario dentro de un workspace.
  * - Email en SUPER_ADMIN_EMAILS → 'super_admin' (único origen de ese rol).
  * - Owner del workspace → 'admin' (no necesita fila en WorkspaceMember).
- * - Membresía activa → su rol; un 'super_admin' guardado en DB se ignora.
+ * - Membresía activa → su rol; un rol de escalada guardado en DB se ignora
+ *   (ESCALATION_ROLES: 'super_admin', 'agency_owner').
  * - Sin membresía válida → 'viewer' (acceso mínimo de solo lectura).
  */
 export async function getRole(auth: AuthContext, ws: { id: string; ownerId: string }): Promise<Role> {
@@ -21,7 +22,11 @@ export async function getRole(auth: AuthContext, ws: { id: string; ownerId: stri
     where: { workspaceId: ws.id, userId: auth.userId, status: 'active' },
   });
 
-  if (member && member.role !== 'super_admin' && (ROLES as string[]).includes(member.role)) {
+  if (
+    member &&
+    !(ESCALATION_ROLES as string[]).includes(member.role) &&
+    (ROLES as string[]).includes(member.role)
+  ) {
     return member.role as Role;
   }
 

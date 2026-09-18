@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { ROLES, isRoleContext, requireRole } from '@/lib/roles';
+import { INVITABLE_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
@@ -23,7 +23,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const data: { role?: string; status?: string } = {};
 
   if (role !== undefined) {
-    if (!(ROLES as string[]).includes(role) || role === 'admin' || role === 'super_admin') {
+    // Capa 1 del bloqueo de escalada: excluye admin, super_admin y agency_owner.
+    // Capa 2 vive en getRole(), que ignora estos roles si quedaran guardados.
+    if (!(INVITABLE_ROLES as string[]).includes(role)) {
       return NextResponse.json({ error: 'Rol inválido' }, { status: 400 });
     }
     data.role = role;

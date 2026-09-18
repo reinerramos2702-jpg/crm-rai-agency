@@ -8,9 +8,34 @@ import {
   PERMISSIONS_BY_ROLE,
   MODULE_ACCESS,
   ROLES,
+  INVITABLE_ROLES,
+  ESCALATION_ROLES,
   type Role,
   type Permission,
 } from '../roles-shared';
+
+describe('INVITABLE_ROLES / ESCALATION_ROLES', () => {
+  for (const role of ['admin', 'super_admin', 'agency_owner'] as Role[]) {
+    it(`Equipo no puede asignar '${role}'`, () => {
+      expect(INVITABLE_ROLES).not.toContain(role);
+    });
+  }
+
+  it('los roles operativos sí son invitables', () => {
+    expect(INVITABLE_ROLES).toEqual(['gerente', 'agente', 'staff', 'viewer']);
+  });
+
+  it("ESCALATION_ROLES cubre super_admin y agency_owner, pero no 'admin'", () => {
+    expect(ESCALATION_ROLES).toEqual(['super_admin', 'agency_owner']);
+    expect(ESCALATION_ROLES).not.toContain('admin');
+  });
+
+  it('todo rol de escalada está también fuera de los invitables (las 2 capas coinciden)', () => {
+    for (const role of ESCALATION_ROLES) {
+      expect(INVITABLE_ROLES).not.toContain(role);
+    }
+  });
+});
 
 describe('hasPermission', () => {
   for (const role of ROLES) {

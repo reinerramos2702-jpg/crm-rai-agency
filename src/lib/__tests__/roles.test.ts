@@ -73,6 +73,29 @@ describe('roles.ts — requireRole / requirePermission', () => {
     expect((result as NextResponse).status).toBe(403);
   });
 
+  it('role agency_owner guardado en WorkspaceMember se ignora → viewer (no hay escalada vía Team)', async () => {
+    vi.mocked(prisma.workspaceMember.findFirst).mockResolvedValue({
+      role: 'agency_owner',
+      status: 'active',
+    } as any);
+
+    const result = await requireRole(FAKE_REQ, ['agency_owner', 'admin']);
+
+    expect(isRoleContext(result)).toBe(false);
+    expect((result as NextResponse).status).toBe(403);
+  });
+
+  it('role admin guardado en WorkspaceMember SÍ se respeta (no es rol de escalada)', async () => {
+    vi.mocked(prisma.workspaceMember.findFirst).mockResolvedValue({
+      role: 'admin',
+      status: 'active',
+    } as any);
+
+    const ctx = await getRoleContext(FAKE_REQ);
+
+    expect(ctx?.role).toBe('admin');
+  });
+
   it('getRoleContext resuelve el workspace vía resolveActiveWorkspace (mecanismo único)', async () => {
     vi.mocked(prisma.workspaceMember.findFirst).mockResolvedValue(null);
 

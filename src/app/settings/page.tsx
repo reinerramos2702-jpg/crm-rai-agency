@@ -5,7 +5,7 @@ import { Settings2, Webhook, Globe, ToggleLeft, ToggleRight, CheckCircle2, Alert
 import { TopBar } from '@/components/layout/TopBar';
 import { Spinner } from '@/components/ui/Spinner';
 import toast from 'react-hot-toast';
-import { ROLES, ROLE_LABELS, ROLE_DESCRIPTIONS, type Role } from '@/lib/roles-shared';
+import { ROLES, INVITABLE_ROLES, ROLE_LABELS, ROLE_DESCRIPTIONS, type Role } from '@/lib/roles-shared';
 
 interface SettingsData {
   n8nWebhookUrl?: string;
@@ -26,8 +26,6 @@ interface TeamOwner {
   email: string;
   displayName: string | null;
 }
-
-const INVITABLE_ROLES = ROLES.filter((r) => r !== 'admin') as Exclude<Role, 'admin'>[];
 
 /**
  * Página de Configuración.
