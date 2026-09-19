@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
  */
 
 export async function GET(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin', 'gerente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin']);
   if (!isRoleContext(ctx)) return ctx;
   const auth = ctx.auth;
 
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin', 'gerente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin']);
   if (!isRoleContext(ctx)) return ctx;
   const auth = ctx.auth;
 
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin', 'gerente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin']);
   if (!isRoleContext(ctx)) return ctx;
   const auth = ctx.auth;
 

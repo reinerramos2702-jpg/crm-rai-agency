@@ -10,7 +10,7 @@ export const runtime = 'nodejs';
  */
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const ctx = await requireRole(req, ['admin']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin']);
   if (!isRoleContext(ctx)) return ctx;
 
   const member = await prisma.workspaceMember.findFirst({
@@ -44,7 +44,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const ctx = await requireRole(req, ['admin']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin']);
   if (!isRoleContext(ctx)) return ctx;
 
   const member = await prisma.workspaceMember.findFirst({

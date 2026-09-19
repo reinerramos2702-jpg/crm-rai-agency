@@ -21,7 +21,7 @@ async function getKB(id: string, workspaceId: string) {
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const ctx = await requireRole(req, ['admin', 'gerente', 'agente', 'viewer']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'viewer']);
   if (!isRoleContext(ctx)) return ctx;
 
   const { id } = await params;
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const ctx = await requireRole(req, ['admin', 'gerente', 'agente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
   if (!isRoleContext(ctx)) return ctx;
 
   const { id } = await params;
@@ -49,7 +49,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const ctx = await requireRole(req, ['admin', 'gerente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente']);
   if (!isRoleContext(ctx)) return ctx;
 
   const { id } = await params;

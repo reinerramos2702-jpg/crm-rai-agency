@@ -10,7 +10,7 @@ export const runtime = 'nodejs';
  */
 
 export async function GET(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin']);
   if (!isRoleContext(ctx)) return ctx;
 
   const owner = await prisma.user.findUnique({ where: { id: ctx.workspace.ownerId } });
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin']);
   if (!isRoleContext(ctx)) return ctx;
 
   const { email, role } = await req.json();

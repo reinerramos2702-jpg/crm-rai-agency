@@ -6,7 +6,7 @@ import { logAudit } from '@/lib/audit';
 export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin', 'gerente', 'agente', 'viewer']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'viewer']);
   if (!isRoleContext(ctx)) return ctx;
 
   const url = new URL(req.url);
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin', 'gerente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente']);
   if (!isRoleContext(ctx)) return ctx;
 
   let body: Record<string, unknown>;

@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
  * Filtros opcionales: entityType, entityId, userId, from, to
  */
 export async function GET(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin', 'gerente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente']);
   if (!isRoleContext(ctx)) return ctx;
 
   const url = new URL(req.url);

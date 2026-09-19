@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin', 'gerente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente']);
   if (!isRoleContext(ctx)) return ctx;
 
   const {

@@ -12,7 +12,7 @@ export const runtime = 'nodejs';
  */
 
 export async function GET(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin', 'gerente', 'agente', 'viewer']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'viewer']);
   if (!isRoleContext(ctx)) return ctx;
   const ws = ctx.workspace;
 
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin', 'gerente', 'agente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
   if (!isRoleContext(ctx)) return ctx;
   const ws = ctx.workspace;
 

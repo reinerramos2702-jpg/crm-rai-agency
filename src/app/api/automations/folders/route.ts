@@ -10,7 +10,7 @@ export const runtime = 'nodejs';
  */
 
 export async function POST(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin', 'gerente', 'agente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
   if (!isRoleContext(ctx)) return ctx;
 
   const { name } = await req.json();
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin', 'gerente', 'agente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
   if (!isRoleContext(ctx)) return ctx;
 
   const id = req.nextUrl.searchParams.get('id');

@@ -25,7 +25,7 @@ function jsonError(message: string, status: number) {
  * tablas, URLs) para que el modelo responda como lo haría en producción.
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const ctx = await requireRole(req, ['admin', 'gerente', 'agente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
   if (!isRoleContext(ctx)) return ctx;
 
   const { id } = await params;

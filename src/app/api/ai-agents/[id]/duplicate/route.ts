@@ -10,7 +10,7 @@ export const runtime = 'nodejs';
  * bases de conocimiento asociadas) en un nuevo agente "Sugerido" (no principal).
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const ctx = await requireRole(req, ['admin', 'gerente', 'agente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
   if (!isRoleContext(ctx)) return ctx;
 
   const { id } = await params;
