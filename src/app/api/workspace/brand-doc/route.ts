@@ -1,6 +1,11 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { isRoleContext, requireRole } from '@/lib/roles';
+import {
+  CONTENT_GENERATOR_READ_ROLES,
+  CONTENT_GENERATOR_WRITE_ROLES,
+  isRoleContext,
+  requireRole,
+} from '@/lib/roles';
 import { extractTextFromDocx } from '@/lib/docx-extract';
 
 export const runtime = 'nodejs';
@@ -17,7 +22,7 @@ export const runtime = 'nodejs';
  */
 
 export async function GET(req: NextRequest) {
-  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'staff']);
+  const ctx = await requireRole(req, CONTENT_GENERATOR_READ_ROLES);
   if (!isRoleContext(ctx)) return ctx;
 
   // ctx.workspace solo trae id/name/ownerId — el doc de marca se lee fresco de
@@ -32,7 +37,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  const ctx = await requireRole(req, CONTENT_GENERATOR_WRITE_ROLES);
   if (!isRoleContext(ctx)) return ctx;
   const ws = ctx.workspace;
 
@@ -85,7 +90,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  const ctx = await requireRole(req, CONTENT_GENERATOR_WRITE_ROLES);
   if (!isRoleContext(ctx)) return ctx;
   const ws = ctx.workspace;
 

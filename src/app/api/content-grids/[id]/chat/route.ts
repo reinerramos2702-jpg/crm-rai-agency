@@ -1,8 +1,8 @@
 import { streamText, generateText, convertToCoreMessages } from 'ai';
 import { NextRequest } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { getLLM, type Provider } from '@/lib/llm-providers';
 import { prisma } from '@/lib/db';
+import { CONTENT_GENERATOR_WRITE_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -28,8 +28,8 @@ function jsonError(message: string, status: number) {
  * El historial completo se persiste en ContentGrid.chatHistory.
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, CONTENT_GENERATOR_WRITE_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const { id } = await params;
 
@@ -43,14 +43,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   let modelId = body.modelId;
 
   const grid = await prisma.contentGrid.findFirst({
-    where: { id, userId: auth.userId },
+    where: { id, workspaceId: ctx.workspace.id },
     include: { workspace: { select: { brandDocText: true, brandDocName: true } } },
   });
   if (!grid) return new Response('Grid not found', { status: 404 });
 
   let model;
   try {
-    model = await getLLM(auth.userId, provider, modelId);
+    model = await getLLM(ctx.workspace.id, provider, modelId);
   } catch (e) {
     return jsonError((e as Error).message, 400);
   }
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (isQuotaOrAvail) {
         try {
           modelId = 'gemini-2.5-flash';
-          model = await getLLM(auth.userId, provider, modelId);
+          model = await getLLM(ctx.workspace.id, provider, modelId);
         } catch (e2) {
           return jsonError((e2 as Error).message, 502);
         }

@@ -18,7 +18,7 @@ import type { AgentOutput, MasterJson, ContentItem } from '@/lib/master-json-sch
  * Para pipelines sin video (static_ads, carousel) retorna skipped.
  */
 export async function runVideoAgent(args: {
-  userId: string;
+  workspaceId: string;
   executionId: string;
   taskId: string;
   master: MasterJson;
@@ -44,7 +44,7 @@ export async function runVideoAgent(args: {
   }
 
   try {
-    const apiKey = await resolveApiKey(args.userId, 'google');
+    const apiKey = await resolveApiKey(args.workspaceId, 'google');
     if (!apiKey) throw new Error('Google API key ausente para Veo');
 
     const prompt = buildVeoPrompt(master, item, args.copyOutput, args.visualOutput);

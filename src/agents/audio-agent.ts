@@ -1,5 +1,4 @@
-import { prisma } from '@/lib/db';
-import { decrypt } from '@/lib/crypto';
+import { resolveApiKey } from '@/lib/llm-providers';
 import { uploadAsset } from '@/lib/r2';
 import type { AgentOutput, MasterJson, ContentItem } from '@/lib/master-json-schema';
 
@@ -8,7 +7,7 @@ import type { AgentOutput, MasterJson, ContentItem } from '@/lib/master-json-sch
  * Soporta: 'elevenlabs', 'openai-tts'.
  */
 export async function runAudioAgent(args: {
-  userId: string;
+  workspaceId: string;
   executionId: string;
   taskId: string;
   master: MasterJson;
@@ -33,7 +32,7 @@ export async function runAudioAgent(args: {
       };
     }
 
-    const { buffer, cost } = await synthesize(args.userId, provider, text);
+    const { buffer, cost } = await synthesize(args.workspaceId, provider, text);
     const stored = await uploadAsset({
       body: buffer,
       contentType: 'audio/mpeg',
@@ -77,16 +76,13 @@ function extractDialogue(copyOutput: any): string {
 }
 
 async function synthesize(
-  userId: string,
+  workspaceId: string,
   provider: string,
   text: string
 ): Promise<{ buffer: Buffer; cost: number }> {
   if (provider === 'elevenlabs') {
-    const stored = await prisma.apiKey.findFirst({
-      where: { userId, provider: 'elevenlabs', validated: true },
-    });
-    if (!stored) throw new Error('ElevenLabs key missing');
-    const apiKey = decrypt(stored.ciphertext, stored.iv, stored.authTag);
+    const apiKey = await resolveApiKey(workspaceId, 'elevenlabs');
+    if (!apiKey) throw new Error('ElevenLabs key missing');
     const voiceId = '21m00Tcm4TlvDq8ikWAM'; // default; debería venir del brand profile
     const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
@@ -107,11 +103,8 @@ async function synthesize(
   }
 
   if (provider === 'openai-tts') {
-    const stored = await prisma.apiKey.findFirst({
-      where: { userId, provider: 'openai', validated: true },
-    });
-    if (!stored) throw new Error('OpenAI key missing');
-    const apiKey = decrypt(stored.ciphertext, stored.iv, stored.authTag);
+    const apiKey = await resolveApiKey(workspaceId, 'openai');
+    if (!apiKey) throw new Error('OpenAI key missing');
     const res = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: {

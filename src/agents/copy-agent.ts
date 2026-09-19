@@ -24,7 +24,7 @@ FORMATO OUTPUT:
 }`;
 
 export async function runCopyAgent(args: {
-  userId: string;
+  workspaceId: string;
   master: MasterJson;
   item: ContentItem;
 }): Promise<AgentOutput> {
@@ -33,7 +33,7 @@ export async function runCopyAgent(args: {
   const { provider, modelId } = master.modelConfig.copyAgent;
 
   try {
-    const model = await getLLM(args.userId, provider as any, modelId);
+    const model = await getLLM(args.workspaceId, provider as any, modelId);
 
     const userPrompt = `MARCA: ${JSON.stringify(master.brand)}
 TIPO DE PIPELINE: ${item.pipelineType}

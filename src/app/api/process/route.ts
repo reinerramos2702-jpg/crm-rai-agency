@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { getPipelineQueue } from '@/lib/redis';
 import { estimateExecutionCost, enforceHardCap } from '@/lib/cost-estimator';
 import { MasterJson } from '@/lib/master-json-schema';
+import { CAMPAIGN_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
@@ -17,14 +17,14 @@ export const runtime = 'nodejs';
  * - Crea Execution + N Tasks + N Jobs en cola.
  */
 export async function POST(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, CAMPAIGN_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const queue = getPipelineQueue();
   const { campaignId, confirmedCostUsd } = await req.json();
 
   const campaign = await prisma.campaign.findFirst({
-    where: { id: campaignId, userId: auth.userId },
+    where: { id: campaignId, workspaceId: ctx.workspace.id },
   });
   if (!campaign?.masterJson) return new Response('Campaign not ready', { status: 400 });
 
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
   const execution = await prisma.execution.create({
     data: {
       campaignId,
-      userId: auth.userId,
+      userId: ctx.auth.userId,
       status: 'queued',
       estimatedCostUsd: totalUsd,
       hardCapUsd: cap.cap,
@@ -73,7 +73,12 @@ export async function POST(req: NextRequest) {
     tasks.map((task) =>
       queue.add(
         `task-${task.id}`,
-        { taskId: task.id, executionId: execution.id, userId: auth.userId },
+        {
+          taskId: task.id,
+          executionId: execution.id,
+          userId: ctx.auth.userId,
+          workspaceId: ctx.workspace.id,
+        },
         { jobId: task.id }
       )
     )

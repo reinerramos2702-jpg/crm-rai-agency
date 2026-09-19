@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { analyzeAssets } from '@/agents/vision-analyzer';
 import { resolveApiKey } from '@/lib/llm-providers';
-import { getAuth } from '@/lib/auth';
+import { CAMPAIGN_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -29,8 +29,8 @@ export const dynamic = 'force-dynamic';
  * }
  */
 export async function GET(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, CAMPAIGN_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const { searchParams } = new URL(req.url);
   const folderPath = searchParams.get('path');
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
   const DAY_REGEX = /d[íi]a\s*(\d+)/i;
 
   const googleApiKey =
-    (await resolveApiKey(auth.userId, 'google')) || process.env.GOOGLE_API_KEY;
+    (await resolveApiKey(ctx.workspace.id, 'google')) || process.env.GOOGLE_API_KEY;
 
   // Leer entradas de la carpeta raíz
   let entries: fs.Dirent[];

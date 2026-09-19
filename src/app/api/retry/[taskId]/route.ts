@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { Queue } from 'bullmq';
+import { CAMPAIGN_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
@@ -21,8 +21,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { taskId: string } }
 ) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, CAMPAIGN_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const { taskId } = params;
 
@@ -32,7 +32,7 @@ export async function POST(
     include: {
       execution: {
         include: {
-          campaign: { select: { userId: true, masterJson: true, name: true } },
+          campaign: { select: { workspaceId: true, masterJson: true, name: true } },
         },
       },
     },
@@ -42,7 +42,7 @@ export async function POST(
     return NextResponse.json({ error: 'Task no encontrada' }, { status: 404 });
   }
 
-  if (task.execution.campaign.userId !== auth.userId) {
+  if (task.execution.campaign.workspaceId !== ctx.workspace.id) {
     return NextResponse.json({ error: 'Sin acceso a esta task' }, { status: 403 });
   }
 
@@ -87,7 +87,8 @@ export async function POST(
     {
       taskId,
       executionId: task.executionId,
-      userId: auth.userId,
+      userId: ctx.auth.userId,
+      workspaceId: ctx.workspace.id,
     },
     {
       jobId: `retry-${taskId}-${Date.now()}`,

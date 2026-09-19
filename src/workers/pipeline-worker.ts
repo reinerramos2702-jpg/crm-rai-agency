@@ -17,7 +17,7 @@ import type { MasterJson } from '@/lib/master-json-schema';
 const worker = new Worker(
   'content-pipeline',
   async (job) => {
-    const { taskId, executionId, userId } = job.data;
+    const { taskId, executionId } = job.data;
     console.log(`[worker] start task ${taskId} (exec ${executionId})`);
 
     const task = await prisma.task.findUnique({ where: { id: taskId } });
@@ -47,7 +47,13 @@ const worker = new Worker(
       });
     }
 
-    await processTask({ userId, executionId, taskId, master, item });
+    await processTask({
+      workspaceId: execution.campaign.workspaceId,
+      executionId,
+      taskId,
+      master,
+      item,
+    });
 
     // Si todas las tasks de la exec están done → marcar exec completed
     const pending = await prisma.task.count({

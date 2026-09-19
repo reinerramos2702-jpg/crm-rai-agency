@@ -15,10 +15,8 @@ export const runtime = 'nodejs';
 export async function GET(req: NextRequest) {
   const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin']);
   if (!isRoleContext(ctx)) return ctx;
-  const auth = ctx.auth;
-
   const keys = await prisma.apiKey.findMany({
-    where: { userId: auth.userId },
+    where: { workspaceId: ctx.workspace.id },
     select: {
       id: true,
       provider: true,
@@ -35,8 +33,6 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin']);
   if (!isRoleContext(ctx)) return ctx;
-  const auth = ctx.auth;
-
   const { provider, apiKey, label } = await req.json();
   if (!provider || !apiKey) {
     return new Response('provider and apiKey required', { status: 400 });
@@ -63,9 +59,9 @@ export async function POST(req: NextRequest) {
 
   const enc = encrypt(apiKey);
 
-  // upsert por (userId, provider, label)
+  // upsert por workspace, provider y label
   const existing = await prisma.apiKey.findFirst({
-    where: { userId: auth.userId, provider, label: label ?? null },
+    where: { workspaceId: ctx.workspace.id, provider, label: label ?? null },
   });
 
   const saved = existing
@@ -80,7 +76,8 @@ export async function POST(req: NextRequest) {
       })
     : await prisma.apiKey.create({
         data: {
-          userId: auth.userId,
+          userId: ctx.auth.userId,
+          workspaceId: ctx.workspace.id,
           provider,
           label,
           ciphertext: enc.ciphertext,
@@ -100,11 +97,9 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin']);
   if (!isRoleContext(ctx)) return ctx;
-  const auth = ctx.auth;
-
   const id = new URL(req.url).searchParams.get('id');
   if (!id) return new Response('id required', { status: 400 });
 
-  await prisma.apiKey.deleteMany({ where: { id, userId: auth.userId } });
+  await prisma.apiKey.deleteMany({ where: { id, workspaceId: ctx.workspace.id } });
   return new Response(null, { status: 204 });
 }

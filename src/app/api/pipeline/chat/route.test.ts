@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 
 vi.mock('@/lib/roles', () => ({
+  CAMPAIGN_ROLES: ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente'],
   requireRole: vi.fn(),
   isRoleContext: vi.fn(),
 }));

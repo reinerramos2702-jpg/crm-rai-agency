@@ -1,7 +1,7 @@
 import { streamText, convertToCoreMessages } from 'ai';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { isRoleContext, requireRole } from '@/lib/roles';
+import { AI_AGENT_WRITE_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 import { getLLM, type Provider } from '@/lib/llm-providers';
 
 export const runtime = 'nodejs';
@@ -25,7 +25,7 @@ function jsonError(message: string, status: number) {
  * tablas, URLs) para que el modelo responda como lo haría en producción.
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  const ctx = await requireRole(req, AI_AGENT_WRITE_ROLES);
   if (!isRoleContext(ctx)) return ctx;
 
   const { id } = await params;
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   let model;
   try {
-    model = await getLLM(ctx.auth.userId, agent.llmProvider as Provider, agent.llmModel);
+    model = await getLLM(ctx.workspace.id, agent.llmProvider as Provider, agent.llmModel);
   } catch (e) {
     return jsonError(
       `${(e as Error).message}. Configura una API key para ${agent.llmProvider} en Ajustes → Integraciones.`,

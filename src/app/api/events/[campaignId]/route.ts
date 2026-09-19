@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { createRedisSubscriber, eventChannel } from '@/lib/redis';
 import { prisma } from '@/lib/db';
+import { CAMPAIGN_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -19,15 +19,19 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { campaignId: string } }
 ) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, CAMPAIGN_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const url = new URL(req.url);
   const executionId = url.searchParams.get('executionId');
   if (!executionId) return new Response('executionId required', { status: 400 });
 
   const exec = await prisma.execution.findFirst({
-    where: { id: executionId, userId: auth.userId, campaignId: params.campaignId },
+    where: {
+      id: executionId,
+      campaignId: params.campaignId,
+      campaign: { workspaceId: ctx.workspace.id },
+    },
   });
   if (!exec) return new Response('Execution not found', { status: 404 });
 

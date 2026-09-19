@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { ingestUrl } from '@/lib/r2';
 import { generateImage } from '@/agents/visual-agent';
+import { CONTENT_GENERATOR_WRITE_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -18,11 +18,11 @@ export const maxDuration = 120;
  * se reemplaza (permite regenerar tras corrección del usuario).
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, CONTENT_GENERATOR_WRITE_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const { id } = await params;
-  const grid = await prisma.contentGrid.findFirst({ where: { id, userId: auth.userId } });
+  const grid = await prisma.contentGrid.findFirst({ where: { id, workspaceId: ctx.workspace.id } });
   if (!grid) return new Response('Grid not found', { status: 404 });
 
   let body: { themeIndex: number; slideNumber: number; prompt: string; provider?: string };
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   let url: string;
   let cost: number;
   try {
-    const result = await generateImage(auth.userId, provider, prompt);
+    const result = await generateImage(ctx.workspace.id, provider, prompt);
     url = result.url;
     cost = result.cost;
   } catch (e: unknown) {

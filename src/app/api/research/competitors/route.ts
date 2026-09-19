@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { runCompetitorResearch } from '@/agents/competitor-researcher';
 import { resolveApiKey } from '@/lib/llm-providers';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
+import { CAMPAIGN_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120; // Playwright puede tardar hasta 2 min
@@ -17,8 +17,8 @@ export const maxDuration = 120; // Playwright puede tardar hasta 2 min
  * y también se devuelve en la respuesta para que el chat lo reciba inmediatamente
  */
 export async function POST(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, CAMPAIGN_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const { urls, campaignId } = await req.json();
 
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
   // Obtener API key de Anthropic para Claude
   const anthropicKey =
-    (await resolveApiKey(auth.userId, 'anthropic')) ||
+    (await resolveApiKey(ctx.workspace.id, 'anthropic')) ||
     process.env.ANTHROPIC_API_KEY;
 
   if (!anthropicKey) {
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   // Si hay campaignId, persistir insights en masterJson
   if (campaignId) {
     const campaign = await prisma.campaign.findFirst({
-      where: { id: campaignId, userId: auth.userId },
+      where: { id: campaignId, workspaceId: ctx.workspace.id },
     });
 
     if (campaign) {

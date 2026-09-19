@@ -16,7 +16,7 @@ import type { AgentOutput, MasterJson, ContentItem } from '@/lib/master-json-sch
  * El worker lee este campo y llama al proveedor correcto
  */
 export async function runVisualAgent(args: {
-  userId: string;
+  workspaceId: string;
   executionId: string;
   taskId: string;
   master: MasterJson;
@@ -36,7 +36,7 @@ export async function runVisualAgent(args: {
 
     for (const scene of scenes) {
       const prompt = buildVisualPrompt(master, item, scene);
-      const { url, cost } = await generateImage(args.userId, provider, prompt);
+      const { url, cost } = await generateImage(args.workspaceId, provider, prompt);
 
       const stored = await ingestUrl(url, {
         executionId: args.executionId,
@@ -87,13 +87,13 @@ Estilo fotorrealista, alta calidad, sin texto sobreimpreso salvo que se indique.
 }
 
 export async function generateImage(
-  userId: string,
+  workspaceId: string,
   provider: string,
   prompt: string
 ): Promise<{ url: string; cost: number }> {
   // ===== GEMINI IMAGEN 3 =====
   if (provider === 'gemini') {
-    const apiKey = await resolveApiKey(userId, 'google');
+    const apiKey = await resolveApiKey(workspaceId, 'google');
     if (!apiKey) throw new Error('Google API key ausente para Imagen 3');
 
     const res = await fetch(
@@ -125,7 +125,7 @@ export async function generateImage(
 
   // ===== OPENAI gpt-image-1 / DALL-E 3 =====
   if (provider === 'openai') {
-    const apiKey = await resolveApiKey(userId, 'openai');
+    const apiKey = await resolveApiKey(workspaceId, 'openai');
     if (!apiKey) throw new Error('OpenAI API key ausente para imagen');
 
     const res = await fetch('https://api.openai.com/v1/images/generations', {
@@ -161,7 +161,7 @@ export async function generateImage(
 
   // ===== STABILITY AI =====
   if (provider === 'stabilityai') {
-    const apiKey = await resolveApiKey(userId, 'openai'); // usa slot openai temporalmente
+    const apiKey = await resolveApiKey(workspaceId, 'openai'); // usa slot openai temporalmente
     if (!apiKey) throw new Error('Stability AI API key ausente');
 
     const res = await fetch('https://api.stability.ai/v2beta/stable-image/generate/ultra', {

@@ -1,6 +1,11 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { isRoleContext, requireRole } from '@/lib/roles';
+import {
+  CONTENT_GENERATOR_READ_ROLES,
+  CONTENT_GENERATOR_WRITE_ROLES,
+  isRoleContext,
+  requireRole,
+} from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
@@ -10,11 +15,11 @@ export const runtime = 'nodejs';
  */
 
 export async function GET(req: NextRequest) {
-  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'staff']);
+  const ctx = await requireRole(req, CONTENT_GENERATOR_READ_ROLES);
   if (!isRoleContext(ctx)) return ctx;
 
   const grids = await prisma.contentGrid.findMany({
-    where: { userId: ctx.auth.userId },
+    where: { workspaceId: ctx.workspace.id },
     orderBy: { updatedAt: 'desc' },
     select: {
       id: true,
@@ -35,7 +40,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  const ctx = await requireRole(req, CONTENT_GENERATOR_WRITE_ROLES);
   if (!isRoleContext(ctx)) return ctx;
   const ws = ctx.workspace;
 
@@ -47,7 +52,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Nombre amistoso automático: "Grilla 1", "Grilla 2", ...
-  const count = await prisma.contentGrid.count({ where: { userId: ctx.auth.userId } });
+  const count = await prisma.contentGrid.count({ where: { workspaceId: ctx.workspace.id } });
   const name = body.name?.trim() || `Grilla ${count + 1}`;
 
   const grid = await prisma.contentGrid.create({

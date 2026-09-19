@@ -91,6 +91,10 @@ export class WorkspaceAccessError extends Error {
  *
  * El super admin también cae en su workspace propio si no manda header: el
  * acceso cross-tenant siempre es explícito.
+ *
+ * Dependencia de Etapa 3: el frontend transportará workspaceId en la cookie
+ * JWT. Ese cambio de transporte se implementará en auth, no en esta fase de
+ * scoping; las rutas solo deben consumir el workspace ya resuelto aquí.
  */
 export async function resolveActiveWorkspace(
   req: NextRequest,

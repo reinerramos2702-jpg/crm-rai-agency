@@ -29,7 +29,7 @@ import type { MasterJson, ContentItem, AgentOutput } from '@/lib/master-json-sch
  */
 
 export async function processTask(args: {
-  userId: string;
+  workspaceId: string;
   executionId: string;
   taskId: string;
   master: MasterJson;
@@ -46,7 +46,7 @@ export async function processTask(args: {
 
   // ============ 1. COPY (cascada) ============
   await emit(executionId, taskId, 'agent.started', 'copy');
-  const copy = await runCopyAgent({ userId: args.userId, master: args.master, item });
+  const copy = await runCopyAgent({ workspaceId: args.workspaceId, master: args.master, item });
   outputs.copy = copy;
   await persistAgent(taskId, copy);
   if (copy.status === 'failed') return pauseTask(executionId, taskId, 'copy', copy.errorMessage!);
@@ -57,7 +57,7 @@ export async function processTask(args: {
 
   const [visual, audio] = await Promise.all([
     runVisualAgent({
-      userId: args.userId,
+      workspaceId: args.workspaceId,
       executionId,
       taskId,
       master: args.master,
@@ -65,7 +65,7 @@ export async function processTask(args: {
       copyOutput: (copy.data || {}) as Record<string, unknown>,
     }),
     runAudioAgent({
-      userId: args.userId,
+      workspaceId: args.workspaceId,
       executionId,
       taskId,
       master: args.master,
@@ -84,7 +84,7 @@ export async function processTask(args: {
   // ============ 3. VIDEO (depende de Visual + Audio) ============
   await emit(executionId, taskId, 'agent.started', 'video');
   const video = await runVideoAgent({
-    userId: args.userId,
+    workspaceId: args.workspaceId,
     executionId,
     taskId,
     master: args.master,
@@ -101,7 +101,7 @@ export async function processTask(args: {
   if (args.master.modelConfig.musicAgent) {
     await emit(executionId, taskId, 'agent.started', 'music');
     const music = await runMusicAgent({
-      userId: args.userId,
+      workspaceId: args.workspaceId,
       executionId,
       taskId,
       master: args.master,

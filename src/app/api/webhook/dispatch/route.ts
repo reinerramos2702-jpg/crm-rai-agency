@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { dispatchToN8n } from '@/lib/n8n-dispatcher';
+import { CAMPAIGN_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
@@ -13,8 +13,8 @@ export const runtime = 'nodejs';
  * Útil para disparar publicación manual desde la UI.
  */
 export async function POST(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, CAMPAIGN_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const { taskId } = await req.json();
   if (!taskId) return NextResponse.json({ error: 'Se requiere taskId' }, { status: 400 });
@@ -32,14 +32,14 @@ export async function POST(req: NextRequest) {
   });
 
   if (!task) return NextResponse.json({ error: 'Task no encontrada' }, { status: 404 });
-  if (task.execution.campaign.userId !== auth.userId) {
+  if (task.execution.campaign.workspaceId !== ctx.workspace.id) {
     return NextResponse.json({ error: 'Sin acceso' }, { status: 403 });
   }
 
   // Obtener URL del webhook desde Settings del workspace de la campaña o master JSON
   const master = task.execution.campaign.masterJson as Record<string, unknown>;
   const settings = await prisma.settings.findUnique({
-    where: { workspaceId: task.execution.campaign.workspaceId },
+    where: { workspaceId: ctx.workspace.id },
   });
   const webhookUrl =
     (master?.n8nWebhookUrl as string) ||

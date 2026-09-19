@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { resolveApiKey } from '@/lib/llm-providers';
+import { isRoleContext, MARKETING_WRITE_ROLES, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -971,8 +971,8 @@ function generateHTMLReport(analysis: AdsAnalysis, scrapedOk: boolean, searchUrl
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, MARKETING_WRITE_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const body = await req.json();
   const { brandName, country = 'ALL' } = body as { brandName: string; country?: string };
@@ -991,7 +991,7 @@ export async function POST(req: NextRequest) {
 
   // 2. Get Google API key for AI analysis
   const googleApiKey =
-    (await resolveApiKey(auth.userId, 'google')) || process.env.GOOGLE_API_KEY || null;
+    (await resolveApiKey(ctx.workspace.id, 'google')) || process.env.GOOGLE_API_KEY || null;
 
   // 3. Analyze with AI
   const analysis = await analyzeWithAI(brandName, country, scraped, googleApiKey);

@@ -202,6 +202,15 @@ export function canWrite(role: Role): boolean {
   return role !== 'viewer';
 }
 
+// Backend role sets derived from the same module matrix used by navigation.
+export const CAMPAIGN_ROLES = MODULE_ACCESS['/campaign/new'];
+export const CONTENT_GENERATOR_READ_ROLES = MODULE_ACCESS['/generador-imagenes'];
+export const CONTENT_GENERATOR_WRITE_ROLES = CONTENT_GENERATOR_READ_ROLES.filter(
+  (role) => role !== 'staff' && canWrite(role)
+);
+export const MARKETING_WRITE_ROLES = MODULE_ACCESS['/marketing'].filter(canWrite);
+export const AI_AGENT_WRITE_ROLES = MODULE_ACCESS['/agentes-ia'].filter(canWrite);
+
 export function isAdmin(role: Role): boolean {
   return role === 'admin' || role === 'super_admin' || role === 'agency_owner';
 }
