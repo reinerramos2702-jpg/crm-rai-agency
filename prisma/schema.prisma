@@ -15,11 +15,15 @@ datasource db {
 // IDENTIDAD (proviene del CRM via JWT, replicado local para FKs)
 // ============================================
 model User {
-  id          String   @id // UUID del CRM
-  email       String   @unique
-  displayName String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id // UUID del CRM (o generado localmente en registro por invitación)
+  email        String   @unique
+  displayName  String?
+  // Etapa 3 (Auth real): hash scrypt del password. Nullable a propósito — los
+  // usuarios existentes (SSO/dev) no tienen password hasta aceptar una
+  // invitación o ser bootstrap del super admin (SUPER_ADMIN_EMAILS).
+  passwordHash String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   workspaces  Workspace[]
   apiKeys     ApiKey[]

@@ -33,6 +33,7 @@ import {
   X,
 } from 'lucide-react';
 import { hasModuleAccess, ROLE_LABELS, type Role } from '@/lib/roles-shared';
+import { apiFetch } from '@/lib/client-api';
 
 interface SidebarProps {
   n8nConnected?: boolean;
@@ -73,7 +74,7 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/me')
+    apiFetch('/api/me')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!cancelled && data?.role) setRole(data.role as Role);

@@ -1,4 +1,4 @@
-import { jwtVerify } from 'jose';
+import { jwtVerify, SignJWT } from 'jose';
 import { NextRequest } from 'next/server';
 import { prisma } from './db';
 
@@ -9,6 +9,9 @@ export interface AuthContext {
 }
 
 const encoder = new TextEncoder();
+
+/** Nombre de la cookie httpOnly de sesión (Etapa 3 — Auth real). */
+export const SESSION_COOKIE = 'rai_session';
 
 export async function verifyJwt(token: string): Promise<AuthContext | null> {
   try {
@@ -24,6 +27,27 @@ export async function verifyJwt(token: string): Promise<AuthContext | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Emite un JWT de sesión del CRM (HS256, expiración 7 días) con el mismo
+ * payload que verifyJwt espera: sub=userId, email, name=displayName.
+ * Usado por POST /api/auth/login (Etapa 3). El JWT viaja en cookie httpOnly,
+ * nunca en localStorage.
+ */
+export async function signJwt(ctx: {
+  userId: string;
+  email: string;
+  displayName?: string;
+}): Promise<string> {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET no configurado — no se puede emitir sesión.');
+  return new SignJWT({ email: ctx.email, name: ctx.displayName })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setSubject(ctx.userId)
+    .setIssuedAt()
+    .setExpirationTime('7d')
+    .sign(encoder.encode(secret));
 }
 
 /**
@@ -101,7 +125,11 @@ export async function getAuth(req: NextRequest): Promise<AuthContext | null> {
   }
 
   const authHeader = req.headers.get('authorization');
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  // Etapa 3: además del header Bearer (SSO externo), acepta la cookie httpOnly
+  // de sesión emitida por POST /api/auth/login. El frontend autentica con la
+  // cookie (se envía sola en requests same-origin), sin tocar localStorage.
+  const token = bearerToken ?? req.cookies?.get(SESSION_COOKIE)?.value ?? null;
   if (!token) return null;
 
   const ctx = await verifyJwt(token);
