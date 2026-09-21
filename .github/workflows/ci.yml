@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - '**'
+  pull_request:
+
+jobs:
+  codegen:
+    name: Prisma generate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Prisma generate (envs dummy — solo generación, sin tocar DB)
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy?pgmode=transaction
+          DIRECT_URL: postgresql://dummy:dummy@localhost:5432/dummy
+          JWT_SECRET: dummy
+      - name: Cache Prisma client
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.prisma
+          key: prisma-${{ runner.os }}-${{ hashFiles('prisma/schema.prisma') }}
+
+  typecheck:
+    name: tsc --noEmit
+    runs-on: ubuntu-latest
+    needs: codegen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+        env:
+          JWT_SECRET: dummy
+
+  lint:
+    name: ESLint (seguridad + básico)
+    runs-on: ubuntu-latest
+    needs: codegen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+        env:
+          JWT_SECRET: dummy
+
+  test:
+    name: vitest run
+    runs-on: ubuntu-latest
+    needs: codegen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+        env:
+          JWT_SECRET: dummy

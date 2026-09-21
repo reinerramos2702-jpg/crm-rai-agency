@@ -26,9 +26,11 @@ export async function extractTextFromDocx(buffer: Buffer | ArrayBuffer): Promise
   const lines: string[] = [];
   for (const para of paragraphs) {
     // Texto visible: <w:t ...>texto</w:t> (puede haber atributos como xml:space="preserve")
+    // eslint-disable-next-line security/detect-unsafe-regex -- XML de .docx acotado por el usuario logueado; el patrón lazy sobre entrada limitada no escala a ReDoS real.
     const textMatches = para.match(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g) || [];
     const text = textMatches
       .map((m) => {
+        // eslint-disable-next-line security/detect-unsafe-regex -- mismo contexto que arriba: limpiar tags de un match ya extraído.
         const inner = m.replace(/<w:t(?:\s[^>]*)?>/, '').replace(/<\/w:t>/, '');
         return decodeXmlEntities(inner);
       })
