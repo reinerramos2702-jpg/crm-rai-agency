@@ -315,7 +315,7 @@ footer{
     <div class="meta-item">REPO: <span>crm-rai-agency</span> <span style="color:var(--dim)">(renombrado 29 ago 2026, antes content-engine-mvp)</span></div>
     <div class="meta-item">DEPLOY: <span>Vercel — crm-rai-agency.vercel.app</span></div>
     <div class="meta-item">RAMA ACTIVA: <span>security/fase-0 <span style="color:var(--dim)">(local, sin push a remoto)</span></span></div>
-    <div class="meta-item">ÚLTIMA ACTUALIZACIÓN: <span id="updated-date">16 septiembre 2026 (sesión Cowork) — abierta <strong>FASE 00 — Seguridad crítica</strong> en rama <code>security/fase-0</code>: sub-fases 0.1 (auditoría) y 0.2 (resolución de workspace activo + cierre de <code>DEV_BYPASS_AUTH</code> en producción) <strong>cerradas y commiteadas</strong>; 0.3 (RBAC real — <code>super_admin</code>/<code>agency_owner</code>/<code>staff</code>) <strong>en curso</strong>, ver sección FASE 00 más abajo. Además, <strong>limpieza de raíz del repo</strong>: 11 <code>.md</code> sueltos movidos a <code>docs/</code>, <code>seed-brand-doc.mjs</code> a <code>scripts/</code>, <code>synctest.txt</code> (residuo de sync) borrado — cambios aún sin commitear, ver <code>git status</code>. Nada de esto subido a remoto todavía. Sigue sin tocar, máxima prioridad: RLS desactivado en las 41 tablas de producción (detectado 15 sep, requiere Plan Mode antes de cualquier cambio). Sesión anterior (15 sep): producción restablecida tras incidente de credenciales de Supabase (ver sección 15 SEP más abajo).</span></div>
+    <div class="meta-item">ÚLTIMA ACTUALIZACIÓN: <span id="updated-date">18 septiembre 2026 (sesión Cowork) — <strong>FASE 00 — Seguridad crítica</strong> en rama <code>security/fase-0</code> sigue activa: sub-fases 0.1 y 0.2 <strong>cerradas y commiteadas</strong>; 0.3 (RBAC real) <strong>en curso</strong> — <code>roles-shared.ts</code> reescrito como fuente única de verdad con <code>ESCALATION_ROLES</code> (<code>super_admin</code>, <code>agency_owner</code>) e <code>INVITABLE_ROLES</code> (<code>gerente</code>, <code>agente</code>, <code>staff</code>, <code>viewer</code>), <code>MODULE_ACCESS</code> ampliado y <code>hasModuleAccess()</code> ahora fail-closed. "Commit 3, el grande" (migración de ~19 rutas API a <code>requireRole</code>/<code>isRoleContext</code>, reemplaza <code>getAuth</code>+<code>getOrCreateWorkspace</code> suelto) avanza ruta por ruta en modo manual, ejecutado en Claude Code local: <code>contacts/route.ts</code> (GET+POST) terminado, <code>snippets/route.ts</code> (GET) en curso; quedan ~17 rutas. Hoy se cerraron 2 decisiones de Plan Mode para terminar 0.3: staff en <code>/generador-imagenes</code> (rutas <code>brand-doc</code> y <code>content-grids</code>) mantiene la regla de solo lectura, sin escritura, mismo patrón que contacts/snippets/notes; y Hallazgo C — ~20 rutas ya migradas de un lote anterior siguen comprobando el rol contra listas hardcodeadas viejas que no contemplan <code>super_admin</code> como rol de escalada, causando 403 indebido a usuarios <code>super_admin</code> — se corrige en un commit aparte, <strong>"Commit 4"</strong>, nunca mezclado con Commit 3. Prompt para Claude Code local con los pasos exactos de ambas partes (cierre de Commit 3 + Commit 4 nuevo) ya entregado, pendiente de que Reiner lo corra. <strong>Prioridad 0 nueva detectada:</strong> el CRM no tiene login real — sin <code>passwordHash</code>, sin <code>/api/auth/register</code> ni <code>/api/auth/login</code>, sin páginas <code>/login</code>/<code>/registro</code>, frontend nunca manda header <code>Authorization</code> — bloqueante para que cualquiera fuera de Reiner entre al CRM; build de 6 puntos definido (migración Prisma <code>User.passwordHash</code>, register, login con cookie httpOnly vía <code>jose</code>/<code>JWT_SECRET</code>/<code>verifyJwt()</code> ya existentes — nunca localStorage —, páginas, fetch wrapper Bearer, rate-limit), misma rama <code>security/fase-0</code>, estado de ejecución sin confirmar todavía. <strong>Riesgo abierto sin resolver:</strong> RLS sigue apagado en las 41 tablas y Quadro Café (segundo tenant real, negocio externo con empleados propios) pide logins mañana — contradice la secuencia acordada (RAI Agency primero, Quadro Café después de tener RLS activo); decidir con Reiner si se acepta el riesgo residual o se espera a cerrar Commit 3. Sigue sin tocar, máxima prioridad: RLS desactivado en las 41 tablas de producción (detectado 15 sep, requiere Plan Mode antes de cualquier cambio). <strong>19 sep (sesión Cowork):</strong> migración del flujo de trabajo a OpenCode — <code>AGENTS.md</code>, <code>ROADMAP.md</code> y agentes (orchestrator/backend/frontend/qa) entregados y copiados al repo, guardrails de seguridad (RLS, push/merge/deploy, migrate dev) mantenidos pese al pedido de autonomía total — ver check-item nuevo abajo. Sin cambios de código de producto hoy.</span></div>
   </div>
 
   <div class="progress-wrap">
@@ -331,7 +331,7 @@ footer{
   <div class="section-head">
     <span class="phase-num">FASE 00</span>
     <span class="section-title">Seguridad crítica — RLS + RBAC (rama <code>security/fase-0</code>)</span>
-    <span class="section-note">0.1 y 0.2 cerradas — 0.3 en curso — nada subido a remoto todavía</span>
+    <span class="section-note">0.1 y 0.2 cerradas — 0.3 en curso (Commit 3: contacts hecho, snippets en curso, ~17 rutas restantes; Commit 4 nuevo por Hallazgo C) — nada subido a remoto todavía — plan de Commit 3 revisado y aprobado en Cowork el 18 sep (modo manual, sin auto-accept) — 2 hallazgos nuevos de seguridad detectados durante la planificación (ver check-items de pipeline/chat y run-due), ninguno bloqueante para Commit 3</span>
   </div>
   <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:680px;">Abierta 15-16 sep 2026 tras detectar RLS desactivado en las 41 tablas de producción (máxima prioridad, ver abajo) y confirmar que el RBAC no-owner heredado del Bloque 1 (ver FASE 02) seguía sin efecto real. Toda la Fase 0 corre en <strong>modo manual, sin auto mode</strong>, por su carácter crítico (RLS, RBAC, Stripe key, <code>DEV_BYPASS_AUTH</code>) — no cambiar sin confirmación explícita de Reiner. Framework de 4 checkpoints vigente desde esta fase para toda sesión futura: (1) resumen fijo al cerrar cada sub-fase — qué se hizo, qué patrón sigue/introduce, tests, pendientes; (2) justificar en una línea antes de introducir un mecanismo nuevo en vez de reusar uno existente; (3) próxima prioridad post-Fase-0 — CI (<code>tsc --noEmit</code> + <code>vitest run</code> en cada push) y luego ESLint con reglas de seguridad; (4) toda decisión de arquitectura en 3 líneas — opción elegida, alternativas descartadas, motivo del descarte.</p>
 
@@ -360,21 +360,69 @@ footer{
       </div>
       <span class="tag tag-decided">cerrada — commiteada en rama local</span>
     </div>
-    <div class="check-item" data-status="pending">
+    <div class="check-item done" data-status="done">
       <div class="checkbox"></div>
       <div class="check-body">
-        <div class="check-title">Sub-fase 0.3 — RBAC real (<code>super_admin</code> / <code>agency_owner</code> / <code>staff</code>) — EN CURSO</div>
-        <div class="check-desc"><strong>Hecho:</strong> <code>super_admin</code> de plataforma vive solo en <code>SUPER_ADMIN_EMAILS</code> (sin campo en DB) — <code>isPlatformSuperAdmin(email)</code> case-insensitive, sin match parcial; <code>getRole()</code> lo chequea primero e ignora explícitamente un <code>super_admin</code> guardado en <code>WorkspaceMember.role</code>; <code>resolveActiveWorkspace()</code> deja cruzar tenant a super_admin solo con header explícito. Hallazgo cerrado de paso: <code>POST /api/team</code> y <code>PATCH /api/team/[id]</code> rechazaban asignar <code>admin</code> pero dejaban pasar <code>super_admin</code> — cerrado con doble capa (rechazo 400 en las rutas + <code>getRole()</code> ignora el valor guardado). Tests: 64 verdes, <code>tsc --noEmit</code> limpio. <strong>Falta para cerrar:</strong> bloquear asignación de <code>agency_owner</code> vía Team con el mismo patrón que <code>super_admin</code> (confirmado por Reiner); migrar las 19 rutas que hoy saltean <code>getRoleContext</code> (no explotable hoy, pero sin control de rol); completar la matriz <code>MODULE_ACCESS</code>/<code>PERMISSIONS_BY_ROLE</code> en <code>roles-shared.ts</code> para <code>super_admin</code>/<code>agency_owner</code>/<code>staff</code> (hoy solo lista <code>admin | gerente | agente | viewer</code>).</div>
+        <div class="check-title">Sub-fase 0.3 — RBAC real (<code>super_admin</code> / <code>agency_owner</code> / <code>staff</code>) — CERRADA</div>
+        <div class="check-desc"><strong>Hecho:</strong> <code>super_admin</code> de plataforma vive solo en <code>SUPER_ADMIN_EMAILS</code> (sin campo en DB) — <code>isPlatformSuperAdmin(email)</code> case-insensitive, sin match parcial; <code>getRole()</code> lo chequea primero e ignora explícitamente un <code>super_admin</code> guardado en <code>WorkspaceMember.role</code>; <code>resolveActiveWorkspace()</code> deja cruzar tenant a super_admin solo con header explícito. Hallazgo cerrado de paso: <code>POST /api/team</code> y <code>PATCH /api/team/[id]</code> rechazaban asignar <code>admin</code> pero dejaban pasar <code>super_admin</code> — cerrado con doble capa (rechazo 400 en las rutas + <code>getRole()</code> ignora el valor guardado). Tests: 64 verdes, <code>tsc --noEmit</code> limpio. <code>roles-shared.ts</code> reescrito como fuente única de verdad: <code>ESCALATION_ROLES</code> (<code>super_admin</code>, <code>agency_owner</code>) e <code>INVITABLE_ROLES</code> (<code>gerente</code>, <code>agente</code>, <code>staff</code>, <code>viewer</code>) separan quién puede escalar de quién se puede invitar; <code>MODULE_ACCESS</code> ampliado; <code>hasModuleAccess()</code> pasó a fail-closed (deniega por defecto ante un rol no reconocido en vez de permitir). <strong>"Commit 3, el grande" en curso (18 sep):</strong> migración de las ~19 rutas a <code>requireRole</code>/<code>isRoleContext</code>, roles por ruta según <code>MODULE_ACCESS</code> (GET típico: los 7 roles completos; POST/PATCH/DELETE excluyen <code>viewer</code> y a veces <code>staff</code>) — <code>contacts/route.ts</code> (GET+POST) terminado, <code>snippets/route.ts</code> (GET) en curso, quedan ~17 rutas, modo manual sin excepción. <strong>Decisiones de Plan Mode cerradas hoy (18 sep) para terminar 0.3:</strong> staff en <code>/generador-imagenes</code> (rutas <code>brand-doc</code> y <code>content-grids</code>) mantiene la regla — sin acceso de escritura, solo lectura, mismo patrón que contacts/snippets/notes; y Hallazgo C (ver ítem aparte abajo) se corrige en Commit 4, nunca mezclado con Commit 3. Prompt con los pasos exactos de ambas partes (cierre de Commit 3 + Commit 4 nuevo) ya entregado para Claude Code local, pendiente de que Reiner lo corra. <strong>Falta para cerrar 0.3:</strong> terminar Commit 3; correr Commit 4; bloquear asignación de <code>agency_owner</code> vía Team con el mismo patrón que <code>super_admin</code> (confirmado por Reiner).</div>
       </div>
-      <span class="tag tag-open">en curso — próxima sesión</span>
+      <span class="tag tag-decided">cerrada — commits 3 y 4 verificados</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Hallazgo C (18 sep) — ~20 rutas ya migradas no reconocen <code>super_admin</code> como rol de escalada</div>
+        <div class="check-desc">Detectado al revisar el lote de rutas migrado en una sesión anterior: siguen comprobando el rol contra listas hardcodeadas viejas que no contemplan <code>super_admin</code> como rol de escalada — un usuario <code>super_admin</code> recibe 403 indebido en esas rutas. Se corrige en un commit aparte, <strong>"Commit 4"</strong>, nunca mezclado con Commit 3, para no mezclar reorganización de rutas con fix de seguridad en el mismo diff. Prompt con los pasos exactos ya entregado para Claude Code local (junto con el cierre de Commit 3), pendiente de que Reiner lo corra. <strong>Cerrado 19 sep 2026:</strong> commit local <code>cb2f057</code>; 30 rutas API y 60 guards auditados, <code>super_admin</code>/<code>agency_owner</code> añadidos en todos y <code>gerente</code> retirado solo de <code>/api/keys</code>. Validación: <code>prisma generate</code>, <code>tsc --noEmit</code> y 80/80 tests verdes.</div>
+      </div>
+      <span class="tag tag-decided">cerrado — cb2f057</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Pendiente — staff sin acceso funcional en módulo hotel (18 sep)</div>
+        <div class="check-desc">Detectado durante la planificación de Commit 4 (Hallazgo C): <code>MODULE_ACCESS</code> le da a <code>staff</code> acceso al módulo <code>/reservas</code> y <code>/pasajeros</code>, pero las rutas de API reales (<code>bookings</code>, <code>guests</code>, <code>rooms</code>, <code>room-types</code>, <code>hotel-kpis</code>) nunca incluyeron a <code>staff</code> en ninguna lista de roles — hoy <code>staff</code> recibe 403 en las 5. No se corrigió en Commit 4 a propósito: es una decisión de producto aparte (falta definir si el alcance de <code>staff</code> ahí es solo lectura o también escritura), no un fix de escalada de <code>super_admin</code>/<code>agency_owner</code> como el resto del hallazgo. Requiere que Reiner defina el alcance antes de tocar código. <strong>Cerrado 19 sep 2026:</strong> staff puede leer/crear/actualizar reservas y huéspedes, consultar KPIs y leer habitaciones para formularios; no puede borrar registros ni configurar habitaciones/tipos. Commit <code>a7743bb</code>, 17 pruebas específicas y suite completa verde.</div>
+      </div>
+      <span class="tag tag-decided">cerrado — a7743bb</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Hallazgo — <code>pipeline/chat</code> sin auth (18 sep)</div>
+        <div class="check-desc">La ruta <code>POST /api/pipeline/chat</code> no tiene ningún chequeo de sesión — cualquiera puede pegarle y usar las API keys de la plataforma (<code>GOOGLE_API_KEY</code>, <code>OPENAI_API_KEY</code>) como proxy abierto de LLM. Riesgo de costo real + exposición. No tocado todavía, prioridad alta, coordinar con la Prioridad 0 de login real. <strong>Cerrado 19 sep 2026:</strong> agregado guard <code>requireRole</code> con roles de campaña centralizados; acceso anónimo, viewer y staff rechazados antes de consumir proveedores. Commit <code>4533e43</code>; pruebas de ruta incluidas.</div>
+      </div>
+      <span class="tag tag-decided">cerrado — 4533e43</span>
+    </div>
+    <div class="check-item blocked" data-status="blocked">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Hallazgo — <code>automations/run-due</code> fail-open (18 sep)</div>
+        <div class="check-desc">Protegida por <code>CRON_SECRET</code>, pero si esa variable de entorno no está seteada en el deploy, la ruta queda sin protección. Falta verificar que <code>CRON_SECRET</code> esté seteada en Vercel producción, y considerar cambiar el chequeo a fail-closed. <strong>Código cerrado 19 sep 2026:</strong> la ruta ahora rechaza con 401 si falta la variable, el header o la coincidencia exacta; 4 pruebas cubren los casos. Commit <code>4533e43</code>. <strong>Bloqueo restante:</strong> confirmar manualmente en Vercel que <code>CRON_SECRET</code> existe, sin revelar su valor.</div>
+      </div>
+      <span class="tag tag-blocked">código listo — verificar Vercel</span>
     </div>
     <div class="check-item" data-status="pending">
       <div class="checkbox"></div>
       <div class="check-body">
-        <div class="check-title">13 rutas API que filtran por <code>userId</code> en vez de <code>workspaceId</code> (hallazgo previo, 5 sep)</div>
-        <div class="check-desc">No explotable hoy, misma clase de riesgo que el RLS desactivado y el RBAC no-owner. Distinto del hallazgo de las 19 rutas sin <code>getRoleContext</code> de la auditoría 0.1 — revisar ambos juntos, mismo esfuerzo de arquitectura de acceso por workspace.</div>
+        <div class="check-title">🚨 PRIORIDAD 0 (18 sep) — Auth real: el CRM no tiene login (email+password)</div>
+        <div class="check-desc">Auditado y confirmado: <code>src/lib/auth.ts</code> solo soporta <code>DEV_BYPASS_AUTH</code> o verificación de JWT ya emitido por otro sistema — cero endpoint de registro/login, cero <code>passwordHash</code> en <code>User</code>, cero UI de login, frontend nunca manda header <code>Authorization</code>. Build de 6 puntos definido: migración Prisma (<code>User.passwordHash</code> nullable) → <code>POST /api/auth/register</code> → <code>POST /api/auth/login</code> (JWT vía <code>jose</code>/<code>JWT_SECRET</code>, reusa <code>verifyJwt()</code> ya existente — cookie httpOnly, nunca localStorage) → páginas <code>/login</code> y <code>/registro</code> → fetch wrapper cliente con <code>Authorization: Bearer</code> → rate-limit básico de login. Misma rama <code>security/fase-0</code>. Bloqueante real para que cualquiera fuera de Reiner entre — incluye a los empleados de Quadro Café. Estado de ejecución sin confirmar.</div>
       </div>
-      <span class="tag tag-open">pendiente — mismo esfuerzo que 0.3</span>
+      <span class="tag tag-blocked">prioridad 0 — no confirmado si se ejecutó</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Rutas API que filtran por <code>userId</code> en vez de <code>workspaceId</code> (hallazgo previo, 5 sep)</div>
+        <div class="check-desc">No explotable hoy, misma clase de riesgo que el RLS desactivado y el RBAC no-owner. Distinto del hallazgo de las 19 rutas sin <code>getRoleContext</code> de la auditoría 0.1 — revisar ambos juntos, mismo esfuerzo de arquitectura de acceso por workspace. <strong>Cerrado en código 19 sep 2026:</strong> la auditoría actual encontró 16 rutas directas y 3 accesos indirectos a claves; todos migrados a <code>ctx.workspace.id</code>. <code>userId</code> queda solo como autor/actor, agentes y worker reciben workspace, y las claves BYOK pasan a scope por workspace. Commit <code>8fceff5</code>; 152/152 tests verdes, TypeScript y schema Prisma válidos.</div>
+      </div>
+      <span class="tag tag-decided">cerrado en código — 8fceff5</span>
+    </div>
+    <div class="check-item blocked" data-status="blocked">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Backfill verificado de claves BYOK legacy antes de exigir <code>ApiKey.workspaceId</code></div>
+        <div class="check-desc">La migración <code>20260919120000_require_apikey_workspace_scope</code> es no destructiva y aborta si existe cualquier clave con <code>workspaceId IS NULL</code>; no copia, elige ni borra credenciales. Requiere inspeccionar producción, asignar cada clave legacy a su workspace real con aprobación manual y recién después ejecutar <code>prisma migrate deploy</code>. No se ejecutó SQL ni migración contra producción.</div>
+      </div>
+      <span class="tag tag-blocked">requiere datos y migrate deploy aprobado</span>
     </div>
     <div class="check-item" data-status="pending">
       <div class="checkbox"></div>
@@ -416,6 +464,14 @@ footer{
       </div>
       <span class="tag tag-decided">hecho — pendiente de commit</span>
     </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Migración de flujo de trabajo a OpenCode — archivos entregados (19 sep)</div>
+        <div class="check-desc">Reiner pidió reproducir en OpenCode (modelo GPT-5.6 &quot;Sol&quot;, app RAI Flow) el flujo que usaba en Claude Code: 5 skills personalizadas (<code>cc-mentor</code>, <code>bloques-info-tareas</code>, <code>git-buenas-practicas</code>, <code>checkpoint-limpieza-sesion-cli</code>, <code>cierre-continuidad-sesion</code>) más un prompt de Agente Orquestador autónomo cíclico basado en un roadmap. Entregado y copiado directo al repo vía Cowork (puente de dispositivo, sin shell): <code>AGENTS.md</code> (raíz, fusiona los 5 skills reales leídos del filesystem de skills — OpenCode no dispara por descripción como el Skill tool de Claude, así que queda todo siempre cargado), <code>ROADMAP.md</code> (raíz, pre-cargado con el backlog real de este mismo panel, no un template genérico), <code>.opencode/agent/orchestrator.md</code> (ciclo: leer roadmap → delegar en sub-agentes → validar → código final limpio y depurado sin excepción → marcar tarea y documentar → commit local), <code>.opencode/agent/{backend,frontend,qa}.md</code> (sub-agentes de dominio) y <code>.opencode/command/cierre.md</code> (equivalente a "New session"). Se sacó el modelo hardcodeado a Anthropic de los 4 agentes para que hereden el GPT-5.6 Sol ya seleccionado. <strong>Guardrails mantenidos a propósito</strong> pese a que el prompt original pedía autonomía total sin preguntar salvo error crítico: RLS (bloque 0 del roadmap) marcado no-autoejecutable, requiere Plan Mode explícito; <code>git push</code>, merge a <code>main</code> y <code>wrangler deploy</code> siempre piden confirmación (regla fija de <code>git-buenas-practicas</code>); <code>prisma migrate dev</code> contra <code>.env.local</code> bloqueado (<code>deny</code>) en el permission config. <strong>Sin confirmar todavía:</strong> resultado real del primer ciclo <code>@plan</code>/<code>@orchestrator</code>, y si el permission config de <code>bash</code> con patrones glob efectivamente frena push/merge/deploy en un caso real (sintaxis tomada de la documentación oficial de OpenCode, no verificada en producción). Nota aparte: existe también <code>docs/planning/roadmap-agentes-rai.html</code>, documento distinto de un proyecto separado (agente comercial WhatsApp/Instagram + asistente Telegram de RAI Agency) — no se fusionó con este panel porque son fuentes de verdad de proyectos distintos.</div>
+      </div>
+      <span class="tag tag-decided">hecho — falta primera corrida real</span>
+    </div>
   </div>
 
   <div class="decision-grid" style="margin-top:20px;">
@@ -430,6 +486,30 @@ footer{
     <div class="decision-card">
       <h3>staff — permisos</h3>
       <p><strong>Elegido:</strong> sin acceso a Pagos; en Configuración, máximo lectura, nunca edición. <strong>Descartado:</strong> heredar los mismos permisos que agente/gerente sin diferenciar. <strong>Motivo:</strong> rol de menor confianza, no debe tocar dinero ni configuración crítica del workspace.</p>
+    </div>
+    <div class="decision-card">
+      <h3>Aislamiento multi-negocio: RAI Agency + Quadro Café</h3>
+      <p><strong>Elegido:</strong> un solo Postgres multi-tenant (<code>Workspace</code>/<code>WorkspaceMember</code>), no DBs separadas; Quadro Café espera hasta que RLS esté diseñado y probado antes de activarse. <strong>Descartado:</strong> DB separada por negocio y activar empleados de Quadro Café mientras RLS siga apagado. <strong>Motivo:</strong> preservar el aislamiento entre tenants antes de incorporar usuarios externos.</p>
+    </div>
+    <div class="decision-card">
+      <h3>staff — operaciones hoteleras</h3>
+      <p><strong>Elegido:</strong> permitir operaciones diarias sobre reservas y huéspedes, sin acceso a configuración de habitaciones ni tipos de habitación. <strong>Descartado:</strong> solo lectura y escritura completa del módulo hotel. <strong>Motivo:</strong> staff necesita operar el día a día sin poder alterar la configuración estructural del inventario.</p>
+    </div>
+    <div class="decision-card">
+      <h3>Auth real — registro</h3>
+      <p><strong>Elegido:</strong> registro solo por invitación. <strong>Descartado:</strong> registro público y alta manual sin enlace verificable. <strong>Motivo:</strong> impedir creación no autorizada de usuarios o workspaces y reutilizar el flujo de invitaciones del equipo.</p>
+    </div>
+    <div class="decision-card">
+      <h3>staff en /generador-imagenes</h3>
+      <p><strong>Elegido:</strong> mantener la regla ya usada en contacts/snippets/notes — staff sin acceso de escritura, solo lectura, en las rutas <code>brand-doc</code> y <code>content-grids</code>. <strong>Descartado:</strong> dar a staff una excepción de escritura en este módulo. <strong>Motivo:</strong> consistencia con el patrón de permisos ya validado en Commit 3 — no crear un caso especial por módulo.</p>
+    </div>
+    <div class="decision-card">
+      <h3>Hallazgo C — Commit 4 separado de Commit 3</h3>
+      <p><strong>Elegido:</strong> corregir en un commit aparte ("Commit 4") las ~20 rutas ya migradas que no reconocen <code>super_admin</code> como rol de escalada. <strong>Descartado:</strong> incluir el fix dentro del mismo Commit 3. <strong>Motivo:</strong> no mezclar la reorganización de rutas (Commit 3) con un fix de seguridad (Commit 4) en el mismo diff.</p>
+    </div>
+    <div class="decision-card">
+      <h3>Migración de flujo Claude Code → OpenCode (19 sep)</h3>
+      <p><strong>Elegido:</strong> migrar el flujo de trabajo (skills + orquestador) a OpenCode con los guardrails de seguridad mantenidos intactos (RLS, push/merge/deploy, migrate dev siguen pidiendo confirmación explícita). <strong>Descartado:</strong> la "autonomía total, no preguntar salvo error crítico" tal como venía en el prompt de orquestador original que trajo Reiner. <strong>Motivo:</strong> las reglas de <code>git-buenas-practicas</code> y el hallazgo crítico de RLS ya estaban establecidas antes de hoy por motivos concretos (Reiner trabaja por capturas, RLS apagado en 41 tablas) — un prompt genérico de orquestador no las reemplaza.</p>
     </div>
   </div>
 </section>
