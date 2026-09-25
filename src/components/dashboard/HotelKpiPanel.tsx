@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  BedDouble, LogIn, LogOut, Wallet, Clock, AlertCircle, TrendingUp,
-  Users, MessageSquare, ChevronRight, Building2, RefreshCw,
+  BedDouble, LogIn, LogOut, Wallet, AlertCircle, TrendingUp,
+  Users, ChevronRight, Building2, RefreshCw,
 } from 'lucide-react';
 import { formatMoney, BookingStatusBadge, PaymentStatusBadge } from '@/components/hotel/StatusBadges';
 import { HelpTip } from '@/components/ui/HelpTip';

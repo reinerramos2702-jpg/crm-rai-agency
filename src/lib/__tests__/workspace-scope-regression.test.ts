@@ -25,6 +25,7 @@ const scopedRoutes = [
 ];
 
 function source(path: string) {
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- The test only passes repository paths from the controlled literal lists below.
   return readFileSync(join(process.cwd(), path), 'utf8');
 }
 

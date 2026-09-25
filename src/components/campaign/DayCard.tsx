@@ -61,8 +61,6 @@ export function DayCard({ task, onRetry, onPublish }: DayCardProps) {
   const borderColor = borderColors[task.status] || 'var(--rai-border)';
 
   const imageAsset = task.assets?.find((a) => a.kind === 'image');
-  const videoAsset = task.assets?.find((a) => a.kind === 'video');
-
   return (
     <>
       <div
@@ -143,6 +141,7 @@ export function DayCard({ task, onRetry, onPublish }: DayCardProps) {
               marginBottom: 8,
             }}
           >
+            {/* El asset puede ser data/blob/remoto; conservar img evita alterar su carga con el optimizador. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageAsset.publicUrl}

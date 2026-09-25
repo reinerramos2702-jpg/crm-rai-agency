@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, User, BedDouble, CreditCard, MessageSquare, FileText, Edit2,
-  Trash2, Save, X, Calendar as CalendarIcon, Mail, Phone, FileCheck, MapPin,
+  Trash2, Save, X, Mail, Phone, FileCheck, MapPin,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
@@ -175,7 +175,7 @@ export default function GuestDetailPage() {
       </div>
 
       {tab === 'profile' && (editing ? <EditForm guest={guest} onCancel={() => setEditing(false)} onSaved={() => { setEditing(false); load(); }} /> : <ProfileView guest={guest} />)}
-      {tab === 'bookings' && <BookingsTab guest={guest} onChange={load} />}
+      {tab === 'bookings' && <BookingsTab guest={guest} />}
       {tab === 'payments' && <PaymentsTab guest={guest} />}
       {tab === 'messages' && <MessagesTab guestId={guest.id} contactId={guest.contact?.id ?? null} />}
       {tab === 'notes' && <NotesTab guest={guest} onSaved={load} />}
@@ -311,7 +311,7 @@ function EditForm({ guest, onCancel, onSaved }: { guest: Guest; onCancel: () => 
   );
 }
 
-function BookingsTab({ guest, onChange }: { guest: Guest; onChange: () => void }) {
+function BookingsTab({ guest }: { guest: Guest }) {
   if (guest.bookings.length === 0) {
     return (
       <div className="card" style={{ padding: 40, textAlign: 'center' }}>

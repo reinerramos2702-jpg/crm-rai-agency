@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { Key, Plus, Trash2, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
 import { TopBar } from '@/components/layout/TopBar';
-import { StatusBadge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
 import toast from 'react-hot-toast';
 

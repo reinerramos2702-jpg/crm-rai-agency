@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Building2, BedDouble, MapPin, Plus, Edit2, Trash2,
-  TrendingUp, Users as UsersIcon, X, Save,
+  X, Save,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
-  SiteStatusBadge, RoomStatusBadge, ROOM_STATUS_LABELS, SITE_STATUS_LABELS,
+  SiteStatusBadge, ROOM_STATUS_LABELS, SITE_STATUS_LABELS,
   formatMoney,
 } from '@/components/hotel/StatusBadges';
 import { HelpTip } from '@/components/ui/HelpTip';

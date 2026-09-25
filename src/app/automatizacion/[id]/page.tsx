@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
   Zap,
-  Plus,
   Trash2,
   ChevronUp,
   ChevronDown,
@@ -374,7 +373,6 @@ function StepCard({
 // ============================================================
 export default function AutomationBuilderPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const id = params?.id;
 
   const [loading, setLoading] = useState(true);

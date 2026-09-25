@@ -1010,6 +1010,8 @@ export default function ConversacionesPage() {
                   style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 96, justifyContent: 'space-between' }}
                 >
                   <span className="row" style={{ gap: 6 }}>
+                    {/* La bandera usa una URL externa dinámica; conservar img evita exigir hosts remotos en Next Image. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={flagUrl(COUNTRY_CODES[countryIdx].iso2)} width={20} height={14} alt={COUNTRY_CODES[countryIdx].name} style={{ borderRadius: 2, display: 'block' }} />
                     <span style={{ fontSize: 13 }}>{COUNTRY_CODES[countryIdx].dial}</span>
                   </span>
@@ -1060,6 +1062,8 @@ export default function ConversacionesPage() {
                             background: i === countryIdx ? 'rgba(201,168,76,0.1)' : 'transparent',
                           }}
                         >
+                          {/* La bandera usa una URL externa dinámica; conservar img evita exigir hosts remotos en Next Image. */}
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={flagUrl(c.iso2)} width={18} height={13} alt={c.name} style={{ borderRadius: 2, display: 'block' }} />
                           <span style={{ flex: 1 }}>{c.name}</span>
                           <span className="muted">{c.dial}</span>

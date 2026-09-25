@@ -18,6 +18,7 @@ const worker = new Worker(
   'content-pipeline',
   async (job) => {
     const { taskId, executionId } = job.data;
+    // eslint-disable-next-line no-console -- Operational worker lifecycle output; the project has no application logger.
     console.log(`[worker] start task ${taskId} (exec ${executionId})`);
 
     const task = await prisma.task.findUnique({ where: { id: taskId } });
@@ -31,6 +32,7 @@ const worker = new Worker(
 
     // Re-checkpoint: si task ya está done, saltamos
     if (task.status === 'done') {
+      // eslint-disable-next-line no-console -- Operational worker lifecycle output; the project has no application logger.
       console.log(`[worker] task ${taskId} already done, skipping`);
       return;
     }
@@ -83,10 +85,12 @@ worker.on('failed', (job, err) => {
 });
 
 worker.on('ready', () => {
+  // eslint-disable-next-line no-console -- Operational worker lifecycle output; the project has no application logger.
   console.log('[worker] ready, listening on queue "content-pipeline"');
 });
 
 process.on('SIGTERM', async () => {
+  // eslint-disable-next-line no-console -- Operational worker lifecycle output; the project has no application logger.
   console.log('[worker] SIGTERM, closing...');
   await worker.close();
   process.exit(0);

@@ -12,21 +12,15 @@ import {
   Image as ImageIcon,
   Video,
   LayoutGrid,
-  Clock,
-  CheckCircle2,
   AlertCircle,
   Sparkles,
   Settings,
-  Eye,
   Play,
-  Pause,
   RefreshCw,
   Upload,
   FileText,
   Palette,
   Camera,
-  Globe,
-  Phone,
   MapPin,
   Trash2,
   X,
@@ -115,20 +109,25 @@ function loadFromStorage<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(STORAGE_PREFIX + key);
     return raw ? JSON.parse(raw) : fallback;
-  } catch { return fallback; }
+  } catch {
+    // Volver al valor inicial si el contenido guardado no es JSON válido.
+    return fallback;
+  }
 }
 
 function saveToStorage(key: string, value: unknown) {
   if (typeof window === 'undefined') return;
-  try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value)); } catch {}
+  try {
+    localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
+  } catch {
+    // El guardado es opcional y puede fallar si el almacenamiento está bloqueado o lleno.
+  }
 }
 
 export default function ContentIGTab() {
   const [view, setView] = useState<'campaigns' | 'planner' | 'calendar'>(() => loadFromStorage('view', 'campaigns'));
   const [campaigns, setCampaigns] = useState<Campaign[]>(() => loadFromStorage('campaigns', []));
   const [activeCampaign, setActiveCampaign] = useState<Campaign | null>(() => loadFromStorage('activeCampaign', null));
-  const [loading, setLoading] = useState(false);
-
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => loadFromStorage('chatMessages', [DEFAULT_WELCOME]));
   const [chatInput, setChatInput] = useState(() => loadFromStorage('chatInput', ''));
   const [chatLoading, setChatLoading] = useState(false);
@@ -263,14 +262,6 @@ export default function ContentIGTab() {
       ]);
     }
     setChatLoading(false);
-  }
-
-  function formatCampaignFolder(name: string, startDate: string, endDate: string) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const fmt = (d: Date) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    return `${name.replace(/\s+/g, '_')}_${fmt(start)}_al_${fmt(end)}`;
   }
 
   return (

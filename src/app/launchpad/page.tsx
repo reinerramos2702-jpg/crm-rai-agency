@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Settings,
   Megaphone,
@@ -533,10 +534,13 @@ export default function LaunchpadPage() {
             {slideCount > 0 ? (
               <>
                 <div className="lp-slide-frame">
-                  <img
+                  <Image
                     src={`/tutorials/${tutorialItem.id}/slide-${slideIndex + 1}.svg`}
                     alt={`${tutorialItem.title} — paso ${slideIndex + 1}`}
-                    style={{ width: '100%', borderRadius: 8, display: 'block' }}
+                    width={1280}
+                    height={720}
+                    sizes="(max-width: 720px) calc(100vw - 64px), 672px"
+                    style={{ width: '100%', height: 'auto', borderRadius: 8, display: 'block' }}
                   />
                 </div>
                 <div className="row-between mt-4">

@@ -155,7 +155,6 @@ export async function POST(req: NextRequest) {
     ];
 
     const isGemini = model?.startsWith('gemini');
-    const isOpenAI = model?.startsWith('gpt') || model?.startsWith('claude');
 
     let reply = '';
     let campaign = null;

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -9,12 +9,8 @@ import {
   CheckCircle2,
   Circle,
   Sparkles,
-  Image as ImageIcon,
   Wand2,
-  Plus,
-  X,
   RefreshCw,
-  Trash2,
 } from 'lucide-react';
 import { TopBar } from '@/components/layout/TopBar';
 import { Spinner } from '@/components/ui/Spinner';
@@ -77,7 +73,6 @@ interface ContentGrid {
 }
 
 export default function ContentGridWizardPage() {
-  const router = useRouter();
   const params = useParams<{ id: string }>();
   const gridId = params.id;
 
@@ -184,7 +179,9 @@ export default function ContentGridWizardPage() {
         } catch {
           errMsg = text || errMsg;
         }
-      } catch {}
+      } catch {
+        // El cuerpo de error puede no estar disponible; conservar el mensaje por estado HTTP.
+      }
       if (res.status === 401) errMsg = 'Sesión expirada. Vuelve a iniciar sesión.';
       else if (/no api key/i.test(errMsg)) {
         errMsg = `No hay API key configurada para "${provider}". Ve a "Claves de IA" y agrega una.`;
@@ -213,7 +210,9 @@ export default function ContentGridWizardPage() {
             assistantText += piece;
             gotAnyText = true;
             setMessages([...next, { role: 'assistant', content: assistantText }]);
-          } catch {}
+          } catch {
+            // Ignorar fragmentos incompletos del stream hasta recibir el siguiente bloque.
+          }
         } else if (line.startsWith('3:')) {
           try {
             const errPiece = JSON.parse(line.slice(2));
@@ -222,7 +221,9 @@ export default function ContentGridWizardPage() {
             assistantText = `⚠️ ${errText}`;
             gotAnyText = true;
             setMessages([...next, { role: 'assistant', content: assistantText }]);
-          } catch {}
+          } catch {
+            // Ignorar fragmentos de error malformados sin cancelar el resto del stream.
+          }
         }
       }
     }
@@ -569,6 +570,8 @@ export default function ContentGridWizardPage() {
                   .sort((a, b) => a.slideNumber - b.slideNumber)
                   .map((asset) => (
                     <div key={asset.id} className="card" style={{ padding: 8 }}>
+                      {/* Las URLs de assets son dinámicas y pueden ser data/blob/remotas; no deben pasar por el optimizador. */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={asset.publicUrl}
                         alt={`Slide ${asset.slideNumber}`}
@@ -600,6 +603,8 @@ export default function ContentGridWizardPage() {
                 <p className="label" style={{ marginBottom: 10 }}>Todas las imágenes ({grid.assets.length})</p>
                 <div className="grid grid-2">
                   {grid.assets.map((asset) => (
+                    /* Las URLs de assets son dinámicas y pueden ser data/blob/remotas; no deben pasar por el optimizador. */
+                    /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                       key={asset.id}
                       src={asset.publicUrl}

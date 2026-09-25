@@ -1,15 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Layers, CheckCircle2, AlertCircle, Clock, type LucideIcon } from 'lucide-react';
-
-interface StatItem {
-  label: string;
-  value: number;
-  icon: LucideIcon;
-  color: string;
-  bg: string;
-}
+import { Layers, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 
 interface StatsBarProps {
   total: number;

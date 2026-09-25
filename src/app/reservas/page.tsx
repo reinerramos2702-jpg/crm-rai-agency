@@ -3,11 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  BedDouble, Plus, Search, Filter, Calendar as CalendarIcon, LogIn, LogOut,
+  BedDouble, Plus, Search, Filter, LogIn, LogOut,
   Clock, CheckCircle2, Ban, UserX, X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { BookingStatusBadge, BOOKING_STATUS_LABELS, formatMoney } from '@/components/hotel/StatusBadges';
+import { BookingStatusBadge, formatMoney } from '@/components/hotel/StatusBadges';
 import { HelpTip } from '@/components/ui/HelpTip';
 
 interface Booking {

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface AuthShellProps {
   title: string;
@@ -31,9 +32,12 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
     >
       <div style={{ width: '100%', maxWidth: 420 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-          <img
+          <Image
             src="/crystal-logo.webp"
             alt="RAI Agency"
+            width={40}
+            height={40}
+            sizes="40px"
             style={{
               width: 40,
               height: 40,

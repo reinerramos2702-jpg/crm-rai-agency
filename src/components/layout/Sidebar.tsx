@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -104,9 +105,12 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
           {mobileOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img
+          <Image
             src="/crystal-logo.webp"
             alt="RAI"
+            width={28}
+            height={28}
+            sizes="28px"
             style={{ width: 28, height: 28, objectFit: 'contain', filter: 'drop-shadow(0 0 6px rgba(123,94,167,0.4))' }}
           />
           <span className="gradient-text" style={{ fontSize: 16, fontWeight: 800 }}>RAI</span>
@@ -129,9 +133,12 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img
+          <Image
             src="/crystal-logo.webp"
             alt="RAI Agency"
+            width={40}
+            height={40}
+            sizes="40px"
             style={{
               width: 40,
               height: 40,

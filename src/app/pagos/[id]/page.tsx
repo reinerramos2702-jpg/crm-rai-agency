@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, CheckCircle2, XCircle, RefreshCw, Eye, Ban, FileText,
-  CreditCard, User, BedDouble, Building2, Activity, Trash2, Upload,
+  CreditCard, User, Activity, Trash2, Upload,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PaymentStatusBadge, formatMoney } from '@/components/hotel/StatusBadges';

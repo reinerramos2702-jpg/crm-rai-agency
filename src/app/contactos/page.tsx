@@ -17,8 +17,6 @@ import {
   Filter,
   ChevronDown,
   Inbox,
-  Pencil,
-  Trash2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
