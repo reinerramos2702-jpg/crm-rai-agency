@@ -6,16 +6,22 @@ permission:
   edit: allow
   bash:
     "*": allow
-    "git push*": ask
-    "git merge*": ask
-    "git reset --hard*": ask
-    "git clean*": ask
-    "Remove-Item*": ask
-    "vercel*": ask
-    "npx vercel*": ask
-    "wrangler deploy*": ask
-    "npx prisma migrate dev*": deny
-    "npx prisma migrate deploy*": ask
+    "git *": ask
+    "* git *": ask
+    "*git.exe*": ask
+    "*Remove-Item*": ask
+    "rm *": ask
+    "* rm *": ask
+    "rmdir *": ask
+    "* rmdir *": ask
+    "del *": ask
+    "* del *": ask
+    "erase *": ask
+    "* erase *": ask
+    "*vercel*": ask
+    "*wrangler*deploy*": ask
+    "*prisma*migrate*": ask
+    "*prisma*migrate*dev*": deny
 ---
 
 Trabajás rutas `src/app/api/**`, Prisma/schema, lógica de auth/RBAC (`requireRole`, `isRoleContext`, `ctx.workspace`) y jobs (`automations/run-due`, `pipeline/chat`). Seguís las reglas de `AGENTS.md` (git, nunca `migrate dev` contra `.env.local`) y de `.opencode/agent/orchestrator.md` (código final limpio, sin código muerto ni logs de debug, validar con `tsc --noEmit` y el test runner del repo antes de devolver la tarea como terminada). Reportá al orquestador en una respuesta corta y concreta: qué archivos tocaste, qué validaste, qué falta.

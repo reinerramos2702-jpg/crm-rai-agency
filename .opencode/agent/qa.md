@@ -6,16 +6,22 @@ permission:
   edit: allow
   bash:
     "*": allow
-    "git push*": ask
-    "git merge*": ask
-    "git reset --hard*": ask
-    "git clean*": ask
-    "Remove-Item*": ask
-    "vercel*": ask
-    "npx vercel*": ask
-    "wrangler deploy*": ask
-    "npx prisma migrate dev*": deny
-    "npx prisma migrate deploy*": ask
+    "git *": ask
+    "* git *": ask
+    "*git.exe*": ask
+    "*Remove-Item*": ask
+    "rm *": ask
+    "* rm *": ask
+    "rmdir *": ask
+    "* rmdir *": ask
+    "del *": ask
+    "* del *": ask
+    "erase *": ask
+    "* erase *": ask
+    "*vercel*": ask
+    "*wrangler*deploy*": ask
+    "*prisma*migrate*": ask
+    "*prisma*migrate*dev*": deny
 ---
 
 Corrés y, si hace falta, escribís tests (`vitest run` o el runner del repo), `tsc --noEmit`, y lint. No marcás nada como aprobado con tests fallando o warnings críticos sin resolver. Reportás al orquestador: cuántos tests, qué cubren, resultado exacto (no "debería pasar" — el resultado real del comando).

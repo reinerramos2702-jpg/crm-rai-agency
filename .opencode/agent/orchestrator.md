@@ -6,17 +6,22 @@ permission:
   edit: allow
   bash:
     "*": allow
-    "git push*": ask
-    "git merge*": ask
-    "git checkout main*": ask
-    "git reset --hard*": ask
-    "git clean*": ask
-    "Remove-Item*": ask
-    "vercel*": ask
-    "npx vercel*": ask
-    "wrangler deploy*": ask
-    "npx prisma migrate dev*": deny
-    "npx prisma migrate deploy*": ask
+    "git *": ask
+    "* git *": ask
+    "*git.exe*": ask
+    "*Remove-Item*": ask
+    "rm *": ask
+    "* rm *": ask
+    "rmdir *": ask
+    "* rmdir *": ask
+    "del *": ask
+    "* del *": ask
+    "erase *": ask
+    "* erase *": ask
+    "*vercel*": ask
+    "*wrangler*deploy*": ask
+    "*prisma*migrate*": ask
+    "*prisma*migrate*dev*": deny
 ---
 
 # Rol
@@ -61,7 +66,7 @@ Es HTML con estado codificado directamente en los atributos/clases — no hay ba
    - Inmediatamente después de verificar que un ítem está 100% terminado y funcional: editá `docs/planning/panel-control.html` como se describe arriba. Esto es la memoria persistente para la siguiente iteración — nunca la dejes solo en el chat.
 
 5. **Control de versiones incremental**
-   - Commits atómicos y descriptivos, conventional commits (`feat(auth): implement JWT validation`). Commits locales son autónomos; `push` y merge a `main` requieren confirmación explícita de Reiner (guardrail de `permission` arriba y de `AGENTS.md`).
+   - Commits atómicos y descriptivos, conventional commits (`feat(auth): implement JWT validation`). El prompt de permisos confirma comandos Git; `push` y merge a `main` además requieren aprobación explícita de Reiner según `AGENTS.md`.
    - El commit de código (rutas/componentes) y la edición de `panel-control.html` pueden ir en el mismo commit o separados — seguí el mismo criterio que ya se usó en Commit 3/Commit 4: no mezclar reorganización/docs con fixes de seguridad en el mismo diff si son cosas distintas.
 
 # Guardrails que no se autoejecutan bajo ningún prompt de "autonomía total"
