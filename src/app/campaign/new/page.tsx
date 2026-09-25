@@ -144,7 +144,6 @@ export default function NewCampaignPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Cargar campaña existente
-  const [loadingCampaign, setLoadingCampaign] = useState(false);
   const skipModelResetRef = useRef(false);
 
   useEffect(() => {
@@ -152,7 +151,6 @@ export default function NewCampaignPage() {
     const existingId = params.get('id');
     if (!existingId) return;
 
-    setLoadingCampaign(true);
     (async () => {
       try {
         const res = await fetch(`/api/campaigns/${existingId}`);
@@ -182,8 +180,6 @@ export default function NewCampaignPage() {
         toast.success(`Continuando "${campaign.name}"`);
       } catch {
         toast.error('Error de red al cargar la campaña.');
-      } finally {
-        setLoadingCampaign(false);
       }
     })();
   }, []);
@@ -459,7 +455,9 @@ export default function NewCampaignPage() {
         } catch {
           errMsg = text || errMsg;
         }
-      } catch {}
+      } catch {
+        // La respuesta puede no incluir un cuerpo de error legible.
+      }
 
       if (res.status === 401) {
         errMsg = 'Sesión expirada. Vuelve a iniciar sesión.';
@@ -496,7 +494,9 @@ export default function NewCampaignPage() {
             assistantText += piece;
             gotAnyText = true;
             setMessages([...next, { role: 'assistant', content: assistantText }]);
-          } catch {}
+          } catch {
+            // Ignorar frames de texto malformados del stream.
+          }
         } else if (line.startsWith('3:')) {
           try {
             const errPiece = JSON.parse(line.slice(2));
@@ -505,7 +505,9 @@ export default function NewCampaignPage() {
             assistantText = `⚠️ ${errText}`;
             gotAnyText = true;
             setMessages([...next, { role: 'assistant', content: assistantText }]);
-          } catch {}
+          } catch {
+            // Ignorar frames de error malformados del stream.
+          }
         }
       }
     }
@@ -680,16 +682,16 @@ export default function NewCampaignPage() {
           <div>
             <p className="label" style={{ marginBottom: 6 }}>
               <FolderSearch size={11} style={{ marginRight: 4, display: 'inline' }} />
-              Carpeta de Planificación Local
+              Carpeta de planificación del workspace
             </p>
             <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginBottom: 6 }}>
-              Organiza tu carpeta con subcarpetas &quot;Día 1&quot;, &quot;Día 2&quot;, etc.
+              Usa una ruta habilitada por el administrador y organízala en subcarpetas &quot;Día 1&quot;, &quot;Día 2&quot;, etc.
             </p>
             <div style={{ display: 'flex', gap: 6 }}>
               <input
                 value={inventoryPath}
                 onChange={(e) => setInventoryPath(e.target.value)}
-                placeholder="C:\Users\...\Mes_Mayo"
+                placeholder="Ruta habilitada dentro de tu inventario"
                 style={{ flex: 1 }}
               />
               <button

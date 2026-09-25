@@ -36,7 +36,7 @@ const TYPE_ICONS = {
 };
 
 /**
- * Escáner de inventario local de assets.
+ * Escáner de assets dentro del inventario del workspace habilitado por el servidor.
  * Lee carpetas "Día N" y las analiza con Gemini Vision.
  */
 export function InventoryScanner({ onScanComplete }: InventoryScannerProps) {
@@ -92,7 +92,7 @@ export function InventoryScanner({ onScanComplete }: InventoryScannerProps) {
           <input
             value={path}
             onChange={(e) => setPath(e.target.value)}
-            placeholder="C:/Users/.../Planificacion_Mayo"
+            placeholder="Ruta habilitada dentro del inventario del workspace"
             style={{ paddingLeft: 32 }}
             onKeyDown={(e) => e.key === 'Enter' && scan()}
           />
