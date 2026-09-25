@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAI Agency — Roadmap de Agentes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg:#090c11; --panel:#111720; --raised:#18212c; --line:#263241;
+  --text:#edf2f7; --muted:#8c9aaa; --cyan:#5ec8e8; --green:#45d483;
+  --amber:#f2a93b; --red:#ff6474; --violet:#a68bff; --blue:#61a5fa;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh;color:var(--text);font-family:Inter,sans-serif;
+  background:
+    linear-gradient(rgba(9,12,17,.97),rgba(9,12,17,.97)),
+    repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(94,200,232,.07) 39px,rgba(94,200,232,.07) 40px),
+    repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(94,200,232,.07) 39px,rgba(94,200,232,.07) 40px);
+  padding-bottom:70px;
+}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.wrap{max-width:1180px;margin:auto;padding:0 28px}
+header{padding:52px 0 30px;border-bottom:1px solid var(--line)}
+.eyebrow,.mono{font-family:'JetBrains Mono',monospace}
+.eyebrow{color:var(--cyan);font-size:11px;letter-spacing:.15em;text-transform:uppercase}
+h1{font:700 clamp(30px,5vw,52px)/1.05 'Space Grotesk',sans-serif;margin-top:12px;letter-spacing:-.035em}
+.lead{max-width:760px;color:var(--muted);line-height:1.65;margin-top:16px;font-size:15px}
+.meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.pill{border:1px solid var(--line);background:var(--panel);padding:7px 10px;font:11px 'JetBrains Mono',monospace;color:var(--muted)}
+.pill strong{color:var(--text);font-weight:500}
+
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:28px 0 14px}
+.metric{background:var(--panel);border:1px solid var(--line);padding:18px}
+.metric b{display:block;font:700 28px 'Space Grotesk',sans-serif}
+.metric span{font:11px 'JetBrains Mono',monospace;color:var(--muted);text-transform:uppercase}
+.progress{height:8px;border:1px solid var(--line);background:var(--raised);overflow:hidden}
+.progress>div{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--green));transition:.25s}
+
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:24px 0 10px}
+.btn{background:var(--panel);color:var(--muted);border:1px solid var(--line);padding:9px 12px;font-size:12px}
+.btn:hover,.btn.active{border-color:var(--cyan);color:var(--text)}
+.btn.primary{background:var(--cyan);border-color:var(--cyan);color:var(--bg);font-weight:700}
+.spacer{flex:1}
+
+section{margin-top:46px}
+.section-head{display:flex;gap:12px;align-items:center;padding-bottom:13px;border-bottom:1px dashed var(--line);margin-bottom:18px}
+.section-code{font:600 11px 'JetBrains Mono',monospace;color:var(--bg);background:var(--cyan);padding:4px 8px}
+h2{font:600 22px 'Space Grotesk',sans-serif}
+.section-note{margin-left:auto;color:var(--muted);font-size:12px}
+
+.architecture{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.node{position:relative;background:var(--panel);border:1px solid var(--line);padding:18px;min-height:150px}
+.node:not(:last-child)::after{content:'→';position:absolute;right:-12px;top:44%;z-index:2;color:var(--cyan);font:600 18px 'JetBrains Mono',monospace}
+.node small{font:10px 'JetBrains Mono',monospace;color:var(--cyan);text-transform:uppercase;letter-spacing:.1em}
+.node h3{font:600 16px 'Space Grotesk',sans-serif;margin:9px 0}
+.node p{font-size:12.5px;line-height:1.5;color:var(--muted)}
+
+.decisions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.decision{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--green);padding:16px}
+.decision.pending{border-left-color:var(--amber)}
+.decision strong{display:block;font-size:14px;margin-bottom:5px}
+.decision span{color:var(--muted);font-size:12.5px;line-height:1.45}
+
+.roadmap{display:flex;flex-direction:column;gap:12px}
+.phase{background:var(--panel);border:1px solid var(--line)}
+.phase.hidden{display:none}
+.phase-top{display:grid;grid-template-columns:70px 1fr auto;gap:16px;align-items:center;padding:18px;border-bottom:1px solid var(--line)}
+.phase-number{font:700 25px 'Space Grotesk',sans-serif;color:var(--cyan)}
+.phase-title h3{font:600 17px 'Space Grotesk',sans-serif}
+.phase-title p{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.45}
+.status{font:600 10px 'JetBrains Mono',monospace;text-transform:uppercase;padding:5px 8px;border:1px solid}
+.status.pending{color:var(--muted);border-color:var(--line)}
+.status.progress{color:var(--amber);border-color:rgba(242,169,59,.45)}
+.status.blocked{color:var(--red);border-color:rgba(255,100,116,.45)}
+.status.done{color:var(--green);border-color:rgba(69,212,131,.45)}
+.tasks{padding:8px 18px 14px}
+.task{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid rgba(38,50,65,.7)}
+.task:last-child{border-bottom:none}
+.state-dot{width:20px;height:20px;border:1px solid var(--line);background:var(--raised);color:var(--muted);display:grid;place-items:center;font-size:11px}
+.task[data-status="done"] .state-dot{background:var(--green);border-color:var(--green);color:var(--bg)}
+.task[data-status="progress"] .state-dot{border-color:var(--amber);color:var(--amber)}
+.task[data-status="blocked"] .state-dot{border-color:var(--red);color:var(--red)}
+.task h4{font-size:13.5px;font-weight:600}
+.task p{font-size:12px;color:var(--muted);line-height:1.5;margin-top:4px}
+.owner{font:10px 'JetBrains Mono',monospace;color:var(--muted);border:1px solid var(--line);padding:3px 6px;white-space:nowrap}
+.phase-actions{display:flex;gap:8px;padding:0 18px 16px}
+.phase-actions button{background:transparent;border:1px solid var(--line);color:var(--muted);padding:6px 9px;font-size:11px}
+.phase-actions button:hover{color:var(--text);border-color:var(--cyan)}
+
+.human-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.human-card{padding:15px;background:var(--panel);border:1px solid var(--line)}
+.human-card strong{font-size:13px}.human-card p{color:var(--muted);font-size:12px;line-height:1.5;margin-top:5px}
+
+.notes{width:100%;min-height:140px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:14px;resize:vertical;line-height:1.5}
+.notes:focus{outline:none;border-color:var(--cyan)}
+.saved{font:11px 'JetBrains Mono',monospace;color:var(--green);margin-top:7px;min-height:16px}
+
+footer{margin-top:55px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--muted);font:11px 'JetBrains Mono',monospace}
+input[type=file]{display:none}
+
+@media(max-width:850px){
+  .summary,.architecture{grid-template-columns:repeat(2,1fr)}
+  .node::after{display:none}
+}
+@media(max-width:620px){
+  .wrap{padding:0 16px}.summary,.architecture,.decisions,.human-grid{grid-template-columns:1fr}
+  .phase-top{grid-template-columns:46px 1fr}.phase-top .status{grid-column:2;width:max-content}
+  .task{grid-template-columns:24px 1fr}.owner{grid-column:2;width:max-content}
+  .section-note{display:none}.spacer{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Documento vivo · sistema jerárquico de agentes del CRM</div>
+    <h1>Roadmap de Agentes<br>RAI Agency</h1>
+    <p class="lead">Mapa de capacidades, madurez y tareas del sistema jerárquico que mantiene CRM RAI Agency. La fuente única del backlog de producto y seguridad es <code>docs/planning/panel-control.html</code>; este documento no lo replica ni lo reemplaza.</p>
+    <div class="meta">
+      <div class="pill">ACTUALIZADO: <strong id="updated">25 sep 2026</strong></div>
+      <div class="pill">ORQUESTACIÓN: <strong>OpenCode + subagentes especializados</strong></div>
+      <div class="pill">CRM: <strong>Next.js + Prisma + Supabase + Vercel</strong></div>
+      <div class="pill">ESTADO: <strong>Agentes versionados · tres commits locales sin push</strong></div>
+    </div>
+    <div class="summary">
+      <div class="metric"><b id="pct">0%</b><span>avance total</span></div>
+      <div class="metric"><b id="doneCount">0</b><span>completadas</span></div>
+      <div class="metric"><b id="progressCount">0</b><span>en curso</span></div>
+      <div class="metric"><b id="blockedCount">0</b><span>bloqueadas</span></div>
+    </div>
+    <div class="progress"><div id="progressBar"></div></div>
+  </header>
+
+  <div class="toolbar">
+    <button class="btn active" data-filter="all">Todo</button>
+    <button class="btn" data-filter="progress">En curso</button>
+    <button class="btn" data-filter="pending">Pendiente</button>
+    <button class="btn" data-filter="blocked">Bloqueado</button>
+    <button class="btn" data-filter="done">Completado</button>
+    <span class="spacer"></span>
+    <button class="btn" id="copySummary">Copiar resumen</button>
+    <button class="btn" id="exportState">Exportar estado</button>
+    <label class="btn" for="importFile">Importar estado</label>
+    <input id="importFile" type="file" accept="application/json">
+  </div>
+
+  <main>
+    <section>
+      <div class="section-head"><span class="section-code">MAPA</span><h2>Arquitectura acordada</h2><span class="section-note">Simple, separada y mantenible</span></div>
+      <div class="architecture">
+        <div class="node"><small>01 · Coordinación</small><h3>Orquestador OpenCode</h3><p>Lee la fuente de verdad, divide el trabajo, asigna una tarea acotada y consolida evidencia sin eludir aprobaciones humanas.</p></div>
+        <div class="node"><small>02 · Especialistas</small><h3>Backend · Frontend · QA</h3><p>Subagentes con alcance mínimo, contexto explícito y salida verificable. QA revisa; no aprueba su propio cambio.</p></div>
+        <div class="node"><small>03 · Producto</small><h3>CRM RAI Agency</h3><p>Next.js y Prisma sobre Supabase; Vercel es el destino de despliegue del CRM.</p></div>
+        <div class="node"><small>04 · Clasificación opcional</small><h3>Jev</h3><p>Clasificador desacoplado para decisiones reversibles. <code>typesafe/jev</code> podría consumirse mediante Cloudflare, sujeto a benchmark y aprobación.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><span class="section-code">DECISIONES</span><h2>Base ya definida</h2></div>
+      <div class="decisions">
+        <div class="decision"><strong>Una sola fuente de verdad</strong><span><code>docs/planning/panel-control.html</code> decide el backlog de producto y seguridad. Aquí solo se registra la capacidad operativa de los agentes.</span></div>
+        <div class="decision"><strong>Separación de responsabilidades</strong><span>El orquestador coordina; backend, frontend y QA trabajan con permisos y archivos acotados. Ningún agente se autoaprueba.</span></div>
+        <div class="decision"><strong>Estado verificable, no aspiracional</strong><span>“Completado” exige evidencia en el repositorio. Credenciales, migraciones remotas, merges y despliegues permanecen pendientes hasta validación humana.</span></div>
+        <div class="decision"><strong>Definition of Done obligatoria</strong><span>Cada tarea termina con alcance cumplido, diff revisado, validaciones pertinentes, evidencia y documentación sincronizada; sin código muerto ni secretos.</span></div>
+        <div class="decision"><strong>Skills propias y auditadas</strong><span>SkillsMP aporta referencias, no instalaciones. Cada patrón útil se reescribe, reduce, prueba y versiona como skill interna.</span></div>
+        <div class="decision pending"><strong>Jev sigue siendo un piloto</strong><span>No genera código ni toma decisiones irreversibles. Requiere benchmark, feature flag, trazabilidad, umbral de confianza y fallback humano.</span></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><span class="section-code">ROADMAP</span><h2>Fases del proyecto</h2><span class="section-note">Haz clic en cada tarea para cambiar su estado</span></div>
+      <div class="roadmap" id="roadmap">
+
+        <article class="phase" data-phase="0">
+          <div class="phase-top"><div class="phase-number">00</div><div class="phase-title"><h3>Base de orquestación</h3><p>Establecer la jerarquía, los contratos de delegación y los límites de cada agente.</p></div><span class="status progress">En curso</span></div>
+          <div class="tasks">
+            <div class="task" data-id="0-1" data-status="done"><button class="state-dot">✓</button><div><h4>Crear los cuatro agentes OpenCode</h4><p>Orquestador, backend, frontend y QA están definidos en <code>.opencode/agent/</code> y versionados en <code>36eaaf3</code>. DoD: cuatro archivos legibles, rastreados y con roles separados.</p></div><span class="owner">OPENCODE</span></div>
+            <div class="task" data-id="0-2" data-status="done"><button class="state-dot">✓</button><div><h4>Revisar definiciones y guardrails locales</h4><p>Las definiciones fueron revisadas y corregidas para Vercel, migraciones, push/merge y comandos destructivos; quedaron versionadas en <code>36eaaf3</code>. DoD: diff revisado y archivos rastreados en la rama activa.</p></div><span class="owner">ORQUESTADOR</span></div>
+            <div class="task" data-id="0-3" data-status="done"><button class="state-dot">✓</button><div><h4>Formalizar el contrato de delegación</h4><p>La corrida asignó scopes separados al orquestador y a backend, frontend y QA, con salida y evidencia delimitadas. DoD: contrato aplicado sin solapamientos en una corrida real.</p></div><span class="owner">ARQUITECTURA</span></div>
+            <div class="task" data-id="0-4" data-status="done"><button class="state-dot">✓</button><div><h4>Impedir la autoaprobación</h4><p>QA revisó los cambios después del agente autor y antes de los commits locales. DoD: separación autor/revisor demostrada; aprobación humana sigue reservada para acciones externas.</p></div><span class="owner">QA</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="1">
+          <div class="phase-top"><div class="phase-number">01</div><div class="phase-title"><h3>Contexto y documentación</h3><p>Entregar a cada agente el contexto mínimo correcto sin crear una segunda fuente de backlog.</p></div><span class="status progress">En curso</span></div>
+          <div class="tasks">
+            <div class="task" data-id="1-1" data-status="done"><button class="state-dot">✓</button><div><h4>Publicar la rama de seguridad</h4><p>La rama <code>security/fase-0</code> existe y está publicada. DoD: rama remota verificable y trabajo fuera de <code>main</code>.</p></div><span class="owner">GIT</span></div>
+            <div class="task" data-id="1-2" data-status="done"><button class="state-dot">✓</button><div><h4>Definir reglas operativas del repositorio</h4><p><code>AGENTS.md</code> quedó versionado en <code>36eaaf3</code> con reglas de Git, seguridad, continuidad y fuente de verdad. DoD: reglas rastreadas y disponibles para próximas sesiones.</p></div><span class="owner">DOCUMENTACIÓN</span></div>
+            <div class="task" data-id="1-3" data-status="done"><button class="state-dot">✓</button><div><h4>Alinear este mapa con la fuente de verdad</h4><p>La corrida tomó prioridades de <code>docs/planning/panel-control.html</code> y este mapa conserva solo capacidades y madurez de agentes. DoD: backlog único explícito y sin duplicación de pendientes de producto.</p></div><span class="owner">ORQUESTADOR</span></div>
+            <div class="task" data-id="1-4" data-status="done"><button class="state-dot">✓</button><div><h4>Crear paquetes de contexto por dominio</h4><p>Backend, frontend y QA recibieron scopes separados con rutas, restricciones y evidencia esperada durante la corrida. DoD: cada especialista trabajó dentro del contexto asignado.</p></div><span class="owner">DOCUMENTACIÓN</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="2">
+          <div class="phase-top"><div class="phase-number">02</div><div class="phase-title"><h3>Backend, API, Prisma y RLS</h3><p>Delegar cambios de datos con aislamiento multi-tenant y migraciones controladas.</p></div><span class="status pending">Pendiente</span></div>
+          <div class="tasks">
+            <div class="task" data-id="2-1" data-status="pending"><button class="state-dot">·</button><div><h4>Crear checklist backend por tarea</h4><p>Incluir autenticación, workspace, validación, errores, auditoría y rate limit según aplique. DoD: checklist usado y evidenciado en un PR.</p></div><span class="owner">BACKEND</span></div>
+            <div class="task" data-id="2-2" data-status="pending"><button class="state-dot">·</button><div><h4>Normalizar el flujo Prisma</h4><p>Analizar esquema, generar migración revisable y usar <code>prisma migrate deploy</code> contra la base remota. DoD: SQL revisado, respaldo definido y plan de reversión escrito.</p></div><span class="owner">BACKEND</span></div>
+            <div class="task" data-id="2-3" data-status="blocked"><button class="state-dot">!</button><div><h4>Validar RLS en Supabase</h4><p>Comprobar políticas con tenants distintos y mínimo privilegio. DoD: matriz allow/deny aprobada; bloqueado hasta contar con entorno y acceso autorizados.</p></div><span class="owner">SEGURIDAD</span></div>
+            <div class="task" data-id="2-4" data-status="done"><button class="state-dot">✓</button><div><h4>Exigir pruebas de regresión de aislamiento</h4><p>El commit local <code>21b2f5f</code> limita el inventario a <code>&lt;base&gt;/&lt;workspaceId&gt;</code> y añade pruebas de endpoint/helper para traversal, prefix bypass, symlink exterior y errores sin rutas. DoD: pruebas incluidas en la suite 189/189.</p></div><span class="owner">BACKEND + QA</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="3">
+          <div class="phase-top"><div class="phase-number">03</div><div class="phase-title"><h3>Frontend, UX y accesibilidad</h3><p>Aplicar patrones compartidos del CRM y validar estados completos de interfaz.</p></div><span class="status pending">Pendiente</span></div>
+          <div class="tasks">
+            <div class="task" data-id="3-1" data-status="pending"><button class="state-dot">·</button><div><h4>Inventariar patrones visuales reutilizables</h4><p>Identificar layout, navegación, formularios, feedback, carga y estados vacíos antes de crear componentes. DoD: decisión de reutilización registrada por tarea.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="3-2" data-status="pending"><button class="state-dot">·</button><div><h4>Definir checklist responsive</h4><p>Validar móvil, tableta y escritorio sin desbordes ni controles inaccesibles. DoD: evidencia visual en tres anchos y navegación completa.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="3-3" data-status="pending"><button class="state-dot">·</button><div><h4>Incorporar accesibilidad al cierre</h4><p>Revisar HTML semántico, teclado, foco, nombres accesibles, contraste y mensajes de error. DoD: revisión manual más chequeo automatizado sin fallos críticos.</p></div><span class="owner">FRONTEND + QA</span></div>
+            <div class="task" data-id="3-4" data-status="pending"><button class="state-dot">·</button><div><h4>Prohibir estados de progreso locales ficticios</h4><p>El progreso operativo del CRM debe venir de la base de datos; <code>localStorage</code> solo sirve para preferencias o documentos autónomos como este. DoD: revisión de persistencia aprobada.</p></div><span class="owner">ARQUITECTURA</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="4">
+          <div class="phase-top"><div class="phase-number">04</div><div class="phase-title"><h3>QA, CI y E2E</h3><p>Convertir cada entrega en evidencia repetible antes de solicitar aprobación.</p></div><span class="status progress">En curso</span></div>
+          <div class="tasks">
+            <div class="task" data-id="4-1" data-status="done"><button class="state-dot">✓</button><div><h4>Contar con CI y ESLint en HEAD</h4><p>CI ejecuta Prisma generate, TypeScript, ESLint y Vitest. El commit local <code>9e3d3aa</code> redujo lint de 67 a 0 warnings sin cambio funcional; QA final: 0 errores/0 warnings, typecheck limpio y build exitoso de 62 páginas.</p></div><span class="owner">QA</span></div>
+            <div class="task" data-id="4-2" data-status="done"><button class="state-dot">✓</button><div><h4>Contar con pruebas unitarias y E2E</h4><p>La suite final terminó 189/189, incluidas pruebas de aislamiento del inventario; el repositorio conserva especificaciones Playwright. Único aviso no bloqueante: BullMQ busca el paquete opcional <code>@valkey/valkey-glide</code>.</p></div><span class="owner">QA</span></div>
+            <div class="task" data-id="4-3" data-status="pending"><button class="state-dot">·</button><div><h4>Crear matriz de validación por tipo de cambio</h4><p>Relacionar documentación, UI, API, Prisma y seguridad con comandos y revisión manual. DoD: el orquestador no puede cerrar una tarea sin la evidencia exigida.</p></div><span class="owner">QA</span></div>
+            <div class="task" data-id="4-4" data-status="pending"><button class="state-dot">·</button><div><h4>Agregar pruebas E2E a flujos críticos faltantes</h4><p>Priorizar según <code>panel-control.html</code>, sin duplicar aquí su backlog. DoD: escenarios críticos aprobados, estables y aislados de producción.</p></div><span class="owner">QA + PRODUCTO</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="5">
+          <div class="phase-top"><div class="phase-number">05</div><div class="phase-title"><h3>Mantenimiento y deuda técnica</h3><p>Detectar, clasificar y resolver deuda sin convertir el mantenimiento en cambios ilimitados.</p></div><span class="status pending">Pendiente</span></div>
+          <div class="tasks">
+            <div class="task" data-id="5-1" data-status="done"><button class="state-dot">✓</button><div><h4>Adoptar el protocolo de deuda</h4><p><code>panel-control.html</code> contiene el registro visible DT-001 a DT-004 con módulo/evidencia, riesgo y estado/acción. DoD: los cuatro hallazgos reales quedaron trazables sin inventar deuda adicional.</p></div><span class="owner">ORQUESTADOR</span></div>
+            <div class="task" data-id="5-2" data-status="done"><button class="state-dot">✓</button><div><h4>Separar observación de remediación</h4><p>La deuda abierta, aceptada y bloqueada quedó documentada aparte de cualquier corrección; DT-004 exige acción humana antes del deploy. DoD: registro sin remediaciones fuera del alcance aprobado.</p></div><span class="owner">QA</span></div>
+            <div class="task" data-id="5-3" data-status="pending"><button class="state-dot">·</button><div><h4>Programar auditoría periódica</h4><p>Revisar TypeScript, lint, tests, build, dependencias, duplicación y código muerto. DoD: informe fechado con comandos, resultados y límites conocidos.</p></div><span class="owner">MANTENIMIENTO</span></div>
+            <div class="task" data-id="5-4" data-status="pending"><button class="state-dot">·</button><div><h4>Definir presupuesto de deuda por iteración</h4><p>Reservar capacidad sin desplazar prioridades de <code>panel-control.html</code>. DoD: cupo aprobado y tareas cerradas con pruebas de no regresión.</p></div><span class="owner">PRODUCTO</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="6">
+          <div class="phase-top"><div class="phase-number">06</div><div class="phase-title"><h3>Skills internas auditadas</h3><p>Convertir patrones útiles en instrucciones propias, pequeñas y comprobables.</p></div><span class="status pending">Pendiente</span></div>
+          <div class="tasks">
+            <div class="task" data-id="6-1" data-status="pending"><button class="state-dot">·</button><div><h4>Priorizar catálogo interno</h4><p>Seleccionar necesidades repetidas: Next.js, Prisma/RLS, pruebas, UI accesible, deuda y operación segura. DoD: prioridad justificada por frecuencia y riesgo.</p></div><span class="owner">ORQUESTADOR</span></div>
+            <div class="task" data-id="6-2" data-status="pending"><button class="state-dot">·</button><div><h4>Investigar referencias en SkillsMP</h4><p>Leer patrones públicos sin instalar ni copiar código opaco. DoD: referencias, licencia, riesgos y piezas descartadas documentadas.</p></div><span class="owner">INVESTIGACIÓN</span></div>
+            <div class="task" data-id="6-3" data-status="pending"><button class="state-dot">·</button><div><h4>Reescribir y reducir cada skill</h4><p>Crear instrucciones propias con permisos mínimos, entradas y salidas claras. DoD: revisión de seguridad y ausencia de secretos o dependencias innecesarias.</p></div><span class="owner">SEGURIDAD</span></div>
+            <div class="task" data-id="6-4" data-status="pending"><button class="state-dot">·</button><div><h4>Evaluar antes de activar</h4><p>Probar casos normales, ambiguos y adversos; comparar contra trabajo sin skill. DoD: criterios de activación cumplidos y versión fijada.</p></div><span class="owner">QA</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="7">
+          <div class="phase-top"><div class="phase-number">07</div><div class="phase-title"><h3>Piloto Jev</h3><p>Evaluar un clasificador opcional sin convertirlo en programador ni autoridad final.</p></div><span class="status pending">Pendiente</span></div>
+          <div class="tasks">
+            <div class="task" data-id="7-1" data-status="pending"><button class="state-dot">·</button><div><h4>Definir caso reversible</h4><p>Elegir clasificación o enrutamiento sin pagos, permisos, borrados ni migraciones. DoD: entradas, clases, fallback y daño máximo aprobados.</p></div><span class="owner">PRODUCTO + QA</span></div>
+            <div class="task" data-id="7-2" data-status="pending"><button class="state-dot">·</button><div><h4>Construir benchmark en español</h4><p>Preparar corpus etiquetado y medir precisión, confianza, latencia, costo y sesgos. DoD: umbral de aceptación definido antes de ejecutar.</p></div><span class="owner">QA</span></div>
+            <div class="task" data-id="7-3" data-status="blocked"><button class="state-dot">!</button><div><h4>Validar proveedor y privacidad</h4><p>Evaluar <code>typesafe/jev</code> mediante Cloudflare, retención y tratamiento de datos. DoD: revisión legal/técnica y credenciales aprobadas; bloqueado hasta autorización.</p></div><span class="owner">SEGURIDAD</span></div>
+            <div class="task" data-id="7-4" data-status="pending"><button class="state-dot">·</button><div><h4>Implementar adaptador con feature flag</h4><p>Registrar versión, resultado, score y fallback humano sin datos sensibles. DoD: apagado instantáneo, observabilidad y pruebas de degradación.</p></div><span class="owner">BACKEND + QA</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="8">
+          <div class="phase-top"><div class="phase-number">08</div><div class="phase-title"><h3>Operación nocturna</h3><p>Permitir corridas largas únicamente con límites, observabilidad y parada segura.</p></div><span class="status blocked">Bloqueado</span></div>
+          <div class="tasks">
+            <div class="task" data-id="8-1" data-status="done"><button class="state-dot">✓</button><div><h4>Definir una cola finita de trabajo</h4><p>La primera corrida se limitó a dos cambios locales verificables y terminó con QA y commits atómicos <code>21b2f5f</code>/<code>9e3d3aa</code>. DoD: alcance cerrado, sin credenciales ni producción.</p></div><span class="owner">ORQUESTADOR</span></div>
+            <div class="task" data-id="8-2" data-status="done"><button class="state-dot">✓</button><div><h4>Aplicar guardrails nocturnos</h4><p>Las definiciones corrigieron límites para Vercel, migraciones, push/merge y comandos destructivos y quedaron versionadas en <code>36eaaf3</code>. La corrida no ejecutó ninguna de esas acciones. DoD: guardrails rastreados y respetados.</p></div><span class="owner">SEGURIDAD</span></div>
+            <div class="task" data-id="8-3" data-status="pending"><button class="state-dot">·</button><div><h4>Registrar heartbeat y checkpoints</h4><p>Guardar tarea activa, resultado, errores, consumo y siguiente paso sin secretos. DoD: una interrupción permite reanudar sin repetir cambios.</p></div><span class="owner">PLATAFORMA</span></div>
+            <div class="task" data-id="8-4" data-status="blocked"><button class="state-dot">!</button><div><h4>Validar operación supervisada extendida</h4><p>La corrida demuestra trabajo prolongado dentro de una sesión activa, pero no puede garantizar operación después de cerrar la sesión. DoD pendiente: equipo conectado, sin suspensión, sesión activa y revisión humana del resultado.</p></div><span class="owner">REINER + QA</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="9">
+          <div class="phase-top"><div class="phase-number">09</div><div class="phase-title"><h3>Gobernanza Git y Vercel</h3><p>Hacer que cada cambio llegue al CRM mediante revisión, evidencia y aprobación explícita.</p></div><span class="status pending">Pendiente</span></div>
+          <div class="tasks">
+            <div class="task" data-id="9-1" data-status="done"><button class="state-dot">✓</button><div><h4>Normalizar ramas y commits</h4><p>La corrida trabajó en <code>security/fase-0</code> y produjo tres commits locales de alcance único: <code>21b2f5f</code> seguridad de inventario, <code>9e3d3aa</code> saneamiento de lint y <code>36eaaf3</code> configuración OpenCode. No hubo push, merge ni deploy.</p></div><span class="owner">GIT</span></div>
+            <div class="task" data-id="9-2" data-status="pending"><button class="state-dot">·</button><div><h4>Exigir revisión previa al push</h4><p>Mostrar diff, pruebas y riesgos; no subir hasta confirmación humana. DoD: aprobación registrada y solo archivos previstos en el commit.</p></div><span class="owner">ORQUESTADOR</span></div>
+            <div class="task" data-id="9-3" data-status="blocked"><button class="state-dot">!</button><div><h4>Validar preview de Vercel</h4><p>Revisar build, variables, rutas críticas, logs y cambios visuales en un entorno aislado. DoD: preview aprobado; bloqueado hasta disponer de acceso y despliegue autorizado.</p></div><span class="owner">QA + HUMANO</span></div>
+            <div class="task" data-id="9-4" data-status="blocked"><button class="state-dot">!</button><div><h4>Autorizar merge y producción</h4><p>Solo después de CI verde, revisión, plan de reversión y aprobación explícita. DoD: merge confirmado, Vercel saludable y entrega registrada; bloqueado hasta decisión humana.</p></div><span class="owner">REINER</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><span class="section-code">GUARDRAILS</span><h2>Intervenciones y límites obligatorios</h2></div>
+      <div class="human-grid">
+        <div class="human-card"><strong>Identidad, secretos y permisos</strong><p>Login, 2FA, tokens, variables de entorno y ampliaciones de acceso siempre quedan en manos humanas; nunca se copian al roadmap.</p></div>
+        <div class="human-card"><strong>Datos y migraciones</strong><p>RLS, datos reales, restauraciones y <code>prisma migrate deploy</code> remoto requieren respaldo, revisión y aprobación explícita.</p></div>
+        <div class="human-card"><strong>Git</strong><p>Ningún agente hace push, merge, borrado, reversión o reescritura de historial sin confirmación. QA no aprueba su propio cambio.</p></div>
+        <div class="human-card"><strong>Vercel</strong><p>Preview antes de producción; variables, logs, build, smoke tests y rollback deben verificarse antes de autorizar el despliegue.</p></div>
+        <div class="human-card"><strong>Operación nocturna</strong><p>Cola finita, sesión activa, equipo sin suspensión, límites de tiempo, checkpoints y parada ante error, ambigüedad o cambio de alcance.</p></div>
+        <div class="human-card"><strong>Definition of Done global</strong><p>Alcance cumplido, diff limpio, validaciones verdes, evidencia, documentación sincronizada y cero secretos, imports sin usar o componentes muertos.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><span class="section-code">CORRIDA</span><h2>Bitácora verificable · 25 sep 2026</h2><span class="section-note">Evidencia fija del repositorio · sin secretos</span></div>
+      <div class="human-grid">
+        <div class="human-card"><strong><code>21b2f5f</code> · Seguridad del inventario</strong><p><code>INVENTORY_ALLOWED_ROOTS</code> usa bases administradas y limita cada tenant a <code>&lt;base&gt;/&lt;workspaceId&gt;</code>. Bloquea traversal, prefix bypass y symlink exterior; los errores no filtran rutas. Incluye tests de endpoint y helper.</p></div>
+        <div class="human-card"><strong><code>9e3d3aa</code> · Lint limpio</strong><p>ESLint pasó de 67 a 0 warnings sin cambio funcional. Los commits de la corrida permanecen locales y no fueron enviados, fusionados ni desplegados.</p></div>
+        <div class="human-card"><strong>QA final</strong><p>189/189 tests, <code>tsc --noEmit</code> limpio, ESLint 0 errores/0 warnings y build exitoso de 62 páginas. Warning no bloqueante: paquete opcional <code>@valkey/valkey-glide</code> de BullMQ.</p></div>
+        <div class="human-card"><strong><code>36eaaf3</code> · Jerarquía y guardrails</strong><p>Orquestador, backend, frontend y QA quedaron versionados después de trabajar con scopes separados y revisión QA posterior al autor. Los permisos exigen aprobación para Vercel, migraciones, push/merge y comandos destructivos.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><span class="section-code">BITÁCORA</span><h2>Novedades y pendientes</h2><span class="section-note">Se guarda automáticamente en este navegador</span></div>
+      <textarea class="notes" id="notes" placeholder="Ejemplo: 25 sep — QA validó la fase 00. Evidencia: diff revisado y pruebas verdes. Pendiente aprobación para versionar..."></textarea>
+      <div class="saved" id="saved"></div>
+    </section>
+  </main>
+
+  <footer><span>RAI AGENCY · ROADMAP DE AGENTES</span><span>Capacidades y madurez de agentes · backlog único en docs/planning/panel-control.html · estados guardados localmente</span></footer>
+</div>
+
+<script>
+const STORAGE_KEY='rai-agents-roadmap-v3';
+const order=['pending','progress','done','blocked'];
+const icons={pending:'·',progress:'→',done:'✓',blocked:'!'};
+const labels={pending:'Pendiente',progress:'En curso',done:'Completado',blocked:'Bloqueado'};
+
+function snapshot(){
+  return {
+    updated:new Date().toISOString(),
+    notes:document.getElementById('notes').value,
+    tasks:Object.fromEntries([...document.querySelectorAll('.task')].map(t=>[t.dataset.id,t.dataset.status]))
+  };
+}
+function save(show=true){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(snapshot()));
+  if(show){const el=document.getElementById('saved');el.textContent='Guardado';setTimeout(()=>el.textContent='',1200)}
+}
+function load(data){
+  if(!data)return;
+  document.getElementById('notes').value=data.notes||'';
+  Object.entries(data.tasks||{}).forEach(([id,status])=>{
+    const task=document.querySelector(`.task[data-id="${id}"]`);
+    if(task)setTask(task,status,false);
+  });
+  refresh();
+}
+function setTask(task,status,persist=true){
+  task.dataset.status=status;
+  task.querySelector('.state-dot').textContent=icons[status];
+  if(persist){save();refresh()}
+}
+function refresh(){
+  const tasks=[...document.querySelectorAll('.task')];
+  const counts=Object.fromEntries(order.map(s=>[s,tasks.filter(t=>t.dataset.status===s).length]));
+  const pct=Math.round((counts.done/tasks.length)*100);
+  document.getElementById('pct').textContent=pct+'%';
+  document.getElementById('doneCount').textContent=counts.done;
+  document.getElementById('progressCount').textContent=counts.progress;
+  document.getElementById('blockedCount').textContent=counts.blocked;
+  document.getElementById('progressBar').style.width=pct+'%';
+  document.querySelectorAll('.phase').forEach(phase=>{
+    const children=[...phase.querySelectorAll('.task')];
+    let state='pending';
+    if(children.every(t=>t.dataset.status==='done'))state='done';
+    else if(children.some(t=>t.dataset.status==='blocked'))state='blocked';
+    else if(children.some(t=>['progress','done'].includes(t.dataset.status)))state='progress';
+    const badge=phase.querySelector('.status');
+    badge.className='status '+state;badge.textContent=labels[state];
+    phase.dataset.status=state;
+  });
+}
+
+document.querySelectorAll('.task').forEach(task=>task.querySelector('.state-dot').addEventListener('click',()=>{
+  const next=order[(order.indexOf(task.dataset.status)+1)%order.length];setTask(task,next);
+}));
+document.querySelectorAll('[data-phase-status]').forEach(btn=>btn.addEventListener('click',()=>{
+  btn.closest('.phase').querySelectorAll('.task').forEach(t=>setTask(t,btn.dataset.phaseStatus,false));save();refresh();
+}));
+document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('[data-filter]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  const f=btn.dataset.filter;document.querySelectorAll('.phase').forEach(p=>p.classList.toggle('hidden',f!=='all'&&p.dataset.status!==f));
+}));
+document.getElementById('notes').addEventListener('input',()=>save(false));
+document.getElementById('exportState').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(snapshot(),null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='roadmap-agentes-rai-estado.json';a.click();URL.revokeObjectURL(a.href);
+});
+document.getElementById('importFile').addEventListener('change',async e=>{
+  try{load(JSON.parse(await e.target.files[0].text()));save()}catch{alert('El archivo de estado no es válido.')}e.target.value='';
+});
+document.getElementById('copySummary').addEventListener('click',async()=>{
+  const data=snapshot();const lines=['ROADMAP RAI AGENCY — RESUMEN'];
+  document.querySelectorAll('.phase').forEach(p=>{
+    lines.push(`\n${p.querySelector('.phase-number').textContent} · ${p.querySelector('h3').textContent} — ${p.querySelector('.status').textContent}`);
+    p.querySelectorAll('.task').forEach(t=>lines.push(`- [${icons[t.dataset.status]}] ${t.querySelector('h4').textContent}`));
+  });
+  if(data.notes.trim())lines.push('\nBITÁCORA\n'+data.notes.trim());
+  await navigator.clipboard.writeText(lines.join('\n'));const b=document.getElementById('copySummary');b.textContent='Resumen copiado';setTimeout(()=>b.textContent='Copiar resumen',1400);
+});
+
+try{load(JSON.parse(localStorage.getItem(STORAGE_KEY)))}catch{refresh()}
+refresh();
+</script>
+</body>
+</html>

@@ -309,13 +309,15 @@ footer{
 <header>
   <div class="eyebrow">DOCUMENTO VIVO — SE ACTUALIZA CADA SESIÓN</div>
   <h1>RAI Agency CRM<br>Panel de Control</h1>
-  <p class="subtitle">Checklist maestro del proyecto. Planeación en chat, ejecución en Claude Code vía Cowork. Este archivo es la fuente de verdad del avance — no el historial de chat.</p>
+  <p class="subtitle">Checklist maestro y fuente única del backlog del proyecto. La planificación parte de este panel, OpenCode orquesta subagentes especializados y QA verifica antes de cualquier aprobación humana.</p>
 
   <div class="meta-row">
-    <div class="meta-item">REPO: <span>crm-rai-agency</span> <span style="color:var(--dim)">(renombrado 29 ago 2026, antes content-engine-mvp)</span></div>
+    <div class="meta-item">REPO: <span>crm-rai-agency</span></div>
     <div class="meta-item">DEPLOY: <span>Vercel — crm-rai-agency.vercel.app</span></div>
-    <div class="meta-item">RAMA ACTIVA: <span>security/fase-0 <span style="color:var(--dim)">(local, sin push a remoto)</span></span></div>
+    <div class="meta-item">RAMA ACTIVA: <span>security/fase-0 <span style="color:var(--dim)">(publicada en GitHub, seguimiento de origin/security/fase-0)</span></span></div>
     <div class="meta-item">ÚLTIMA ACTUALIZACIÓN: <span id="updated-date">20 septiembre 2026 (sesión Cowork/OpenCode) — <strong>FASE 00 — Seguridad crítica</strong> en rama <code>security/fase-0</code>: sub-fases 0.1-0.3 <strong>cerradas y commiteadas</strong> + Etapa 4 (diseño RLS) + Etapa 5 (CI+ESLint) <strong>cerradas</strong>. 19 sep: Commit 4 (<code>cb2f057</code>) — <code>super_admin</code>/<code>agency_owner</code> en los 60 guards, <code>gerente</code> fuera de <code>/api/keys</code>; staff operativo hotelero (<code>a7743bb</code>); cron fail-closed + revisión high-value env vars (<code>4533e43</code> arc. <code>pipeline/chat</code> protegido); las 19 rutas con acceso a contenido y claves migradas a scope por <code>workspaceId</code> (<code>8fceff5</code> — <code>userId</code> queda solo como autor, claves BYOK por workspace, migración no-destructiva pendiente de backfill). 20 sep: <strong>PRIORIDAD 0 — auth real cerrada en código</strong> (<code>2ee646f</code>): login/registro por invitación, cookie httpOnly, 173/173 tests, ver item. <strong>Etapa 4 — plan RLS listo</strong> (<code>docs/planning/PLAN-RLS.md</code>, commit docs <code>9d2f280</code>): política por tabla, rol <code>crm_app</code> (sin BYPASSRLS) vs <code>crm_service</code> (BYPASSRLS para cron/worker), inyección vía <code>SET LOCAL</code> dentro de <code>$transaction</code>; hallazgo crítico: <code>DATABASE_URL</code> usa superusuario <code>postgres</code> → RLS nunca aplicaría — ejecución sigue bloqueada hasta Plan Mode con Reiner. <strong>Etapa 5 — CI+ESLint cerrada</strong> (<code>4b2c2d9</code>): workflow GitHub Actions (<code>tsc --noEmit</code> + <code>vitest</code> + <code>npm run lint</code> por push/PR), ESLint con reglas de seguridad, 0 errores/67 warnings de deuda legacy. Pendientes externos que requieren a Reiner: ejecutar RLS (Plan Mode), <code>prisma migrate deploy</code> de migraciones pendientes (incluye backfill de claves BYOK), setear <code>CRON_SECRET</code>/<code>SUPER_ADMIN_EMAILS</code>/<code>JWT_SECRET</code> en Vercel, rotación de Stripe key, decisi&oacute;n del plan Hobby de Vercel (cron). Sin push a remoto.</span></div>
+    <div class="meta-item">ACTUALIZACIÓN OPERATIVA: <span>25 septiembre 2026 — árbol local recuperado en <code>d2989f0</code>; rama <code>security/fase-0</code> publicada y sincronizada con GitHub; protocolo nocturno, mantenimiento continuo, skills internas y evaluación de Jev registrados en la sección OPS. El texto histórico anterior se conserva como cierre de las Etapas 1-5.</span></div>
+    <div class="meta-item">TURNO NOCTURNO VALIDADO: <span>25 septiembre 2026 — primera corrida jerárquica completada con orquestador y subagentes backend/frontend/QA en scopes separados; QA revisó después del autor. Commits locales, aún sin push: <code>21b2f5f</code> aisló el inventario por workspace y cerró lectura arbitraria del filesystem; <code>9e3d3aa</code> eliminó las 67 advertencias de lint sin cambio funcional; <code>36eaaf3</code> versionó los agentes OpenCode y corrigió guardrails de Vercel, migraciones y Git. Validación final: 189/189 tests, <code>tsc --noEmit</code> limpio, ESLint 0 errores/0 warnings y build exitoso de 62 páginas. Único warning no bloqueante: paquete opcional <code>@valkey/valkey-glide</code> de BullMQ. Producción, RLS, migraciones, push, merge y deploy siguen sin ejecutar.</span></div>
   </div>
 
   <div class="progress-wrap">
@@ -331,7 +333,7 @@ footer{
   <div class="section-head">
     <span class="phase-num">FASE 00</span>
     <span class="section-title">Seguridad crítica — RLS + RBAC (rama <code>security/fase-0</code>)</span>
-    <span class="section-note">0.1—0.3 + Etapa 4 (plan RLS) + Etapa 5 (CI/ESLint) cerradas y commiteadas local — auth real (Prioridad 0) cerrada en código 20 sep — nada subido a remoto todavía — bloques restantes requieren aprobación de Reiner: ejecutar RLS (Plan Mode), migraciones pendientes, envs de Vercel, push</span>
+    <span class="section-note">0.1—0.3 + Etapa 4 (plan RLS) + Etapa 5 (CI/ESLint) cerradas; rama publicada en GitHub el 25 sep — bloques restantes requieren a Reiner: RLS, migraciones, secretos de Vercel, revisión del preview y merge</span>
   </div>
   <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:680px;">Abierta 15-16 sep 2026 tras detectar RLS desactivado en las 41 tablas de producción (máxima prioridad, ver abajo) y confirmar que el RBAC no-owner heredado del Bloque 1 (ver FASE 02) seguía sin efecto real. Toda la Fase 0 corre en <strong>modo manual, sin auto mode</strong>, por su carácter crítico (RLS, RBAC, Stripe key, <code>DEV_BYPASS_AUTH</code>) — no cambiar sin confirmación explícita de Reiner. Framework de 4 checkpoints vigente desde esta fase para toda sesión futura: (1) resumen fijo al cerrar cada sub-fase — qué se hizo, qué patrón sigue/introduce, tests, pendientes; (2) justificar en una línea antes de introducir un mecanismo nuevo en vez de reusar uno existente; (3) próxima prioridad post-Fase-0 — CI (<code>tsc --noEmit</code> + <code>vitest run</code> en cada push) y luego ESLint con reglas de seguridad; (4) toda decisión de arquitectura en 3 líneas — opción elegida, alternativas descartadas, motivo del descarte.</p>
 
@@ -448,13 +450,13 @@ footer{
       </div>
       <span class="tag tag-open">acción manual de Reiner</span>
     </div>
-    <div class="check-item" data-status="pending">
+    <div class="check-item done" data-status="done">
       <div class="checkbox"></div>
       <div class="check-body">
         <div class="check-title">Post-Fase-0: CI (GitHub Actions) + ESLint con reglas de seguridad</div>
-        <div class="check-desc"><strong>Cerrado 20 sep 2026 (Etapa 5, commit <code>4b2c2d9</code>):</strong> workflow CI en <code>.github/workflows/ci.yml</code> — <code>tsc --noEmit</code> + <code>vitest run</code> + <code>npm run lint</code> en cada push/PR; ESLint (`.eslintrc.cjs`, plugins security + react-hooks + @next/next) con reglas de seguridad en <code>error</code>: regex inseguros, eval, new-buffer, no-var-requires; deuda legacy (unused vars, &lt;img&gt;, console) queda en <code>warning</code> para no bloquear CI. Resultado: 0 errores / 67 warnings, 173/173 tests, typecheck limpio.</div>
+        <div class="check-desc"><strong>Cerrado 20 sep 2026 (Etapa 5, commit <code>4b2c2d9</code>) y saneado 25 sep (commit local <code>9e3d3aa</code>):</strong> workflow CI en <code>.github/workflows/ci.yml</code> — <code>tsc --noEmit</code> + <code>vitest run</code> + <code>npm run lint</code> en cada push/PR; ESLint (<code>.eslintrc.cjs</code>, plugins security + react-hooks + @next/next) mantiene reglas de seguridad en error. Las 67 advertencias legacy fueron eliminadas sin cambio funcional. QA final de la corrida: 189/189 tests, typecheck limpio, ESLint 0 errores/0 warnings y build exitoso de 62 páginas; persiste solo el warning no bloqueante de BullMQ por el paquete opcional <code>@valkey/valkey-glide</code>.</div>
       </div>
-      <span class="tag tag-open">siguiente prioridad tras cerrar Fase 0</span>
+      <span class="tag tag-decided">cerrado — 4b2c2d9 + 9e3d3aa</span>
     </div>
     <div class="check-item done" data-status="done">
       <div class="checkbox"></div>
@@ -469,8 +471,9 @@ footer{
       <div class="check-body">
         <div class="check-title">Migración de flujo de trabajo a OpenCode — archivos entregados (19 sep)</div>
         <div class="check-desc">Reiner pidió reproducir en OpenCode (modelo GPT-5.6 &quot;Sol&quot;, app RAI Flow) el flujo que usaba en Claude Code: 5 skills personalizadas (<code>cc-mentor</code>, <code>bloques-info-tareas</code>, <code>git-buenas-practicas</code>, <code>checkpoint-limpieza-sesion-cli</code>, <code>cierre-continuidad-sesion</code>) más un prompt de Agente Orquestador autónomo cíclico basado en un roadmap. Entregado y copiado directo al repo vía Cowork (puente de dispositivo, sin shell): <code>AGENTS.md</code> (raíz, fusiona los 5 skills reales leídos del filesystem de skills — OpenCode no dispara por descripción como el Skill tool de Claude, así que queda todo siempre cargado), <code>ROADMAP.md</code> (raíz, pre-cargado con el backlog real de este mismo panel, no un template genérico), <code>.opencode/agent/orchestrator.md</code> (ciclo: leer roadmap → delegar en sub-agentes → validar → código final limpio y depurado sin excepción → marcar tarea y documentar → commit local), <code>.opencode/agent/{backend,frontend,qa}.md</code> (sub-agentes de dominio) y <code>.opencode/command/cierre.md</code> (equivalente a "New session"). Se sacó el modelo hardcodeado a Anthropic de los 4 agentes para que hereden el GPT-5.6 Sol ya seleccionado. <strong>Guardrails mantenidos a propósito</strong> pese a que el prompt original pedía autonomía total sin preguntar salvo error crítico: RLS (bloque 0 del roadmap) marcado no-autoejecutable, requiere Plan Mode explícito; <code>git push</code>, merge a <code>main</code> y <code>wrangler deploy</code> siempre piden confirmación (regla fija de <code>git-buenas-practicas</code>); <code>prisma migrate dev</code> contra <code>.env.local</code> bloqueado (<code>deny</code>) en el permission config. <strong>Sin confirmar todavía:</strong> resultado real del primer ciclo <code>@plan</code>/<code>@orchestrator</code>, y si el permission config de <code>bash</code> con patrones glob efectivamente frena push/merge/deploy en un caso real (sintaxis tomada de la documentación oficial de OpenCode, no verificada en producción). Nota aparte: existe también <code>docs/planning/roadmap-agentes-rai.html</code>, documento distinto de un proyecto separado (agente comercial WhatsApp/Instagram + asistente Telegram de RAI Agency) — no se fusionó con este panel porque son fuentes de verdad de proyectos distintos.</div>
+        <div class="check-desc"><strong>Actualización 25 sep 2026:</strong> primera corrida real confirmada con scopes separados y revisión QA posterior al autor. Los guardrails fueron corregidos para Vercel, migraciones, push/merge y comandos destructivos, y quedaron versionados junto con <code>AGENTS.md</code> en el commit local <code>36eaaf3</code>. <code>ROADMAP.md</code> queda deprecado; este panel es la única fuente de pendientes, y <code>roadmap-agentes-rai.html</code> describe exclusivamente el sistema de agentes de este CRM. No se ejecutaron push, merge, deploy ni migraciones.</div>
       </div>
-      <span class="tag tag-decided">hecho — falta primera corrida real</span>
+      <span class="tag tag-decided">hecho — corrida real + 36eaaf3</span>
     </div>
   </div>
 
@@ -1054,6 +1057,108 @@ footer{
   </div>
 </section>
 
+<!-- OPERACION AUTONOMA Y MANTENIMIENTO -->
+<section>
+  <div class="section-head">
+    <span class="phase-num">OPS</span>
+    <span class="section-title">Orquestación autónoma, calidad y limpieza continua</span>
+    <span class="section-note">Definido 25 sep 2026 — alcance nocturno seguro, no equivale a autorización de producción</span>
+  </div>
+  <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:720px;">Objetivo: permitir que el orquestador avance durante una sesión larga mediante sub-agentes especializados, cierre tareas atómicas con evidencia y deje este panel actualizado. “100%” significa <strong>100% del trabajo local autónomamente ejecutable</strong>; credenciales, CAPTCHA, pagos, RLS, migraciones remotas, merge a <code>main</code> y producción nunca se marcan completados sin evidencia y aprobación humana. El proceso solo continúa mientras la sesión y la computadora permanezcan activas; no existe ejecución invisible después de cerrar OpenCode.</p>
+
+  <div class="check-list">
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Recuperar el árbol local y sincronizarlo con la rama publicada</div>
+        <div class="check-desc"><strong>Cerrado 25 sep 2026:</strong> archivos rastreados restaurados desde <code>d2989f0</code>; login, registro, CI, migración y pruebas recuperados. <code>HEAD</code> local coincide con <code>origin/security/fase-0</code>; los archivos nuevos sin seguimiento se conservaron.</div>
+      </div>
+      <span class="tag tag-decided">cerrado — d2989f0</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Preparar el ciclo nocturno del orquestador</div>
+        <div class="check-desc"><strong>Cerrado 25 sep 2026 con una corrida real:</strong> el orquestador leyó este panel, delegó scopes separados a backend/frontend/QA y QA revisó después del autor. Se cerraron dos cambios atómicos en commits locales sin push: aislamiento del inventario (<code>21b2f5f</code>) y lint 0/0 (<code>9e3d3aa</code>). Validación final: 189/189 tests, TypeScript limpio y build de 62 páginas. No se ejecutaron acciones de producción.</div>
+      </div>
+      <span class="tag tag-decided">cerrado — primera corrida validada</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Crear registro permanente de deuda técnica y código temporal</div>
+        <div class="check-desc"><strong>Cerrado 25 sep 2026:</strong> el registro visible de esta sección usa ID, módulo/evidencia, riesgo y estado/acción. Los hallazgos se documentan antes de remediarlos y no se elimina código por antigüedad; una corrección exige alcance propio y validación.</div>
+      </div>
+      <span class="tag tag-decided">cerrado — registro OPS activo</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Cerrar lectura arbitraria del filesystem desde el inventario</div>
+        <div class="check-desc"><strong>Cerrado en commit local <code>21b2f5f</code>:</strong> <code>INVENTORY_ALLOWED_ROOTS</code> define bases administradas y cada workspace queda limitado a <code>&lt;base&gt;/&lt;workspaceId&gt;</code>. Se bloquean traversal, prefix bypass y symlinks hacia el exterior; los errores no filtran rutas. QA verificó tests de endpoint y helper dentro de la suite final de 189/189, además de TypeScript, ESLint y build.</div>
+      </div>
+      <span class="tag tag-decided">cerrado — 21b2f5f</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Automatizar mantenimiento semanal en modo informe/PR</div>
+        <div class="check-desc">Ejecutar TypeScript, Vitest, ESLint, build, dependencias y código posiblemente muerto; generar informe y, cuando el cambio sea verificable, abrir una rama y PR. El mantenimiento no borra, mergea ni despliega automáticamente. Las advertencias legacy se reducen por lotes con tests, no en un cambio masivo.</div>
+      </div>
+      <span class="tag tag-open">pendiente — mantenimiento</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Investigar Jev de TypeSafe AI</div>
+        <div class="check-desc"><strong>Cerrado 25 sep 2026:</strong> Jev es un System One Model de decisiones estructuradas (<code>choice</code>, <code>score</code>, <code>noul</code>), disponible en Cloudflare Workers AI como <code>typesafe/jev</code> con cero retención. No genera texto ni código y no reemplaza al modelo de OpenCode. Uso propuesto: clasificar hallazgos, prioridad, riesgo y routing; el LLM de código realiza el cambio y QA lo valida.</div>
+      </div>
+      <span class="tag tag-decided">investigación cerrada</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Pilotar Jev con decisiones reversibles y datos no sensibles</div>
+        <div class="check-desc">Crear adaptador desacoplado, fijar versión, probar 50-100 casos en español, medir precisión/confianza/costo, usar feature flag y fallback humano. Primeros candidatos: prioridad de leads, routing de soporte y triage de deuda técnica. Prohibido usarlo como autoridad final para pagos, borrados, permisos, migraciones o producción.</div>
+      </div>
+      <span class="tag tag-open">pendiente — piloto controlado</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Diseñar skills propias tomando SkillsMP solo como referencia</div>
+        <div class="check-desc">No instalar skills externas. Revisar alcance, pasos y checklists públicos; reescribir versiones mínimas para CRM RAI Agency y auditarlas antes de activarlas. Prioridades detectadas: refactor seguro, deuda técnica, React/Next.js, Prisma/Postgres/RLS, testing de migraciones, UI/UX, Wix/CMS, operaciones CRM y revisión de seguridad.</div>
+      </div>
+      <span class="tag tag-open">pendiente — seguridad por diseño</span>
+    </div>
+    <div class="check-item blocked" data-status="blocked">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Completar y desplegar el 100% sin intervención humana</div>
+        <div class="check-desc">No es ejecutable de forma honesta: RLS y migraciones cambian producción; Meta/Google/Hostinger/Cloudflare pueden exigir login, 2FA o CAPTCHA; faltan secretos de Vercel; Stripe requiere rotación manual; el merge a <code>main</code> y los deploys necesitan aprobación explícita. El orquestador sí puede dejar todo el código local, tests, documentación, commits y PRs preparados.</div>
+      </div>
+      <span class="tag tag-blocked">bloqueado por guardrails humanos</span>
+    </div>
+  </div>
+
+  <div class="feature-group" style="margin-top:24px;">
+    <div class="feature-group-title">Registro permanente de deuda técnica</div>
+    <div class="decision-grid">
+      <div class="decision-card open"><h3>DT-001 · BullMQ / Valkey</h3><p><strong>Módulo/evidencia:</strong> build exitoso con warning por paquete opcional <code>@valkey/valkey-glide</code>. <strong>Riesgo:</strong> bajo. <strong>Estado/acción:</strong> abierto; revisar únicamente si se adopta Valkey Glide.</p></div>
+      <div class="decision-card"><h3>DT-002 · Symlinks seguros</h3><p><strong>Módulo/evidencia:</strong> inventario omite symlinks, incluso cuando apuntan dentro de la raíz permitida. <strong>Riesgo:</strong> bajo. <strong>Estado/acción:</strong> aceptado; documentar el comportamiento.</p></div>
+      <div class="decision-card open"><h3>DT-003 · Carpetas Día N</h3><p><strong>Módulo/evidencia:</strong> carpetas <code>Día N</code> ilegibles aparecen vacías en el inventario. <strong>Riesgo:</strong> bajo. <strong>Estado/acción:</strong> abierto; conservar evidencia y revisar el tratamiento de lectura.</p></div>
+      <div class="decision-card open"><h3>DT-004 · Raíces de inventario por entorno</h3><p><strong>Módulo/evidencia:</strong> el deploy necesita <code>INVENTORY_ALLOWED_ROOTS</code> y la estructura <code>&lt;base&gt;/&lt;workspaceId&gt;</code> configuradas. <strong>Riesgo:</strong> alto. <strong>Estado/acción:</strong> bloqueado por entorno humano; configurar y validar antes de deploy.</p></div>
+    </div>
+  </div>
+
+  <div class="decision-grid" style="margin-top:20px;">
+    <div class="decision-card"><h3>Fuente única del CRM</h3><p><strong>Elegido:</strong> este <code>panel-control.html</code>. <strong>Descartado:</strong> duplicar pendientes en <code>ROADMAP.md</code>. <strong>Motivo:</strong> impedir estados contradictorios y pérdida de contexto.</p></div>
+    <div class="decision-card"><h3>Alcance del segundo HTML</h3><p><strong>Elegido:</strong> <code>roadmap-agentes-rai.html</code> solo para capacidades, madurez y tareas del sistema de agentes. <strong>Descartado:</strong> copiar todo el backlog del CRM. <strong>Motivo:</strong> separar producto CRM de plataforma de agentes.</p></div>
+    <div class="decision-card"><h3>Limpieza de código</h3><p><strong>Elegido:</strong> evidencia estática + pruebas + PR. <strong>Descartado:</strong> borrar por edad o por decisión aislada de IA. <strong>Motivo:</strong> preservar comportamiento y trazabilidad.</p></div>
+    <div class="decision-card"><h3>Jev</h3><p><strong>Elegido:</strong> clasificador auxiliar con confianza y fallback. <strong>Descartado:</strong> usarlo como agente programador. <strong>Motivo:</strong> Jev no escribe código ni conversa; solo devuelve decisiones tipadas.</p></div>
+  </div>
+</section>
+
 <!-- FLUJO DE TRABAJO -->
 <section>
   <div class="section-head">
@@ -1062,21 +1167,33 @@ footer{
   </div>
   <div class="workflow">
     <div class="workflow-step">
-      <div class="eyebrow">01 — CHAT</div>
-      <h4>Planeación y estrategia</h4>
-      <p>Aquí decidimos qué construir, en qué orden, y por qué. No se escribe código de producción en este chat.</p>
+      <div class="eyebrow">01 — PLANIFICACIÓN</div>
+      <h4>Fuente de verdad</h4>
+      <p>Este panel define prioridad, alcance, bloqueos y evidencia esperada sin duplicar el backlog en otros documentos.</p>
     </div>
     <div class="workflow-arrow">→</div>
     <div class="workflow-step">
-      <div class="eyebrow">02 — COWORK</div>
-      <h4>Carpeta de proyecto</h4>
-      <p>Cowork edita archivos directo en la carpeta del repo. Organiza qué toca cada cosa para que Claude Code sepa dónde está todo.</p>
+      <div class="eyebrow">02 — ORQUESTADOR OPENCODE</div>
+      <h4>Descomposición y control</h4>
+      <p>Selecciona una tarea acotada, fija scopes, aplica guardrails y coordina la evidencia sin ampliar el alcance.</p>
     </div>
     <div class="workflow-arrow">→</div>
     <div class="workflow-step">
-      <div class="eyebrow">03 — CLAUDE CODE (terminal)</div>
-      <h4>Ejecución</h4>
-      <p>Recibe los prompts ya preparados, construye, y tú revisas el resultado con ayuda de Cowork antes de aceptar.</p>
+      <div class="eyebrow">03 — SUBAGENTES</div>
+      <h4>Ejecución especializada</h4>
+      <p>Backend, frontend y QA trabajan con responsabilidades y archivos separados; el autor no se autoaprueba.</p>
+    </div>
+    <div class="workflow-arrow">→</div>
+    <div class="workflow-step">
+      <div class="eyebrow">04 — QA + COMMIT LOCAL</div>
+      <h4>Validación trazable</h4>
+      <p>QA revisa después del autor, ejecuta controles pertinentes y solo entonces se crea un commit local atómico.</p>
+    </div>
+    <div class="workflow-arrow">→</div>
+    <div class="workflow-step">
+      <div class="eyebrow">05 — APROBACIÓN HUMANA</div>
+      <h4>Push, merge y deploy</h4>
+      <p>Reiner autoriza explícitamente cada paso externo. Vercel, producción, RLS y migraciones nunca avanzan por inferencia.</p>
     </div>
   </div>
 </section>
@@ -1085,7 +1202,7 @@ footer{
 
 <footer>
   <span>RAI AGENCY CRM — PANEL VIVO</span>
-  <span>Marca cada casilla al completar. Pide a Claude que regenere este archivo cuando avancen los bloqueadores.</span>
+  <span>Marca cada casilla al completar. Pide al orquestador OpenCode que actualice este archivo cuando exista evidencia nueva.</span>
 </footer>
 
 <script>
