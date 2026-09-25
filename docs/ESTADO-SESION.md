@@ -1,32 +1,32 @@
 # Estado de sesión — CRM RAI Agency
-Última actualización: 20 septiembre 2026 (sesión OpenCode, rama `security/fase-0`)
+Última actualización: 25 septiembre 2026 (sesión OpenCode, rama `security/fase-0`)
 
 ## Hecho en la última sesión
-- **Etapa 1 — Panel reconciliado** (commits docs `4908ab0`, `628f92b`): `docs/planning/panel-control.html` marcó Prioridad 0 (auth real) cerrada, items de FASE 00 con sus commits reales y fecha actualizada.
-- **Etapa 2 — Seguridad sin RLS** (commits `8fceff5`, `a7743bb`, `4533e43`, `cb2f057`, verificado en ese orden): scope por `workspaceId` en 19 rutas + migración `require_apikey_workspace_scope` (no ejecutada), staff hotel operativo, cron fail-closed, Commit 4 con super_admin/agency_owner en guards. 152/152 tests.
-- **Etapa 3 — Auth real por invitación (Prioridad 0)** (commit `2ee646f`): `User.passwordHash`, scrypt nativo (`src/lib/password.ts`), rate-limit en memoria (`src/lib/rate-limit.ts`), `/api/auth/register` (403 sin invitación, excepción SUPER_ADMIN_EMAILS) + `/api/auth/login`, páginas `/login` + `/registro`, `AuthShell`, cookie `rai_session` httpOnly, `signJwt()` en auth.ts, Sidebar vía `apiFetch`. Migración `20260920120000_add_user_password_hash` creada NO ejecutada. 173/173 tests, tsc limpio.
-- **Etapa 4 — Plan RLS** (commit docs `9d2f280`): `docs/planning/PLAN-RLS.md` — políticas por tabla, roles `crm_app`/`crm_service`, inyección vía `SET LOCAL` dentro de `$transaction`. Hallazgo crítico: `DATABASE_URL` usa superusuario `postgres` → hay que crear `crm_app` antes de habilitar RLS. Ejecución bloqueada (Plan Mode con Reiner).
-- **Etapa 5 — CI + ESLint** (commit `4b2c2d9`): `.github/workflows/ci.yml` (prisma generate + tsc + lint + vitest por push/PR), ESLint con reglas de seguridad (0 errores/67 warnings), scripts `lint` y `typecheck` en package.json.
-- **Comprobación de Etapa 6 — Saneo git (parcial):** `96ee2c8` YA está en main (pendiente anotado antes quedó resuelto). PR #3 (módulo Instagram huérfano) y PR #7 (B2A, conflictuado) siguen abiertos remotos y tocan archivos afectados por seguridad — requieren decisión de Reiner.
+- Ejecutada la primera corrida jerárquica del orquestador con subagentes backend, frontend y QA en scopes separados; QA revisó después del autor.
+- Cerrada la lectura arbitraria del filesystem en inventario (`21b2f5f`): raíces administradas por servidor, aislamiento `<base>/<workspaceId>`, bloqueo de traversal/prefix bypass/symlink exterior y errores sin rutas internas. Se añadieron pruebas de helper y endpoint.
+- Eliminadas las 67 advertencias de ESLint (`9e3d3aa`) sin cambiar comportamiento funcional; lint quedó en 0 errores/0 warnings.
+- Versionados `AGENTS.md`, los cuatro agentes y el comando de cierre (`36eaaf3`); reforzados después los permisos contra variantes de Git, Prisma, Vercel y borrado (`c418bef`).
+- Adaptado `docs/planning/roadmap-agentes-rai.html` al sistema de agentes de este CRM y sincronizado `docs/planning/panel-control.html` (`2c17fdf`).
+- Validación final: 189/189 tests, `tsc --noEmit` limpio, ESLint limpio y build de 62 páginas. Persiste solo el warning no bloqueante de BullMQ por `@valkey/valkey-glide`.
+- Eliminados, con aprobación explícita, los artefactos sin seguimiento: `.playwright-mcp/`, `test-mcp.png`, `docs/planning/Claude outputs/` y el `ROADMAP.md` deprecado.
+- Publicada `security/fase-0` hasta `c418bef` en `origin/security/fase-0`. No hubo merge a `main`, migraciones ni deploy.
 
 ## Decisiones tomadas
-- Registro SOLO por invitación (descartado registro público/manual); única excepción bootstrap via `SUPER_ADMIN_EMAILS`. Reutiliza flujo de invitación existente vía `POST /api/team` con `status='invited'`.
-- Implementación auth con scrypt nativo de Node (bcryptjs no está en deps). JWT HS256 7 días, mismo payload que `verifyJwt`.
-- RLS: inyección del workspace con `SET LOCAL` dentro de `$transaction` interactivo por request (el pooler transaction-mode recicla conexiones; SET de sesión no sobrevive). Se descartó header+set_config y derivar del rol JWT.
-- ESLint corre con reglas de seguridad como `error` y deuda legacy como `warning` (no bloquear CI con ruido pre-existente).
-- Quadro Café: se activará recién cuando RLS esté diseñado Y probado (mantiene vigencia).
+- `docs/planning/panel-control.html` sigue siendo la única fuente de backlog; `roadmap-agentes-rai.html` registra solo capacidades y madurez de agentes.
+- El inventario usa bases administradas y una subcarpeta obligatoria por workspace; se descartó aceptar rutas arbitrarias proporcionadas por el cliente por riesgo multi-tenant.
+- Las advertencias de lint se corrigieron por lotes con QA posterior, no ocultando reglas globalmente; las supresiones restantes son puntuales y justificadas.
+- Los agentes exigen confirmación técnica para Git y acciones destructivas; migraciones de desarrollo quedan denegadas y producción/Vercel requieren aprobación humana.
+- El Calendario de Contenido será el próximo bloque, pero no se mezclará automáticamente con `security/fase-0`: primero se decidirá la base de la rama sin mergear seguridad a `main` por inferencia.
 
 ## Archivos/módulos tocados
-- `prisma/schema.prisma` (`User.passwordHash`), `prisma/migrations/20260920120000_add_user_password_hash/migration.sql` (nueva, sin ejecutar).
-- `src/lib/{password,rate-limit,client-api}.ts` (nuevos), `src/lib/auth.ts` (signJwt, SESSION_COOKIE, getAuth cookie+Bearer).
-- `src/app/api/auth/{register,login}/route.ts` (nuevos), `src/app/{login,registro}/page.tsx`, `src/components/auth/AuthShell.tsx` (nuevos), `src/components/layout/Sidebar.tsx`.
-- Tests: `src/lib/__tests__/{password,rate-limit,auth-register,auth-login}.test.ts` (nuevos).
-- `.github/workflows/ci.yml`, `.eslintrc.cjs` (nuevos), `package.json` (scripts lint/typecheck + deps dev eslint/TS/security/next/react-hooks), `package-lock.json`.
-- `docs/planning/PLAN-RLS.md` (nuevo), `docs/planning/panel-control.html`, `docs/ESTADO-SESION.md` (este).
+- Inventario: `.env.example`, `src/lib/inventory-paths.ts`, `src/app/api/inventory/route.ts`, `src/agents/vision-analyzer.ts`, UI y pruebas asociadas.
+- Limpieza lint: 25 archivos de frontend/backend/tests/worker, sin cambios funcionales previstos.
+- Operación OpenCode: `AGENTS.md`, `.opencode/agent/{orchestrator,backend,frontend,qa}.md`, `.opencode/command/cierre.md`.
+- Documentación: `docs/planning/panel-control.html`, `docs/planning/roadmap-agentes-rai.html`, `docs/ESTADO-SESION.md`.
 
 ## Pendiente para la próxima sesión
-- **Etapa 7 — Producto** (próximo gran bloque): orden vigente B2A calendario núcleo → B2B automatización → 4 → 3 → 5 → 6 del catálogo GHL; actualizar `panel-control.html` con cada cierre. Confirmar con Reiner si arranca B2A (PR #7 viejo conflictuado puede servir de insumo).
-- **RLS (bloqueado, requiere Plan Mode con Reiner):** ejecutar `PLAN-RLS.md` en 16 pasos; primero crear `crm_app`/`crm_service`, mover `DATABASE_URL`/`DIRECT_URL`, migrar `engine.ts` (cron) y `pipeline-worker.ts` a `crm_service`; probar en tenant de prueba.
-- **Migraciones Prisma pendientes:** `20260919120000_require_apikey_workspace_scope` (requiere backfill manual de claves legacy) y `20260920120000_add_user_password_hash` — ambos con `migrate deploy` tras aprobación.
-- **Env de Vercel (hacerlo Reiner):** `SUPER_ADMIN_EMAILS` (sin esto nadie puede crear la primera cuenta), `JWT_SECRET`, `CRON_SECRET`; rotación de Stripe key; decisión del plan Hobby (cron).
-- **PRs remotos:** decidir destino de PR #3 (Instagram huérfano: resucitar/descartar; toca roles-shared/Sidebar/schema/vercel.json) y PR #7 (B2A conflictuado). `git push` de esta rama + merge a main requieren aprobación.
+- Reiniciar OpenCode para cargar los agentes y permisos versionados.
+- Leer este archivo y `docs/planning/panel-control.html`; verificar que `security/fase-0` está sincronizada con remoto.
+- Preparar BLOQUE 2A — Calendario de Contenido en rama `rai-feat-calendario-contenido`. Antes de crearla, decidir técnicamente si debe partir de `main` o de `security/fase-0`; no mergear a `main` sin aprobación. Auditar el PR #7 antiguo y rescatar selectivamente solo código compatible con RBAC, `apiFetch` y aislamiento por workspace.
+- Mantener bloqueados RLS, migraciones remotas, variables de Vercel, merge y deploy hasta aprobación explícita.
+- Antes de cualquier deploy futuro, configurar `INVENTORY_ALLOWED_ROOTS` y crear `<base>/<workspaceId>` para cada workspace que use inventario.

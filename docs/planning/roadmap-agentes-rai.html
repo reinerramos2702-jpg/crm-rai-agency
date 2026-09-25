@@ -124,7 +124,7 @@ input[type=file]{display:none}
       <div class="pill">ACTUALIZADO: <strong id="updated">25 sep 2026</strong></div>
       <div class="pill">ORQUESTACIÓN: <strong>OpenCode + subagentes especializados</strong></div>
       <div class="pill">CRM: <strong>Next.js + Prisma + Supabase + Vercel</strong></div>
-      <div class="pill">ESTADO: <strong>Agentes versionados · commits locales sin push</strong></div>
+      <div class="pill">ESTADO: <strong>Agentes versionados · rama de seguridad publicada</strong></div>
     </div>
     <div class="summary">
       <div class="metric"><b id="pct">0%</b><span>avance total</span></div>
@@ -277,7 +277,7 @@ input[type=file]{display:none}
         <article class="phase" data-phase="9">
           <div class="phase-top"><div class="phase-number">09</div><div class="phase-title"><h3>Gobernanza Git y Vercel</h3><p>Hacer que cada cambio llegue al CRM mediante revisión, evidencia y aprobación explícita.</p></div><span class="status pending">Pendiente</span></div>
           <div class="tasks">
-            <div class="task" data-id="9-1" data-status="done"><button class="state-dot">✓</button><div><h4>Normalizar ramas y commits</h4><p>La corrida trabajó en <code>security/fase-0</code> y produjo commits locales de alcance único, incluidos <code>21b2f5f</code> para seguridad de inventario, <code>9e3d3aa</code> para lint y <code>36eaaf3</code> para configuración OpenCode. No hubo push, merge ni deploy.</p></div><span class="owner">GIT</span></div>
+            <div class="task" data-id="9-1" data-status="done"><button class="state-dot">✓</button><div><h4>Normalizar ramas y commits</h4><p>La corrida trabajó en <code>security/fase-0</code> y produjo commits de alcance único para inventario, lint, configuración y guardrails. El push autorizado sincronizó la rama con GitHub hasta <code>c418bef</code>; no hubo merge ni deploy.</p></div><span class="owner">GIT</span></div>
             <div class="task" data-id="9-2" data-status="pending"><button class="state-dot">·</button><div><h4>Exigir revisión previa al push</h4><p>Mostrar diff, pruebas y riesgos; no subir hasta confirmación humana. DoD: aprobación registrada y solo archivos previstos en el commit.</p></div><span class="owner">ORQUESTADOR</span></div>
             <div class="task" data-id="9-3" data-status="blocked"><button class="state-dot">!</button><div><h4>Validar preview de Vercel</h4><p>Revisar build, variables, rutas críticas, logs y cambios visuales en un entorno aislado. DoD: preview aprobado; bloqueado hasta disponer de acceso y despliegue autorizado.</p></div><span class="owner">QA + HUMANO</span></div>
             <div class="task" data-id="9-4" data-status="blocked"><button class="state-dot">!</button><div><h4>Autorizar merge y producción</h4><p>Solo después de CI verde, revisión, plan de reversión y aprobación explícita. DoD: merge confirmado, Vercel saludable y entrega registrada; bloqueado hasta decisión humana.</p></div><span class="owner">REINER</span></div>
@@ -303,7 +303,7 @@ input[type=file]{display:none}
       <div class="section-head"><span class="section-code">CORRIDA</span><h2>Bitácora verificable · 25 sep 2026</h2><span class="section-note">Evidencia fija del repositorio · sin secretos</span></div>
       <div class="human-grid">
         <div class="human-card"><strong><code>21b2f5f</code> · Seguridad del inventario</strong><p><code>INVENTORY_ALLOWED_ROOTS</code> usa bases administradas y limita cada tenant a <code>&lt;base&gt;/&lt;workspaceId&gt;</code>. Bloquea traversal, prefix bypass y symlink exterior; los errores no filtran rutas. Incluye tests de endpoint y helper.</p></div>
-        <div class="human-card"><strong><code>9e3d3aa</code> · Lint limpio</strong><p>ESLint pasó de 67 a 0 warnings sin cambio funcional. Los commits de la corrida permanecen locales y no fueron enviados, fusionados ni desplegados.</p></div>
+        <div class="human-card"><strong><code>9e3d3aa</code> · Lint limpio</strong><p>ESLint pasó de 67 a 0 warnings sin cambio funcional. La rama fue publicada con aprobación; no fue fusionada ni desplegada.</p></div>
         <div class="human-card"><strong>QA final</strong><p>189/189 tests, <code>tsc --noEmit</code> limpio, ESLint 0 errores/0 warnings y build exitoso de 62 páginas. Warning no bloqueante: paquete opcional <code>@valkey/valkey-glide</code> de BullMQ.</p></div>
         <div class="human-card"><strong><code>36eaaf3</code> · Jerarquía y guardrails</strong><p>Orquestador, backend, frontend y QA quedaron versionados después de trabajar con scopes separados y revisión QA posterior al autor. Los permisos exigen aprobación para Vercel, migraciones, push/merge y comandos destructivos.</p></div>
       </div>
