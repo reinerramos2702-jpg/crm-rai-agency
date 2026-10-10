@@ -1,5 +1,7 @@
 # RAI Agency CRM — Briefing de arranque para Cowork
 
+> ⚠️ **Documento histórico (briefing del 1 sep 2026).** El repo, el flujo de trabajo y el estado cambiaron: hoy el trabajo de código lo ejecuta OpenCode (agentes `@orchestrator`, `@backend`, `@frontend`, `@qa`) bajo `AGENTS.md`; Cowork planifica, edita documentación y verifica. Estado actual → `../ESTADO-SESION.md`; backlog y decisiones → `panel-control.html`; reglas → `../../AGENTS.md` y `BUENAS-PRACTICAS-CRM.md`. No usar este texto como primer mensaje de una sesión nueva.
+
 Pega este documento completo como primer mensaje al abrir la carpeta del proyecto en Claude Cowork.
 
 ## Quién soy y qué es esto

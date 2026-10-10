@@ -1,6 +1,8 @@
 # Módulo Automatizaciones — Calendario de Contenido
 ## Spec técnica para Claude Code
 
+> **Estado al 10 oct 2026:** spec de referencia. La implementación se trabajó en la rama `rai-feat-calendario-contenido`, publicada en remoto (`d6f362d`); no está mergeada a `main` y el estado de su PR es desconocido. Antes de retomarla hay que decidir su rama base (ver `../ESTADO-SESION.md`) y adaptar el modelo de datos a `workspaceId` (esta spec usa `tenantId`). Prioridad actual: login/registro (`../SPEC-login-registro-ui.md`).
+
 Submódulo dentro de Automatizaciones. El cliente final (dueño, marketing, o recepcionista según el negocio) sube contenido y lo programa día a día en tarjetas tipo slider, visualmente atractivo, con publicación vía Graph API de Meta.
 
 Quién sube contenido: **el cliente final**, sin conocimiento técnico. Implicación de diseño: cada acción necesita feedback claro, estados de error legibles (no mensajes de API crudos), y guía integrada — no es opcional, es P0.

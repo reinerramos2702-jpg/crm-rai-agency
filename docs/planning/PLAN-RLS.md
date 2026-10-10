@@ -7,6 +7,8 @@
 > `src/lib/roles.ts`, `src/lib/automations/engine.ts`, `src/workers/pipeline-worker.ts`,
 > `src/app/api/public/booking/[slug]/route.ts`, `.env.example`, migraciones Prisma.
 
+> **Estado al 10 oct 2026:** plan completo y revisado; **nada ejecutado** (ni SQL, ni roles, ni cambio de `DATABASE_URL`). Sigue bloqueado hasta una sesión en Plan Mode con Reiner. Hallazgo crítico vigente: `DATABASE_URL` usa el superusuario `postgres`, por lo que RLS nunca se aplicaría sin el rol `crm_app`. Backlog: `panel-control.html` (FASE 00).
+
 ---
 
 ## 1. Objetivo y alcance
