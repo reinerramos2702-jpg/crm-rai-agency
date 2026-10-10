@@ -45,6 +45,8 @@ Principios: escalable, modular, UX sin fricción para usuarios no técnicos, dat
 
 **Auth**: `src/lib/auth.ts` → `getAuth(req)` → `AuthContext { userId, email }`
 
+**Auth real (cerrada en código el 20 sep 2026, commit `2ee646f`)**: `User.passwordHash` (scrypt nativo), `POST /api/auth/login` y `POST /api/auth/register`, JWT con `jose` en cookie httpOnly `rai_session` (nunca localStorage), `getAuth` acepta la cookie además del Bearer, cliente `apiFetch` (401 → `/login`). `checkRateLimit` (`src/lib/rate-limit.ts`, en memoria por instancia) protege el login: 5 intentos/15 min por email e IP. Hoy el registro es **solo por invitación** (excepción: `SUPER_ADMIN_EMAILS`). Cambio aprobado y especificado, aún **sin implementar**: auto-registro abierto con Workspace propio y rate-limit en registro (`docs/SPEC-login-registro-ui.md`). El dueño del workspace (`ownerId`) obtiene rol `admin` en `getRole()` sin fila en `WorkspaceMember`. `DEV_BYPASS_AUTH` es solo para desarrollo local.
+
 **Roles** (`src/lib/roles-shared.ts` + `src/lib/roles.ts`):
 - Tipos: `admin | gerente | agente | viewer`
 - `requireRole(req, allowed[])` → devuelve `RoleContext | NextResponse`

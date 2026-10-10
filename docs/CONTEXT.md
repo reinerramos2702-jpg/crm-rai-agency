@@ -3,9 +3,11 @@
 > Documento vivo. Se actualiza al cerrar cada sesión.
 > Para stack, convenciones y arquitectura → ver `MEMORY.md`.
 
+> ⚠️ **Documento histórico desde el 10 oct 2026.** La última entrada de este archivo es de jun 2026; el trabajo de jul-oct 2026 (seguridad `security/fase-0`, auth real, agentes OpenCode, login/registro premium, Hidromáticos) NO está aquí. Estado actual y punto de reanudación → `ESTADO-SESION.md`; backlog y decisiones → `planning/panel-control.html`; reglas del agente → `../AGENTS.md`. No agregar entradas nuevas aquí.
+
 ---
 
-## ▶️ SIGUIENTE PASO (actualizar cada sesión)
+## ▶️ SIGUIENTE PASO (histórico — jun 2026, ya no se actualiza; ver ESTADO-SESION.md)
 
 **Tarea activa (jun 20 2026): Construir tab "Pipeline IG" como 5ta tab dentro de `/automatizacion`. Sistema multi-agente de contenido automático para Hotel MPV (cliente piloto + producto vendible del CRM).**
 

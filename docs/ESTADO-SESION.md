@@ -1,5 +1,5 @@
 # Estado de sesión — CRM RAI Agency
-Última actualización: 5 octubre 2026 (sesión Cowork, rama `rai-feat-login-registro-ui`). Las secciones marcadas "25 sep" son el cierre anterior de OpenCode, conservado como historial.
+Última actualización: 10 octubre 2026 (sesión Cowork, rama `rai-feat-login-registro-ui`; verificado 10 oct: sin cambios de código desde el 5 oct, implementación del login sin iniciar). Las secciones marcadas "25 sep" son el cierre anterior de OpenCode, conservado como historial.
 
 ## Estado actual (5 oct 2026) — punto de reanudación
 - Rama activa: `rai-feat-login-registro-ui` = `origin/security/fase-0` (`69277fb`) + 3 commits locales solo de documentación e imágenes (`b455270`, `a76be0b`, `0355e6b`). Ninguno está publicado en remoto.
@@ -18,7 +18,7 @@
 1. OpenCode: releer la spec v3 y salir de modo Plan; ejecutar el bloque con `@backend`, `@frontend` y `@qa` hasta cumplir los criterios de la sección 6 de la spec.
 2. Correr `tsc --noEmit`, lint, `vitest run` y `build` en Windows y registrar resultados reales en el panel.
 3. Preparar el PR del login y esperar aprobación explícita; sin push, merge ni deploy por inferencia.
-4. Hidromáticos: responder las 9 preguntas bloqueantes (§9 del documento) y decidir la base de implementación antes de escribir código.
+4. Hidromáticos: **PAUSADO (decisión de Reiner, 10 oct)** hasta reunirse con el cliente para que responda las 9 preguntas bloqueantes (§9 del documento); después decidir la base de implementación. No escribir código ni planear implementación antes.
 5. Limpieza menor: la copia sin versionar de `INTEGRACION-HIDROMATICOS.md` en la rama de login y un `.git/index.lock` vacío residual (inofensivo; no se concedió permiso de borrado).
 6. Siguen bloqueados hasta aprobación: RLS, migraciones remotas, variables de Vercel, merge a `main` y deploy.
 
