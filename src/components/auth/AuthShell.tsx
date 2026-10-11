@@ -30,8 +30,25 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
         padding: '40px 16px',
       }}
     >
-      <div style={{ width: '100%', maxWidth: 420 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+      {/* Fondo full-bleed (11 oct): imagen cósmica con robot + logo; decorativa. */}
+      <div className="auth-bg" aria-hidden="true">
+        <Image
+          src="/auth/login-bg-cosmos.webp"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          quality={82}
+          className="auth-bg-img"
+        />
+        <div className="auth-bg-scrim" />
+      </div>
+      <div className="auth-shell-content" style={{ width: '100%', maxWidth: 420 }}>
+        {/* En escritorio el logo ya va en la imagen; este logo solo se muestra en móvil. */}
+        <div
+          className="auth-shell-logo"
+          style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}
+        >
           <Image
             src="/crystal-logo.webp"
             alt="RAI Agency"
@@ -65,7 +82,7 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
           </div>
         </div>
 
-        <div className="card" style={{ padding: '28px 24px' }}>
+        <div className="card auth-card" style={{ padding: '28px 24px' }}>
           <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--rai-text)', marginBottom: 4 }}>
             {title}
           </h1>

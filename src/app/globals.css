@@ -1968,3 +1968,54 @@ html * {
     transition: none !important;
   }
 }
+
+/* ============================================
+   AUTH — fondo full-bleed de /login y /registro
+   Imagen decorativa + scrim oscuro para legibilidad del formulario.
+   Zoom lento tipo Ken Burns y entrada del card (solo transform/opacity).
+   ============================================ */
+.auth-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #0A0A0F;
+  z-index: 0;
+}
+.auth-bg-img {
+  object-fit: cover;
+  object-position: center;
+  animation: auth-bg-drift 28s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.auth-bg-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 560px 460px at 50% 50%, rgba(10, 10, 15, 0.72), rgba(10, 10, 15, 0) 72%),
+    linear-gradient(180deg, rgba(10, 10, 15, 0.28), rgba(10, 10, 15, 0) 30%, rgba(10, 10, 15, 0) 70%, rgba(10, 10, 15, 0.35));
+}
+.auth-shell-content {
+  position: relative;
+  z-index: 1;
+  margin: auto 0;
+  animation: auth-card-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.auth-card {
+  background: rgba(18, 18, 26, 0.88);
+  border-color: rgba(201, 168, 76, 0.28);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(232, 185, 35, 0.06);
+}
+@media (min-width: 900px) {
+  .auth-shell-logo { display: none !important; }
+}
+@keyframes auth-bg-drift {
+  from { transform: scale(1); }
+  to { transform: scale(1.05); }
+}
+@keyframes auth-card-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-bg-img, .auth-shell-content { animation: none !important; }
+}
