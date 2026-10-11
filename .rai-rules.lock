@@ -1,0 +1,12 @@
+{
+  ".github/workflows/ci.yml": "6a301b7ca7f123063e45c5ba8db4d382ed3c6e2b88d2cbccefbecfd4c358cd3e",
+  ".opencode/agent/backend.md": "3f4023ce47d4211bc1fbfa1a29b5ef05c12ad220ed8d8aa1da230abd6e98853d",
+  ".opencode/agent/frontend.md": "677fdad814f5557903541cc885c9b241705638820b5b65b34edc7163d16d56d6",
+  ".opencode/agent/orchestrator.md": "aefbd8df97cb74ef0b5397485dba283d01b3bb337cb652569d733aef4fad657e",
+  ".opencode/agent/qa.md": "313db8d40692bc125fec59b5b80b7fd7e350b1bef8e37f20e78eb70520911d54",
+  ".opencode/command/cierre.md": "61ce708108cd01d65feb765f17fbf34945f96576f508ccc696ecf908f978c667",
+  "AGENTS.md": "89f8d6aab5c0f9a341e1dd5d066dd6e944243b2f58e187f2e614ab12ef821373",
+  "scripts/gate.mjs": "afc84477888eb40c89554dacc5e665c018d63eb6ca869eecea65d8843328426b",
+  "scripts/panel-check.mjs": "e89fb7bd0a17e2ca898ccd7e5ac2eee0f422d8c2f075d9f5d4879ad4b4efcb11",
+  "scripts/rules-guard.mjs": "b5a6ef38fa521655001b5546e3fc6ff5abbb2e924bf14f2ef437ac025c9c611f"
+}
