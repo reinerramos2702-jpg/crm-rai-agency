@@ -59,3 +59,10 @@
 - Preparar BLOQUE 2A — Calendario de Contenido en rama `rai-feat-calendario-contenido`. Antes de crearla, decidir técnicamente si debe partir de `main` o de `security/fase-0`; no mergear a `main` sin aprobación. Auditar el PR #7 antiguo y rescatar selectivamente solo código compatible con RBAC, `apiFetch` y aislamiento por workspace.
 - Mantener bloqueados RLS, migraciones remotas, variables de Vercel, merge y deploy hasta aprobación explícita.
 - Antes de cualquier deploy futuro, configurar `INVENTORY_ALLOWED_ROOTS` y crear `<base>/<workspaceId>` para cada workspace que use inventario.
+
+## Actualización 11 oct 2026 — staging, Quadro Café, contenido y Facebook
+- **Staging modo B creado** en la BD CRM (proyecto Supabase `CRM RAI Agency`, `bskdozxkgbxifftuulvc`): schema `staging` + rol `crm_staging` (NOLOGIN). Verificado por Reiner: `schema_staging=1`, `rol_crm_staging=1`, `tablas_public_legibles_por_rol=0`. Pendiente (solo Reiner, fuera del chat): contraseña/LOGIN del rol, `DATABASE_URL`/`DIRECT_URL` con `?schema=staging`, `prisma migrate` contra staging.
+- **Quadro Café (proyecto `wckufllomfmuwxptegvm`) NO se toca.** Por un error de mapeo previo, ahí quedaron un schema `staging` y un rol `crm_staging` vacíos (rol sin objetos, schema sin tablas). Se dejan tal cual; Reiner decidirá en el futuro (reversión segura documentada en el chat de 11 oct).
+- **Contenido IG:** por ahora solo 4 días generados (dia-01 a dia-04, copy listo en `Contenido RRSS/Instagram/Plan 31-1102026/salida`). Se programan esos 4 para probar el sistema; los demás días cuando Reiner tenga las imágenes (se generan en ChatGPT Work, lento).
+- **Facebook:** Página "RAI Agency" (categoría Agencia de marketing) creada el 11 oct desde Browser 2. Pendiente: vincularla a @raiagency__, completar datos (sitio raiagency.net) y token Meta (D1, tarea de Reiner).
+- **Skills:** `orquestador-panel-autonomo` v2.1 guardada; `cierre-continuidad-sesion` (punto 19) pendiente de actualizar con la nomenclatura de chats. `git-buenas-practicas` es el punto 12, no el 19.
