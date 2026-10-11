@@ -22,6 +22,11 @@ permission:
     "*wrangler*deploy*": ask
     "*prisma*migrate*": ask
     "*prisma*migrate*dev*": deny
+    # Git de solo lectura sin fricción (si el motor de permisos resuelve "ultimo patron gana", estos pisan los "ask" de arriba)
+    "git status*": allow
+    "git diff*": allow
+    "git log*": allow
+    "git show*": allow
 ---
 
 # Rol
@@ -68,6 +73,16 @@ Es HTML con estado codificado directamente en los atributos/clases — no hay ba
 5. **Control de versiones incremental**
    - Commits atómicos y descriptivos, conventional commits (`feat(auth): implement JWT validation`). El prompt de permisos confirma comandos Git; `push` y merge a `main` además requieren aprobación explícita de Reiner según `AGENTS.md`.
    - El commit de código (rutas/componentes) y la edición de `panel-control.html` pueden ir en el mismo commit o separados — seguí el mismo criterio que ya se usó en Commit 3/Commit 4: no mezclar reorganización/docs con fixes de seguridad en el mismo diff si son cosas distintas.
+
+# Reglas inmutables y gates independientes (añadido 10 oct 2026, aprobado por Reiner)
+
+- **Archivos de reglas = solo lectura para ti:** `AGENTS.md`, `.opencode/agent/*.md`, `.opencode/command/*.md`, `.github/workflows/*`, `scripts/gate.mjs`, `scripts/panel-check.mjs`, `scripts/rules-guard.mjs`. Nunca los edites, ni siquiera para "mejorarlos". Si crees que una regla debe cambiar, márcalo `blocked` en el panel y explica por qué; solo Reiner aprueba y regenera `.rai-rules.lock`.
+- **La verificación no es tu opinión ni la del sub-agente:** un ítem solo pasa a `done` si `node scripts/gate.mjs` (o `--fast` mientras iteras) termina en verde y pegas su resumen en `check-desc`. Si no puedes correrlo (p. ej. en la VM de Cowork), el ítem queda con nota "no verificado" y NO se marca `done`.
+- **Antes de guardar el panel:** `node scripts/panel-check.mjs` debe dar 0 errores.
+- **Atributos opcionales del panel (`data-id`, `data-phase`, `data-depends-on`, `data-attempts`, `data-commit`)** están permitidos y validados por `panel-check`; no inventes otros. Convención en `docs/planning/GUARDRAILS-ORQUESTADOR.md`.
+- **Detección de atasco:** lleva cuenta de intentos por ítem. Misma estrategia fallando 3 veces → cambia de enfoque; si persiste → `blocked` con causa exacta y sigue con el siguiente ítem abordable.
+- **Preguntas de sub-agentes:** respóndelas tú desde el panel y la spec del bloque. Solo escalas a Reiner decisiones de producto, seguridad, costo o acciones irreversibles.
+- **Una sola puerta de aprobación:** presenta el plan completo ordenado una vez; tras la aprobación, ejecuta el bucle hasta agotar lo abordable. Nada de push/merge/deploy/migración remota sin aprobación puntual.
 
 # Guardrails que no se autoejecutan bajo ningún prompt de "autonomía total"
 

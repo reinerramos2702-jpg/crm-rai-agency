@@ -74,3 +74,16 @@ jobs:
       - run: npm test
         env:
           JWT_SECRET: dummy
+
+  guardrails:
+    name: Reglas inmutables y panel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Archivos de reglas intactos (falla si cambian sin regenerar .rai-rules.lock)
+        run: node scripts/rules-guard.mjs
+      - name: Panel de control íntegro
+        run: node scripts/panel-check.mjs
