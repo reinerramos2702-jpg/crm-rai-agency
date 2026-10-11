@@ -18,7 +18,7 @@
 - Decisión de Reiner (10 oct): no pegar nada en OpenCode hasta terminar las specs; OpenCode produce primero un "plan gigante"; orquestador director autónomo con reglas fijas inmutables y panel + `roadmap-agentes-rai.html` en mano; convertir el proceso en una skill reutilizable. Cualquier cambio de permisos/guardrails requiere su aprobación.
 
 ## Pendiente (orden de ejecución)
-0. Nuevos (10 oct, sin spec/implementación): publicación automática IG+FB (borrador `docs/SPEC-publicacion-contenido-ig-fb.md` v1, bloqueado por decisiones D1–D7 y chequeo de cuenta Meta) y endurecimiento del orquestador + skill reutilizable (esperan aprobación de Reiner).
+0. Nuevos (10 oct, sin spec/implementación): publicación automática IG+FB (borrador `docs/SPEC-publicacion-contenido-ig-fb.md` v1, bloqueado por decisiones D1–D7 y chequeo de cuenta Meta) y endurecimiento del orquestador (aprobado; preparado en rama local `rai-chore-orquestador-guardrails` `754ec87`, falta que Reiner revise el diff, `CODEOWNERS` y checks en CI) + skill reutilizable `orquestador-panel-autonomo` (propuesta mostrada a Reiner).
 1. OpenCode: releer la spec v4 y salir de modo Plan; ejecutar el bloque con `@backend`, `@frontend` y `@qa` hasta cumplir los criterios de la sección 6 de la spec.
 2. Correr `tsc --noEmit`, lint, `vitest run` y `build` en Windows y registrar resultados reales en el panel.
 3. Preparar el PR del login y esperar aprobación explícita; sin push, merge ni deploy por inferencia.
