@@ -33,7 +33,7 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
       {/* Fondo full-bleed (11 oct): imagen cósmica con robot + logo; decorativa. */}
       <div className="auth-bg" aria-hidden="true">
         <Image
-          src="/auth/login-bg-cosmos.webp"
+          src="/auth/login-bg-amanecer.webp"
           alt=""
           fill
           priority
@@ -90,7 +90,7 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
           {children}
         </div>
 
-        <p style={{ fontSize: 13, color: 'var(--rai-muted)', textAlign: 'center', marginTop: 16 }}>
+        <p className="auth-footer" style={{ fontSize: 13, color: 'var(--rai-muted)', textAlign: 'center', marginTop: 16 }}>
           {footer}
         </p>
       </div>

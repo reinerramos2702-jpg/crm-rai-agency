@@ -2002,6 +2002,10 @@ html * {
   margin: auto 0;
   animation: auth-card-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+.auth-footer {
+  color: #B9B9D0 !important;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.9);
+}
 .auth-card {
   background: rgba(18, 18, 26, 0.88);
   border-color: rgba(201, 168, 76, 0.28);
@@ -2021,3 +2025,10 @@ html * {
 @media (prefers-reduced-motion: reduce) {
   .auth-bg-img, .auth-shell-content { animation: none !important; }
 }
+
+/* Registro abierto: aceptar términos + honeypot anti-bot */
+.auth-accept{display:flex;align-items:flex-start;gap:10px;margin:4px 0 14px;font-size:12.5px;line-height:1.45;text-transform:none;letter-spacing:0;font-weight:400;cursor:pointer}
+.auth-accept input[type="checkbox"]{width:16px;height:16px;min-width:16px;margin:2px 0 0;padding:0;accent-color:var(--rai-gold,#D4AF37);cursor:pointer}
+.auth-accept span{flex:1}
+.auth-accept a{color:var(--rai-gold,#D4AF37);text-decoration:underline;text-underline-offset:2px}
+.auth-hp{position:absolute!important;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}

@@ -77,7 +77,7 @@ export default function LoginPage() {
       subtitle="Accede a tu workspace del CRM RAI Agency."
       footer={
         <>
-          ¿No tienes cuenta? <AuthLink href="/registro">Regístrate</AuthLink> (solo con invitación)
+          ¿No tienes cuenta? <AuthLink href="/registro">Regístrate gratis</AuthLink>
         </>
       }
     >

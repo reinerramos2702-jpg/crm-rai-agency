@@ -2,18 +2,23 @@
 
 import { useState } from 'react';
 import { UserPlus, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 import { AuthShell, AuthLink } from '@/components/auth/AuthShell';
 
 /**
  * Página pública de registro (Etapa 3 — Auth real).
- * Registro SOLO por invitación: POST /api/auth/register rechaza con 403 si el
- * email no tiene una invitación pendiente de equipo (o no es super admin).
- * Al aceptar, redirige a /login para iniciar sesión.
+ * Registro ABIERTO (spec v4 §3): cualquiera crea cuenta gratis y recibe su propio
+ * workspace. Con invitación pendiente se une al workspace que lo invitó.
+ * Anti-bot: honeypot `website` + rate limit en el backend. Requiere aceptar
+ * Términos y Privacidad. Al aceptar, el usuario inicia sesión en /login.
  */
 export default function RegistroPage() {
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [businessName, setBusinessName] = useState('');
   const [password, setPassword] = useState('');
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [website, setWebsite] = useState(''); // honeypot: humanos no lo ven
   const [error, setError] = useState('');
   const [ok, setOk] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -26,7 +31,14 @@ export default function RegistroPage() {
       const r = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, displayName: displayName || undefined }),
+        body: JSON.stringify({
+          email,
+          password,
+          displayName: displayName || undefined,
+          businessName: businessName.trim() || undefined,
+          acceptTerms,
+          website,
+        }),
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) {
@@ -44,7 +56,7 @@ export default function RegistroPage() {
   return (
     <AuthShell
       title="Crear cuenta"
-      subtitle="El registro es solo por invitación de un administrador del workspace."
+      subtitle="Gratis para empezar. Sin tarjeta."
       footer={
         <>
           ¿Ya tienes cuenta? <AuthLink href="/login">Inicia sesión</AuthLink>
@@ -84,6 +96,17 @@ export default function RegistroPage() {
             />
           </div>
           <div className="form-group">
+            <label>Tu negocio (opcional)</label>
+            <input
+              type="text"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              placeholder="Nombre de tu marca o empresa"
+              autoComplete="organization"
+              maxLength={120}
+            />
+          </div>
+          <div className="form-group">
             <label>Contraseña</label>
             <input
               type="password"
@@ -95,12 +118,36 @@ export default function RegistroPage() {
               required
             />
           </div>
+          <div className="auth-hp" aria-hidden="true">
+            <label htmlFor="reg-website">Sitio web</label>
+            <input
+              id="reg-website"
+              type="text"
+              name="website"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+            />
+          </div>
+          <label className="auth-accept">
+            <input
+              type="checkbox"
+              checked={acceptTerms}
+              onChange={(e) => setAcceptTerms(e.target.checked)}
+              required
+            />
+            <span>
+              Acepto los <Link href="/terminos" target="_blank">Términos</Link> y la{' '}
+              <Link href="/privacidad" target="_blank">Política de privacidad</Link>.
+            </span>
+          </label>
           {error && (
             <p style={{ color: 'var(--rai-error)', fontSize: 13, marginBottom: 12 }}>{error}</p>
           )}
           <button
             type="submit"
-            disabled={busy || !email.trim() || password.length < 8}
+            disabled={busy || !email.trim() || password.length < 8 || !acceptTerms}
             className="btn btn-primary"
             style={{ width: '100%' }}
           >
