@@ -22,9 +22,12 @@ model User {
   // usuarios existentes (SSO/dev) no tienen password hasta aceptar una
   // invitación o ser bootstrap del super admin (SUPER_ADMIN_EMAILS).
   passwordHash String?
+  // Recuperación de contraseña por SMS: teléfono E.164 (+58...) opcional, sin verificar.
+  phone        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  passwordResetTokens PasswordResetToken[]
   workspaces  Workspace[]
   apiKeys     ApiKey[]
   campaigns   Campaign[]
@@ -959,5 +962,20 @@ model AuditEvent {
 
   @@index([workspaceId, createdAt])
   @@index([entityType, entityId])
+  @@index([userId])
+}
+
+// Recuperación de contraseña: token de un solo uso (se guarda solo el sha256), vence en 30 min.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  channel   String // 'email' | 'sms'
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
 }

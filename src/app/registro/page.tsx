@@ -16,6 +16,7 @@ export default function RegistroPage() {
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [businessName, setBusinessName] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [website, setWebsite] = useState(''); // honeypot: humanos no lo ven
@@ -36,6 +37,7 @@ export default function RegistroPage() {
           password,
           displayName: displayName || undefined,
           businessName: businessName.trim() || undefined,
+          phone: phone.trim() || undefined,
           acceptTerms,
           website,
         }),
@@ -104,6 +106,16 @@ export default function RegistroPage() {
               placeholder="Nombre de tu marca o empresa"
               autoComplete="organization"
               maxLength={120}
+            />
+          </div>
+          <div className="form-group">
+            <label>Teléfono (opcional)</label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+58 412 1234567 — para recuperar tu cuenta"
+              autoComplete="tel"
             />
           </div>
           <div className="form-group">

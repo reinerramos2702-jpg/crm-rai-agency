@@ -16,6 +16,9 @@ export class UnauthorizedError extends Error {
   }
 }
 
+/** Páginas públicas: un 401 ahí es normal (no hay sesión) y no debe redirigir a /login. */
+const PUBLIC_PATHS = ['/login', '/registro', '/recuperar', '/restablecer', '/terminos', '/privacidad'];
+
 export async function apiFetch(input: string, init?: RequestInit): Promise<Response> {
   const res = await fetch(input, {
     ...init,
@@ -25,7 +28,7 @@ export async function apiFetch(input: string, init?: RequestInit): Promise<Respo
 
   if (res.status === 401 && typeof window !== 'undefined') {
     const path = window.location.pathname;
-    if (!path.startsWith('/login') && !path.startsWith('/registro')) {
+    if (!PUBLIC_PATHS.some((p) => path.startsWith(p))) {
       window.location.href = '/login';
     }
     throw new UnauthorizedError();

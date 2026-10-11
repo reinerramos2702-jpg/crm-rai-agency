@@ -2183,3 +2183,11 @@ html * {
 .auth-accept span{flex:1}
 .auth-accept a{color:var(--rai-gold,#D4AF37);text-decoration:underline;text-underline-offset:2px}
 .auth-hp{position:absolute!important;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+
+/* Recuperar contraseña: selector Correo/Teléfono y enlace "olvidé mi contraseña" */
+.auth-forgot { margin-top: 8px; text-align: right; font-size: 12.5px; }
+.auth-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px; margin-bottom: 16px; border-radius: 12px; background: rgba(7, 7, 13, 0.7); border: 1px solid rgba(201, 168, 76, 0.16); }
+.auth-seg button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 10px; border: 0 !important; border-radius: 9px; background: transparent !important; color: #a9a9c4 !important; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .2s ease, color .2s ease; }
+.auth-seg button:hover { color: #fff !important; background: rgba(255, 255, 255, 0.05) !important; }
+.auth-seg button.is-on { color: #1a1405 !important; background: linear-gradient(135deg, #f4d97f, #d4af37 55%, #a9842e) !important; box-shadow: 0 6px 16px -8px rgba(232, 185, 35, 0.7); }
+@media (prefers-reduced-motion: reduce) { .auth-seg button { transition: none; } }

@@ -144,3 +144,6 @@
 - Evidencia: 192/192 tests en `src/lib/__tests__` (registro 13), `tsc --noEmit` limpio.
 - **RIESGO:** no desplegar el registro abierto a producción antes del gating de planes (hoy un usuario nuevo accede a todo). Falta: verificación de email, rate limit distribuido, revocación de sesión, e2e `tests/e2e/auth-ui.spec.ts`, fuerza/mostrar contraseña, cuenta regresiva y a11y restante de la spec v4.
 - Nada enviado a OpenCode. Nada pusheado.
+
+## Recuperar contraseña + fondo galaxia + card premium (11 oct 2026, noche)
+- Detalle y estado en el panel (`recuperar-contrasena`, `login-fondo-full-bleed`) y en `docs/SPEC-recuperar-contrasena.md`. Pendiente de Reiner: migración en staging y proveedor de email/SMS. Propuesta de planes en `docs/SPEC-planes-monetizacion.md` §2b.

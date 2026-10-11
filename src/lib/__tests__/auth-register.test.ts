@@ -221,4 +221,15 @@ describe('POST /api/auth/register — registro abierto con workspace propio', ()
     expect(prisma.workspaceMember.updateMany).toHaveBeenCalled();
     expect(hashPassword).toHaveBeenCalledWith('password123');
   });
+
+  it('teléfono opcional: se normaliza y se guarda; inválido → 400', async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+    vi.mocked(prisma.workspaceMember.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.user.create).mockResolvedValue({ id: 'u9' } as any);
+    const ok = await POST(makeReq({ email: 'p@x.com', password: 'abcdefgh', phone: '+58 412 123-4567' }));
+    expect(ok.status).toBe(200);
+    expect((vi.mocked(prisma.user.create).mock.calls[0][0] as any).data.phone).toBe('+584121234567');
+    const bad = await POST(makeReq({ email: 'q@x.com', password: 'abcdefgh', phone: '0412' }));
+    expect(bad.status).toBe(400);
+  });
 });

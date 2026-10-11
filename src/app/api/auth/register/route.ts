@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { hashPassword } from '@/lib/password';
 import { isPlatformSuperAdmin } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { normalizePhone } from '@/lib/phone';
 
 export const runtime = 'nodejs';
 
@@ -33,7 +34,7 @@ const MAX_BUSINESS_NAME = 120;
  *     invitación o bootstrap.
  */
 export async function POST(req: NextRequest) {
-  const { email, password, displayName, businessName, acceptTerms, website } = await req
+  const { email, password, displayName, businessName, acceptTerms, website, phone } = await req
     .json()
     .catch(() => ({}));
 
@@ -43,6 +44,16 @@ export async function POST(req: NextRequest) {
   if (!password || typeof password !== 'string' || password.length < 8) {
     return NextResponse.json(
       { error: 'La contraseña debe tener al menos 8 caracteres' },
+      { status: 400 }
+    );
+  }
+
+  // Teléfono opcional (para recuperar la cuenta por SMS): formato internacional.
+  const rawPhone = typeof phone === 'string' ? phone.trim() : '';
+  const normalizedPhone = rawPhone ? normalizePhone(rawPhone) : null;
+  if (rawPhone && !normalizedPhone) {
+    return NextResponse.json(
+      { error: 'Teléfono no válido. Usa formato internacional, ej. +58 412 1234567.' },
       { status: 400 }
     );
   }
@@ -96,7 +107,11 @@ export async function POST(req: NextRequest) {
   const user = existing
     ? await prisma.user.update({
         where: { id: existing.id },
-        data: { passwordHash, displayName: displayName || existing.displayName },
+        data: {
+          passwordHash,
+          displayName: displayName || existing.displayName,
+          ...(normalizedPhone ? { phone: normalizedPhone } : {}),
+        },
       })
     : await prisma.user.create({
         data: {
@@ -104,6 +119,7 @@ export async function POST(req: NextRequest) {
           email: normalizedEmail,
           displayName: displayName || null,
           passwordHash,
+          ...(normalizedPhone ? { phone: normalizedPhone } : {}),
         },
       });
 

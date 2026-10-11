@@ -16,12 +16,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(true); // por defecto ON: sesión de 30 días
 
   // Recordar la última elección del toggle en este navegador (solo comodidad de UI).
   useEffect(() => {
     try {
-      if (window.localStorage.getItem(REMEMBER_KEY) === '1') setRemember(true);
+      // Por defecto activado; solo se desactiva si el usuario lo apagó antes ('0').
+      if (window.localStorage.getItem(REMEMBER_KEY) === '0') setRemember(false);
     } catch {
       /* storage bloqueado: se queda en false */
     }
@@ -103,6 +104,9 @@ export default function LoginPage() {
             autoComplete="current-password"
             required
           />
+          <div className="auth-forgot">
+            <AuthLink href="/recuperar">¿Olvidaste tu contraseña?</AuthLink>
+          </div>
         </div>
         <label className="remember-toggle" htmlFor="login-remember" data-checked={remember}>
           <input

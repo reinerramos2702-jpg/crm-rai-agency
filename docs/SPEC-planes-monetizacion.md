@@ -21,6 +21,19 @@
 | P6 | Qué pasa al bajar de plan o dejar de pagar (solo lectura, degradar, borrar) | abierto |
 | P7 | Meta: la app es de RAI (`shared_app`); la revisión de Meta y el volumen limitan cuántos clientes pueden publicar | verificar con Meta |
 
+## 2b. PROPUESTA de Claude para P1 (11 oct 2026, por validar con Reiner)
+
+Criterio: **gratis = lo que no cuesta dinero por uso y crea el hábito/guarda sus datos**; **de pago = lo que consume IA, imágenes o APIs externas, o ahorra horas (automatización)**. Basada en los nombres de módulos del CRM; confirmar qué hace cada uno antes de cerrar.
+
+| Plan | Qué incluye (propuesta) |
+|---|---|
+| Gratis | Contactos y clientes potenciales (con tope), calendario manual, biblioteca de contenido (con tope de almacenamiento), informes básicos, ajustes de cuenta y marca, **publicación manual** (copiar/descargar para publicar tú) |
+| 34 USD | **Publicación automática** en 1 cuenta de Instagram/Facebook, programación de calendario, conversaciones (bandeja unificada), generador de imágenes con créditos mensuales |
+| 49 USD | Varias cuentas sociales, agentes de IA, automatizaciones/flujos, reputación (reseñas), informes avanzados |
+| 67 USD | Equipo y múltiples workspaces, facturación y pagos, sitios web, marketplace, más créditos de IA, soporte prioritario |
+
+Nota: los topes numéricos (contactos, créditos, cuentas) NO están definidos — son P4.
+
 ## 3. Diseño técnico propuesto (para validar, no implementado)
 
 - `Workspace.plan` (`free` | `starter_34` | `pro_49` | `scale_67`; nombres provisionales) + `planStatus` + `planRenewsAt`.
