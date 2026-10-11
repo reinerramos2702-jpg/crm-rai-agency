@@ -117,3 +117,13 @@
 - Nada enviado a OpenCode. Nada pusheado.
 - Pendiente (Reiner): decidir si agrega el caso de uso de Páginas; decidir cuándo autorizar el envío a OpenCode.
 - Pendiente (verificar): duración real del token largo de Instagram Login y endpoint de renovación (docs oficiales).
+
+## Login: «Mantener sesión iniciada» + fondo full-bleed (11 oct 2026)
+- Petición de Reiner: no volver a escribir la cuenta cada vez. Hallazgo: la cookie `rai_session` ya duraba 7 días fijos (sin opción en la UI).
+- Implementado y commiteado en local, rama `rai-feat-login-registro-ui` (`f4b450a`): `rememberMe: true` → cookie persistente 30 días + JWT 30 días; sin marcar → cookie de sesión + JWT 12 h. `signJwt` acepta `expiresInSec` (defecto 7 días intacto). Archivos: `src/lib/session-ttl.ts` (nuevo), `src/lib/auth.ts`, `src/app/api/auth/login/route.ts`, `src/app/login/page.tsx`, `src/app/globals.css` (bloque `.remember-toggle`), `src/lib/__tests__/auth-login.test.ts`, `src/lib/__tests__/session-ttl.test.ts`.
+- Evidencia: 182/182 tests en `src/lib/__tests__`, `tsc --noEmit` limpio, JWT medido (30 d / 12 h / 7 d defecto). Reiner lo vio funcionando en `localhost:3000/login`.
+- Cambio de comportamiento: sin marcar la casilla, la sesión ya no dura 7 días (se cierra con el navegador o a las 12 h).
+- Deuda: JWT sin estado y sin endpoint de cierre de sesión que lo revoque en servidor; sin capturas de tema claro/móvil del toggle; `docs/SPEC-login-registro-ui.md` actualizada con una nota (no cambia sus criterios).
+- Fondo full-bleed para `/login` y `/registro`: Reiner generará la imagen en ChatGPT (prompt entregado: 16:9 2560×1440, centro oscuro vacío, robot a la derecha, logo a la izquierda, sin texto ni blur). Pendiente: recibir la imagen, versión móvil 9:16, optimizar a WebP, aplicar con scrim oscuro; si el logo va en la imagen, quitar el logo suelto de `AuthShell` (la spec v4 ya lo prevé). Existen `public/auth/login-bg-desktop.jpg` y `login-bg-mobile.jpg` (1 oct) sin usar en código.
+- Panel de control (`docs/planning/panel-control.html`) actualizado: resumen del 11 oct, publicación IG+FB v2.2, y 3 ítems nuevos (toggle de sesión = hecho local; fondo full-bleed = espera imagen; caso de uso de Páginas en Meta = espera decisión). `panel-check`: 0 errores, 27 avisos preexistentes. Copia sincronizada en la carpeta `planning`.
+- Nada enviado a OpenCode. Nada pusheado.

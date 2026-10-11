@@ -109,3 +109,11 @@ El CRM tiene tema oscuro (default) y tema claro "Perla" (`[data-theme="light"]` 
 - Al cerrar el bloque, actualizar `docs/planning/panel-control.html` (único panel de pendientes, no `ROADMAP.md`) con el resultado.
 - **Cero dependencias nuevas** (ni de producción ni de desarrollo): sin `sharp`, sin `@axe-core/*`, sin librerías de animación ni de formularios.
 - **Deuda registrada, NO se resuelve en este bloque** (anotar cada una en el panel con la causa): (1) CAPTCHA/Cloudflare Turnstile — requiere claves externas; (2) verificación de email — requiere proveedor de correo; (3) persistir la aceptación legal (fecha y versión) — requiere migración; (4) el rate-limit es en memoria por instancia (limitación ya conocida en serverless); (5) comentario de cabecera desactualizado en `tests/e2e/login.spec.ts`; (6) redacción real de Términos y Privacidad por asesoría legal; (7) comprobar si `/api/auth/register` revela existencia de emails (409) y decidir política — no cambiarlo aquí.
+
+## Adenda 11 oct 2026 — «Mantener sesión iniciada» (ya implementado en local, `f4b450a`)
+- Campo opcional `rememberMe` (booleano estricto) en `POST /api/auth/login`: `true` → cookie `rai_session` persistente 30 días y JWT 30 días; ausente/`false` → cookie de sesión y JWT 12 h. Duraciones en `src/lib/session-ttl.ts`.
+- UI: interruptor accesible (`role="switch"`) entre la contraseña y el botón, ambos temas, `prefers-reduced-motion`; la última elección se recuerda en `localStorage` (solo comodidad).
+- El registro (`/registro`) no cambia; su duración de sesión sigue la de `signJwt` por defecto (7 días) hasta que se decida otra cosa.
+- Aceptación: login con `rememberMe:true` → `Set-Cookie` con `Max-Age=2592000`; sin él → sin `Max-Age`/`Expires`. Cubierto por `auth-login.test.ts` y `session-ttl.test.ts`.
+- Deuda: sin revocación en servidor (JWT sin estado); sin endpoint de logout.
+- Fondo full-bleed: Reiner decidió (11 oct) generar una imagen nueva con el robot y el logo para `/login` y `/registro`; reemplaza o complementa `public/auth/login-bg-*.jpg` al recibirla.
