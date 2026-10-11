@@ -92,3 +92,9 @@
 - Cambio mínimo en `src/app/globals.css`: `color:#0A0A0F` fijo en `.btn-primary`/`button.primary` para `:hover`, `:focus-visible`, `:active` (contraste ~11:1); `.btn-danger:hover` ahora fija `color: var(--rai-error)` (mismo bug latente). Tema claro intacto (su regla base posterior fija texto blanco).
 - Evidencia: prueba Playwright con el CSS real: color en hover = rgb(10,10,15) (primario) y rgb(230,57,70) (peligro); captura revisada. `tsc --noEmit` OK; `eslint` del gate no terminó en el tiempo de la VM (cambio solo CSS).
 - Mejora tipográfica más amplia del botón (peso/tamaño/espaciado) queda para `SPEC-sistema-visual-premium.md`; no se inventó nada fuera del bug.
+
+### Facebook ↔ Instagram vinculados (11 oct 2026)
+- Página de Facebook "RAI Agency" (id 61595435214179) conectada a Instagram @raiagency__ (conexión hecha por Reiner desde la app móvil de Instagram). Verificado en `facebook.com/settings/?tab=linked_instagram`: "Connected Instagram — @raiagency__", con acceso de administración a ambos.
+- Foto de perfil y portada de la Página subidas por Reiner. Copias en `Contenido RRSS/Instagram/Plan 31-1102026/entrada/logo/`: `logo_rai-agency-facebook-perfil.png`, `portada_rai-agency-facebook-robot.png` (versión elegida), `portada_facebook_1640x624.jpg` (alternativa).
+- Ajuste pendiente: "Permitir acceso a los mensajes de Instagram en la bandeja de entrada" está **desactivado**; activarlo cuando se integre la bandeja de conversaciones del CRM.
+- Aún pendiente (Reiner): token Meta (D1) y app Meta (modo Desarrollo) — requisitos del módulo de publicación IG/FB.
