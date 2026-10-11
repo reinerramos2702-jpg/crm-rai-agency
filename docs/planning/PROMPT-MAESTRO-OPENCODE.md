@@ -1,4 +1,6 @@
-# PROMPT MAESTRO — OpenCode (orquestador) — 10 oct 2026
+# PROMPT MAESTRO — OpenCode (orquestador) — 10 oct 2026 (ampliado 11 oct)
+
+> **ESTADO: BORRADOR — NO ENVIADO a OpenCode.** Reiner decidió (11 oct) irlo ampliando poco a poco; solo se envía con su autorización expresa en el chat. Las novedades del 11 oct están en la §9 (adendas).
 
 > Este archivo es el prompt completo. Reiner solo pega en OpenCode la línea de arranque indicada en el chat. Si algo de aquí contradice `AGENTS.md` o `.opencode/agent/orchestrator.md`, gana lo MÁS RESTRICTIVO.
 
@@ -59,3 +61,33 @@ Respóndelas tú desde el panel y la spec. Escala a Reiner SOLO: decisión de pr
 
 ## 8. Cierre
 Al agotar lo abordable (o toparte con una parada dura): `node scripts/gate.mjs` completo; `node scripts/panel-check.mjs`; actualiza `docs/ESTADO-SESION.md` (estado real, ramas, commits, siguiente paso exacto); haz commit local; y entrega un reporte final corto: (1) hecho con evidencia, (2) bloqueado con causa y qué decisión/acción falta de Reiner, (3) deuda y mejoras candidatas registradas, (4) comandos exactos para que Reiner revise cada rama (`git log`, `git diff`) y (5) aprobaciones pendientes (push, PR, migración, deploy).
+
+## 9. Adendas (se amplían poco a poco; cada una con fecha)
+
+### 9.1 — 11 oct 2026: la rama ya contiene trabajo local que NO debes rehacer
+La punta de `rai-feat-login-registro-ui` incluye estos commits locales hechos por Claude (Cowork). Son línea base: verifícalos y extiéndelos, no los reescribas ni los revirtas.
+- `62de918` contraste del botón primario (`.btn-primary:hover` vs `a:hover`).
+- `f4b450a` login: «Mantener sesión iniciada» (`rememberMe` → cookie 30 días + JWT 30 días; sin marcar → cookie de sesión + JWT 12 h; `src/lib/session-ttl.ts`; tests `auth-login.test.ts` y `session-ttl.test.ts`). **Bloque A:** no vuelvas a implementarlo; añade su cobertura e2e y la mención en el criterio de aceptación del login. Sin revocación en servidor = deuda registrada.
+- `81e01b1` + `b1af734` fondo full-bleed cosmos en `AuthShell` (`public/auth/login-bg-cosmos.webp`; scrim; logo suelto solo <900 px). **Sustituye** lo que la spec v4 decía sobre `login-bg-desktop.jpg` (queda sin uso). La imagen definitiva será 21:9 (zonas seguras: logo 14–33 % del ancho, robot 67–86 %, centro 34–66 % vacío). Cuando llegue, solo se reemplaza el archivo; el CSS ya ancla la imagen abajo.
+- `65b6782` `scripts/reset-password.mjs` (solo `schema=staging`; entrada oculta). No lo toques ni lo uses para producción.
+
+### 9.2 — 11 oct 2026: Bloque C usa la spec v2.2 (§11) y la estructura REAL del contenido
+- **Nuevo slice C-8 (de §11):** `WorkspaceMetaConnection.authType` (`facebook_login` por defecto | `instagram_login`), endpoint `PUT /api/workspace/meta/token` (RBAC `canManageContent`, cifrado en servidor, validación contra el host del tipo, `logAudit` sin el valor), campo de pegado en Ajustes y adaptador según `authType`. El token NUNCA va en código, tests, logs, panel ni commits (tests con tokens falsos). El token real lo pega Reiner.
+- **Estructura real del contenido de Work** (el importador debe soportarla, no solo `día N`): `Plan 31-1102026/salida/dia-NN/dia-NN_slide-K-de-N.png` (1080×1350, **PNG**) + `dia-NN_copy.md` (solo existe para días 1–4 hoy). Instagram exige **JPEG**: el importador convierte PNG→JPEG (sin dependencias nuevas salvo aprobación; si no es posible → `blocked` con la causa). Un día sin `.md` queda en borrador incompleto: **no inventes copy**. Los días 1 y 3 del plan figuran como Reel pero se publican como imagen (decisión de QA del 11 oct).
+- **Imágenes públicas:** Meta necesita una URL accesible; el almacenamiento (R2) aún no está provisionado → deja el adaptador de almacenamiento detrás de una interfaz y márcalo `blocked` para Reiner.
+- **Facebook:** la app ya tiene el caso de uso «Administra todo en tu página». Permisos `pages_manage_posts` y `pages_read_engagement` aún sin añadir (los añade Reiner/Claude con su OK). Hasta entonces el adaptador `facebook` se prueba solo con Meta simulado.
+
+### 9.3 — 11 oct 2026: Staging (Bloque 0) — datos verificados que cambian la spec
+- Staging modo B funcionando: schema `staging` + rol `crm_staging`, pooler `aws-1-us-west-2.pooler.supabase.com`, puerto **6543** (el 5432 no responde); Prisma CLI por 6543 se cuelga → las migraciones a staging se aplicaron con un script SQL manual y `_prisma_migrations` pre-poblada. Producción NO tiene las migraciones `20260919120000_require_apikey_workspace_scope` ni `20260920120000_add_user_password_hash`.
+- `vercel.json` fija `env.NEXT_PUBLIC_APP_URL` a producción: hay que corregirlo para staging (añadir a los slices del Bloque 0, sin tocar variables de Vercel).
+- `.env.staging` es de Reiner (git-ignored): nunca lo leas ni lo imprimas.
+
+### 9.4 — 11 oct 2026: Bloque M propuesto — protección de páginas en servidor
+Spec cerrada: `@docs/SPEC-middleware-proteccion-paginas.md` (v1.0; `src/middleware.ts` + tests; decisión B de Reiner). Orden sugerido: después de A y antes de B, en su propia rama (decide Reiner; no mezclar con staging ni con login). Sin dependencias nuevas.
+
+### 9.5 — Pendientes de decisión de Reiner antes de enviar (checklist)
+- [ ] Orden final de bloques (0 → A → M → B → C) y ramas.
+- [ ] Imagen 21:9 del fondo de login recibida y aplicada.
+- [ ] Autorizar los permisos de Páginas en Meta y decidir dónde se guarda el token primero (local/staging).
+- [ ] Copies de los días 5–15 (los redacta Claude tras revisar las imágenes de Work).
+- [ ] Aprobación explícita para pegar el arranque en OpenCode.
