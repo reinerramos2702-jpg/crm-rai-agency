@@ -39,6 +39,8 @@ export async function signJwt(ctx: {
   userId: string;
   email: string;
   displayName?: string;
+  /** Duración en segundos. Por defecto 7 días (comportamiento histórico). */
+  expiresInSec?: number;
 }): Promise<string> {
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new Error('JWT_SECRET no configurado — no se puede emitir sesión.');
@@ -46,7 +48,7 @@ export async function signJwt(ctx: {
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(ctx.userId)
     .setIssuedAt()
-    .setExpirationTime('7d')
+    .setExpirationTime(ctx.expiresInSec ? Math.floor(Date.now() / 1000) + ctx.expiresInSec : '7d')
     .sign(encoder.encode(secret));
 }
 

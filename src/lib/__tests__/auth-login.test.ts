@@ -56,7 +56,45 @@ describe('POST /api/auth/login — JWT en cookie httpOnly (Etapa 3)', () => {
       userId: 'u1',
       email: 'user@x.com',
       displayName: 'Ana',
+      expiresInSec: 60 * 60 * 12,
     });
+  });
+
+  it('sin rememberMe → cookie de sesión (sin maxAge) y JWT de 12 h', async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(USER as any);
+    vi.mocked(verifyPassword).mockReturnValue(true);
+
+    const res = await POST(makeReq({ email: 'user@x.com', password: 'password123' }));
+
+    const cookie = res.cookies.get('rai_session');
+    expect(cookie?.maxAge).toBeUndefined();
+    expect(vi.mocked(signJwt).mock.calls[0][0].expiresInSec).toBe(60 * 60 * 12);
+  });
+
+  it('rememberMe true → cookie persistente de 30 días y JWT de 30 días', async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(USER as any);
+    vi.mocked(verifyPassword).mockReturnValue(true);
+
+    const res = await POST(
+      makeReq({ email: 'user@x.com', password: 'password123', rememberMe: true })
+    );
+
+    const cookie = res.cookies.get('rai_session');
+    expect(cookie?.maxAge).toBe(60 * 60 * 24 * 30);
+    expect(cookie?.httpOnly).toBe(true);
+    expect(cookie?.sameSite).toBe('lax');
+    expect(vi.mocked(signJwt).mock.calls[0][0].expiresInSec).toBe(60 * 60 * 24 * 30);
+  });
+
+  it('rememberMe no booleano ("true", 1) → se trata como false (sesión corta)', async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(USER as any);
+    vi.mocked(verifyPassword).mockReturnValue(true);
+
+    const res = await POST(
+      makeReq({ email: 'user@x.com', password: 'password123', rememberMe: 'true' })
+    );
+
+    expect(res.cookies.get('rai_session')?.maxAge).toBeUndefined();
   });
 
   it('password incorrecto → 401 genérico, sin cookie', async () => {

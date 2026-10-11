@@ -3,10 +3,9 @@ import { prisma } from '@/lib/db';
 import { verifyPassword } from '@/lib/password';
 import { signJwt, SESSION_COOKIE } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { sessionTtlSec } from '@/lib/session-ttl';
 
 export const runtime = 'nodejs';
-
-const SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 7; // 7 días
 
 /**
  * POST /api/auth/login — login email+password (Etapa 3, Prioridad 0).
@@ -15,11 +14,14 @@ const SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 7; // 7 días
  * - La sesión viaja SOLO en cookie httpOnly (nunca localStorage); el frontend
  *   la envía sola en requests same-origin y getAuth la lee de la cookie.
  * - Rate-limit básico en memoria por email y por IP (5 intentos / 15 min).
+ * - `rememberMe: true` → sesión de 30 días (cookie persistente); si no, sesión corta
+ *   (cookie de sesión + JWT de 12 h). Ver src/lib/session-ttl.ts.
  * - Respuesta genérica 401 para usuario inexistente, sin password o password
  *   incorrecto: no filtra qué parte falló.
  */
 export async function POST(req: NextRequest) {
-  const { email, password } = await req.json().catch(() => ({}));
+  const { email, password, rememberMe } = await req.json().catch(() => ({}));
+  const remember = rememberMe === true;
 
   if (!email || typeof email !== 'string' || !password || typeof password !== 'string') {
     return NextResponse.json({ error: 'Email y contraseña son requeridos' }, { status: 400 });
@@ -49,6 +51,7 @@ export async function POST(req: NextRequest) {
     userId: user.id,
     email: user.email,
     displayName: user.displayName ?? undefined,
+    expiresInSec: sessionTtlSec(remember),
   });
 
   const res = NextResponse.json({
@@ -60,7 +63,8 @@ export async function POST(req: NextRequest) {
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
     path: '/',
-    maxAge: SESSION_MAX_AGE_SEC,
+    // Sin maxAge → cookie de sesión (se borra al cerrar el navegador).
+    ...(remember ? { maxAge: sessionTtlSec(true) } : {}),
   });
   return res;
 }

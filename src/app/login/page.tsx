@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LogIn, Loader2 } from 'lucide-react';
+import { LogIn, Loader2, Check } from 'lucide-react';
 import { AuthShell, AuthLink } from '@/components/auth/AuthShell';
+
+const REMEMBER_KEY = 'rai-login-remember';
 
 /**
  * Página pública de login (Etapa 3 — Auth real).
@@ -14,6 +16,25 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [remember, setRemember] = useState(false);
+
+  // Recordar la última elección del toggle en este navegador (solo comodidad de UI).
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(REMEMBER_KEY) === '1') setRemember(true);
+    } catch {
+      /* storage bloqueado: se queda en false */
+    }
+  }, []);
+
+  function toggleRemember(next: boolean) {
+    setRemember(next);
+    try {
+      window.localStorage.setItem(REMEMBER_KEY, next ? '1' : '0');
+    } catch {
+      /* ignorar */
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -35,7 +56,7 @@ export default function LoginPage() {
       const r = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, rememberMe: remember }),
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) {
@@ -83,6 +104,29 @@ export default function LoginPage() {
             required
           />
         </div>
+        <label className="remember-toggle" htmlFor="login-remember" data-checked={remember}>
+          <input
+            id="login-remember"
+            type="checkbox"
+            role="switch"
+            className="remember-input"
+            checked={remember}
+            onChange={(e) => toggleRemember(e.target.checked)}
+          />
+          <span className="remember-text">
+            <span className="remember-title">Mantener sesión iniciada</span>
+            <span className="remember-sub">
+              {remember
+                ? 'No te pediremos la clave por 30 días en este equipo.'
+                : 'Se cierra al cerrar el navegador.'}
+            </span>
+          </span>
+          <span className="remember-track" aria-hidden="true">
+            <span className="remember-thumb">
+              <Check size={12} strokeWidth={3.5} />
+            </span>
+          </span>
+        </label>
         {error && (
           <p style={{ color: 'var(--rai-error)', fontSize: 13, marginBottom: 12 }}>{error}</p>
         )}
