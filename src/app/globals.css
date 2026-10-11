@@ -623,7 +623,11 @@ button:focus-visible, .btn:focus-visible {
   box-shadow: 0 0 0 1px rgba(201,168,76,0.35), 0 0 16px rgba(201,168,76,0.45);
 }
 
-.btn-primary:hover, button.primary:hover {
+.btn-primary:hover, button.primary:hover,
+.btn-primary:focus-visible, button.primary:focus-visible,
+.btn-primary:active, button.primary:active {
+  /* Texto oscuro fijo: `a:hover` (dorado) NO debe ganar sobre el botón dorado. Contraste ~11:1 (AAA). */
+  color: #0A0A0F;
   background: linear-gradient(135deg, #E8B923, #C9A84C);
   border-color: rgba(232,185,35,0.9);
   box-shadow: 0 0 0 1px rgba(232,185,35,0.6), 0 0 22px rgba(232,185,35,0.65);
@@ -669,6 +673,7 @@ button:focus-visible, .btn:focus-visible {
 }
 
 .btn-danger:hover, button.danger:hover {
+  color: var(--rai-error);
   background: rgba(230,57,70,0.12);
   border-color: var(--rai-error);
   box-shadow: 0 0 0 1px rgba(230,57,70,0.35), 0 0 16px rgba(230,57,70,0.35);

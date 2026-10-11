@@ -86,3 +86,9 @@
 - Reiner eligió B: proteger páginas en servidor. Spec en `docs/SPEC-middleware-proteccion-paginas.md` (v1.0). Pendiente de ejecución; nada enviado a OpenCode.
 - Facebook: Página "RAI Agency" creada y con sitio web raiagency.net (id 61595435214179). Vincular IG @raiagency__ bloqueado: Business Suite abre el portafolio "Vida Fácil" (no el de Reiner) y pide verificación de cuenta → decisión/acción de Reiner.
 - Verificado: `.env.local` local solo contiene `VERCEL_OIDC_TOKEN` (no apunta a ninguna base).
+
+### Fix 11 oct 2026 — texto ilegible en botón primario (hover)
+- Causa: `a:hover` (texto dorado, especificidad 0,1,1) ganaba a `.btn-primary:hover` (no declaraba `color`) en botones renderizados como `<a class="btn btn-primary">` → dorado sobre dorado (visto en `/registro` "Ir a iniciar sesión").
+- Cambio mínimo en `src/app/globals.css`: `color:#0A0A0F` fijo en `.btn-primary`/`button.primary` para `:hover`, `:focus-visible`, `:active` (contraste ~11:1); `.btn-danger:hover` ahora fija `color: var(--rai-error)` (mismo bug latente). Tema claro intacto (su regla base posterior fija texto blanco).
+- Evidencia: prueba Playwright con el CSS real: color en hover = rgb(10,10,15) (primario) y rgb(230,57,70) (peligro); captura revisada. `tsc --noEmit` OK; `eslint` del gate no terminó en el tiempo de la VM (cambio solo CSS).
+- Mejora tipográfica más amplia del botón (peso/tamaño/espaciado) queda para `SPEC-sistema-visual-premium.md`; no se inventó nada fuera del bug.
