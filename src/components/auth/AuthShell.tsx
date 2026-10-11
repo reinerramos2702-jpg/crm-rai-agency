@@ -33,7 +33,7 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
       {/* Fondo full-bleed (11 oct): imagen cósmica con robot + logo; decorativa. */}
       <div className="auth-bg" aria-hidden="true">
         <Image
-          src="/auth/login-bg-amanecer.webp"
+          src="/auth/login-bg-galaxia.webp"
           alt=""
           fill
           priority

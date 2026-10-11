@@ -1984,7 +1984,7 @@ html * {
 .auth-bg-img {
   object-fit: cover;
   /* Ancla abajo: en pantallas más anchas que la imagen se recorta el cielo (arriba), no el suelo/robot. */
-  object-position: 50% 100%;
+  object-position: 50% 62%;
   transform-origin: 50% 100%;
   animation: auth-bg-drift 28s ease-in-out infinite alternate;
   will-change: transform;
