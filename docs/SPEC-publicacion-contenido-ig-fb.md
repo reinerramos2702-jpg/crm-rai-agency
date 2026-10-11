@@ -1,6 +1,6 @@
 # SPEC — Publicación programada de contenido en Instagram + Facebook
 
-Estado: **v2 (10 oct 2026) — decisiones D2–D7 cerradas (§9).** Ejecutable por slices 1–6 con Meta simulado; lo que depende de cuentas/secretos reales de Reiner está en §10 y se marca `blocked`, no se pregunta. Requiere login v4 cerrado antes de arrancar (precondición).
+Estado: **v2.1 (10 oct 2026) — decisiones D2–D9 cerradas (§9).** Ejecutable por slices 1–6 con Meta simulado; lo que depende de cuentas/secretos reales de Reiner está en §10 y se marca `blocked`, no se pregunta. Requiere login v4 cerrado antes de arrancar (precondición).
 Rama prevista: `rai-feat-publicacion-ig-fb`. Precondición: login (v4) cerrado. Depende de decidir la base respecto a `rai-feat-calendario-contenido` (ver §3).
 
 ## 1. Objetivo
@@ -14,6 +14,9 @@ Programar y publicar automáticamente en Instagram y Facebook lotes de contenido
 ## 3. Reglas de la API de Meta (docs oficiales leídas el 10 oct 2026)
 - IG: imágenes, reels, carruseles e historias vía Content Publishing API. **Sin programación nativa**: el CRM necesita su propio planificador. Límite ~100 publicaciones por API/24 h por cuenta (la documentación es inconsistente con 50 para carruseles → tratar 50 como tope seguro hasta verificar). Imágenes solo JPEG.
 - Facebook Página: posts de feed admiten `scheduled_publish_time`; historias solo inmediatas.
+- **Instagram sin Página (verificado en docs 10 oct):** la ruta "Instagram Login" (permisos `instagram_business_basic`, `instagram_business_content_publish`) no declara requerir una Página de Facebook; la ruta "Facebook Login" (`instagram_basic`, `instagram_content_publish`, `pages_read_engagement`) sí usa token de Página. El adaptador debe soportar la ruta que `WorkspaceMetaConnection` tenga configurada.
+- **Facebook exige una Página:** la documentación leída solo cubre publicar en Páginas; publicar en un perfil personal no está confirmado → se trata como no soportado. Reiner no tiene Página confirmada (usa su perfil personal) → crear una Página gratis es prerrequisito de FB (ver §10).
+- No verificado en docs: comportamiento del modo Desarrollo sin App Review para cuentas propias → tratar como supuesto hasta la prueba real.
 - Conclusión de diseño: el CRM programa; un worker/cron dispara la publicación a la hora. Para FB feed se puede delegar la programación a Meta o usar el mismo planificador (decisión §9-D3).
 - Los permisos/App Review necesarios para cuentas ajenas de clientes (modo `shared_app`) **no están verificados** → no asumir; ver §9.
 
@@ -25,14 +28,15 @@ Slices en orden, cada uno con su gate:
 4. **Importador `día N`**: lee carpeta `día N` (imagen JPEG + `.md`), valida (formato, tamaño, caption vacío), crea `ScheduledPost` en borrador con fecha asignada por regla (1/día a una hora configurable). Sin inventar copy: si falta `.md`, estado borrador incompleto.
 5. **UI Calendario**: vista mensual/semanal de `ScheduledPost`, arrastrar para reprogramar, estado por color, editar caption, cancelar, publicar ahora. Usa tokens/`fx-*` existentes; ambos temas; respeta `SPEC-sistema-visual-premium.md` si ya está aplicada.
 6. **Historias** (IG y FB inmediatas): mismo motor, tipo STORY; planificador dispara a la hora (FB sin programación nativa).
-7. **Generación de imágenes dentro del CRM**: FUERA de este spec (decisión §9-D5); el flujo base es importar imágenes ya hechas (ChatGPT Work).
+7. **Persistencia de marca y datos del negocio en DB (D9)**: hoy `ContentIGTab` guarda todo (negocio, marca, manual de marca, reglas, handle) solo en `localStorage` del navegador (claves `rai-ig-*`). Crear modelo `BrandProfile` por `workspaceId` (campos: nombre, tipo, ubicación, web, teléfono, WhatsApp, servicios, público, competidores, colores, tono, documento de marca, modo de fotos/logo, handle IG, hora por defecto, reglas de lenguaje, notas), endpoints GET/PUT con RBAC (`canManageContent`), y migrar `ContentIGTab` para leer/guardar vía API (con `apiFetch`). Importación única desde `localStorage` si la DB está vacía (con confirmación del usuario). Tests: aislamiento por workspace, validación de entrada, límites de tamaño del documento de marca. Migración solo local/dev.
+8. **Generación de imágenes dentro del CRM**: FUERA de este spec (decisión §9-D5); el flujo base es importar imágenes ya hechas (ChatGPT Work).
 
 ## 5. Criterios de aceptación (mínimos)
 1. `tsc --noEmit`, lint, `vitest run` y `build` verdes (en Windows/OpenCode).
 2. Tests unitarios del motor con Meta mockeado: éxito, fallo, reintento, idempotencia, token vencido, límite diario.
 3. Tests de aislamiento: un workspace no ve ni publica `ScheduledPost` de otro.
 4. Importador: tests con carpetas válidas, sin `.md`, imagen no JPEG, imagen enorme.
-5. Prueba real de publicación en **cuenta propia de Reiner** (IG + FB) con evidencia (permalink); sin ella el bloque no se declara cerrado, pero los slices 1–6 sí pueden quedar `done` con Meta simulado (ver §10).
+5. Prueba real de publicación en **cuenta propia de Reiner** (IG + Página de FB) con evidencia (permalink); sin ella el bloque no se declara cerrado, pero los slices 1–6 sí pueden quedar `done` con Meta simulado (ver §10).
 6. e2e del calendario en desktop y mobile.
 7. Sin tokens/secretos en logs, respuestas ni commits.
 8. Sin push, merge, deploy ni migración remota sin aprobación expresa.
@@ -59,10 +63,11 @@ Generación de imágenes nativa, reels/carruseles, analítica de publicaciones, 
 | D4 | Disparador: **GitHub Actions programado** (cron cada ~5 min) que llama a `run-due` con `CRON_SECRET`. | Crear el endpoint y un workflow `.github/workflows/publish-scheduler.yml` (el secreto y la URL los configura Reiner en GitHub; ver D8). Documentar que puede retrasarse unos minutos. Sin cron de Vercel. |
 | D5 | v1 **solo importa** imágenes ya creadas (carpetas `día N`). Generación de imágenes: fase posterior. | Fuera de alcance. |
 | D6 | **Rescate selectivo** de `rai-feat-calendario-contenido`. | Auditar esa rama, adaptar solo lo compatible (`tenantId`→`workspaceId`, RBAC, `apiFetch`); sin merge directo. Registrar qué se rescató y qué no. |
+| D9 | La marca/datos del negocio de RAI Agency deben vivir en **base de datos por workspace**, no en `localStorage`. Mientras no exista (slice 7), Claude rellena el formulario en el navegador 2 como carga provisional (hecho el 10 oct: datos de RAI Agency, @raiagency__, dominio `raiagency.net` confirmado como oficial). | Implementar el slice 7; al migrar, importar esos valores a `BrandProfile`. Tarea fija de Claude (navegador 2): mantener lleno y verificado el formulario Contenido IG. |
 | D7 | Regla de horarios por defecto (supuesto reversible): 1 publicación por día a las 10:00 hora de Caracas (UTC-4), configurable por lote. | Implementar como parámetro del importador, no como constante. |
 
 ## 10. Lo único que el agente NO puede cerrar solo (preparar y marcar `blocked`, no preguntar)
 Estas tareas se dejan listas y registradas en el panel como `blocked` con la causa exacta; el resto del bloque avanza igual:
-- **D1 pasos 1 y 3 (Meta, real):** cuenta de IG Business/Creator vinculada a una Página de Facebook, y token con permisos de publicación de la app `RAI Agency Publisher`. Verificado el 10 oct: la app existe en modo Desarrollo y Reiner es Administrador; el vínculo IG↔Página y los permisos **no** están verificados.
+- **D1 pasos 1 y 3 (Meta, real):** Reiner confirmó (10 oct) que `@raiagency__` es cuenta **Instagram Business**. Falta: (a) crear una **Página de Facebook** (gratis) y vincularla a la cuenta, necesaria para publicar en FB y para la ruta Facebook Login de IG; (b) token con permisos de publicación de la app `RAI Agency Publisher`. Verificado el 10 oct: la app existe en modo Desarrollo y Reiner es Administrador; el vínculo IG↔Página y los permisos **no** están verificados. Nota: el navegador 2 no tiene sesión de Instagram iniciada; Reiner debe iniciar sesión él mismo (el agente nunca introduce contraseñas).
 - **D8 secretos y operación:** `CRON_SECRET`, URL de la app y activación del workflow de GitHub los configura Reiner; la migración Prisma remota y cualquier deploy requieren su aprobación.
 - **Criterio de aceptación 5 (publicación real en cuenta de prueba):** se prepara el script/checklist y se marca `blocked` hasta que D1 esté verificado. Los slices 1-6 se verifican con Meta simulado (mock) y no dependen de esto.

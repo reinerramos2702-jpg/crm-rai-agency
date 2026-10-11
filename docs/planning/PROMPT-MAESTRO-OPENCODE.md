@@ -10,7 +10,7 @@ Eres el orquestador director. Ejecutas, con mínima interacción, estos tres blo
 | 0 | Entorno de staging (parte de repositorio, slices S0-1…S0-6) | `@docs/SPEC-entorno-staging.md` | `rai-chore-staging-entorno` (créala desde la punta de la rama actual) |
 | A | Login/registro premium + auto-registro | `@docs/SPEC-login-registro-ui.md` (v4) | `rai-feat-login-registro-ui` (ya existe; el Bloque 0 va antes, en su propia rama, y A continúa en esta rama) |
 | B | Sistema visual premium | `@docs/SPEC-sistema-visual-premium.md` | `rai-feat-visual-premium` (créala desde la punta de A cuando A esté cerrado) |
-| C | Publicación programada IG+FB (slices 1–6 con Meta simulado) | `@docs/SPEC-publicacion-contenido-ig-fb.md` (v2) | `rai-feat-publicacion-ig-fb` (créala desde la punta de B cuando B esté cerrado) |
+| C | Publicación programada IG+FB (slices 1–7 con Meta simulado) | `@docs/SPEC-publicacion-contenido-ig-fb.md` (v2.1) | `rai-feat-publicacion-ig-fb` (créala desde la punta de B cuando B esté cerrado) |
 
 Tres autoridades: el panel `docs/planning/panel-control.html` = estado y alcance; las specs = comportamiento y criterios de aceptación; el repo (código, tests, git) = implementación. Si panel y repo discrepan en implementación, manda el repo y corriges el panel. Infraestructura de staging (R1–R8 de la spec del Bloque 0): la provisiona Reiner; tú dejas las instrucciones exactas y el ítem `blocked`. Fuera de alcance: Hidromáticos (PAUSADO por Reiner), generación de imágenes, cuentas de clientes, publicación real en Meta, RLS, migraciones remotas, deploy.
 
@@ -37,7 +37,7 @@ Escribe `docs/planning/PLAN-EJECUCION-OPENCODE.md` con: grafo de dependencias 0�
 - **0:** los 6 criterios de la §4 de la spec de staging + gate completo verde. R1–R8 quedan `blocked` para Reiner.
 - **A:** todos los criterios de la §6 de la spec v4 (incluye tests vitest nuevos, e2e `tests/e2e/auth-ui.spec.ts`, capturas desktop/mobile, tabla de contraste AA, LCP medido y reportado) + gate completo en verde.
 - **B:** los 11 criterios de la spec visual (First Load JS ≤ +5 kB, 4 capturas desktop/mobile × oscuro/claro, e2e `visual-premium.spec.ts`, CLS=0, reduced-motion) + gate completo en verde.
-- **C (slices 1–6):** modelo `ScheduledPost` + motor con adaptadores IG/FB + endpoint `run-due` (protegido por `CRON_SECRET`) + workflow `.github/workflows/publish-scheduler.yml` + importador `día N` + UI de calendario + historias; criterios 1–4, 6, 7 y 8 de la §5 de la spec con Meta simulado. El criterio 5 (publicación real) queda `blocked` (ver §7).
+- **C (slices 1–7):** modelo `ScheduledPost` + motor con adaptadores IG/FB + endpoint `run-due` (protegido por `CRON_SECRET`) + workflow `.github/workflows/publish-scheduler.yml` + importador `día N` + UI de calendario + historias + persistencia de marca/datos del negocio en DB (`BrandProfile`, slice 7); criterios 1–4, 6, 7 y 8 de la §5 de la spec con Meta simulado. El criterio 5 (publicación real) queda `blocked` (ver §7).
 - **Meta global:** gate completo verde al final de cada bloque y panel con evidencia de cada ítem.
 
 ## 5. Reglas inmutables (heredadas, no negociables)
