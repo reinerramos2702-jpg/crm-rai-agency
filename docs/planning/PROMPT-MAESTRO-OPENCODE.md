@@ -7,11 +7,12 @@ Eres el orquestador director. Ejecutas, con mínima interacción, estos tres blo
 
 | Orden | Bloque | Spec (fuente de verdad del comportamiento) | Rama |
 |---|---|---|---|
-| A | Login/registro premium + auto-registro | `@docs/SPEC-login-registro-ui.md` (v4) | `rai-feat-login-registro-ui` (ya existe, es la actual) |
+| 0 | Entorno de staging (parte de repositorio, slices S0-1…S0-6) | `@docs/SPEC-entorno-staging.md` | `rai-chore-staging-entorno` (créala desde la punta de la rama actual) |
+| A | Login/registro premium + auto-registro | `@docs/SPEC-login-registro-ui.md` (v4) | `rai-feat-login-registro-ui` (ya existe; el Bloque 0 va antes, en su propia rama, y A continúa en esta rama) |
 | B | Sistema visual premium | `@docs/SPEC-sistema-visual-premium.md` | `rai-feat-visual-premium` (créala desde la punta de A cuando A esté cerrado) |
 | C | Publicación programada IG+FB (slices 1–6 con Meta simulado) | `@docs/SPEC-publicacion-contenido-ig-fb.md` (v2) | `rai-feat-publicacion-ig-fb` (créala desde la punta de B cuando B esté cerrado) |
 
-Tres autoridades: el panel `docs/planning/panel-control.html` = estado y alcance; las specs = comportamiento y criterios de aceptación; el repo (código, tests, git) = implementación. Si panel y repo discrepan en implementación, manda el repo y corriges el panel. Fuera de alcance: Hidromáticos (PAUSADO por Reiner), generación de imágenes, cuentas de clientes, publicación real en Meta, RLS, migraciones remotas, deploy.
+Tres autoridades: el panel `docs/planning/panel-control.html` = estado y alcance; las specs = comportamiento y criterios de aceptación; el repo (código, tests, git) = implementación. Si panel y repo discrepan en implementación, manda el repo y corriges el panel. Infraestructura de staging (R1–R8 de la spec del Bloque 0): la provisiona Reiner; tú dejas las instrucciones exactas y el ítem `blocked`. Fuera de alcance: Hidromáticos (PAUSADO por Reiner), generación de imágenes, cuentas de clientes, publicación real en Meta, RLS, migraciones remotas, deploy.
 
 ## 1. Preflight (obligatorio, antes de tocar nada)
 1. `git status` y `git branch --show-current`. Si hay cambios que no son tuyos (por ejemplo `docs/INTEGRACION-HIDROMATICOS.md`, `docs/clientes/`, `docs/referencia/`): NO los toques, NO los commitees, NO los descartes.
@@ -21,7 +22,7 @@ Tres autoridades: el panel `docs/planning/panel-control.html` = estado y alcance
 5. Lee: `AGENTS.md`, `docs/ESTADO-SESION.md`, el panel, las 3 specs, `docs/planning/GUARDRAILS-ORQUESTADOR.md`, `docs/planning/roadmap-agentes-rai.html`.
 
 ## 2. Plan gigante (UNA sola puerta de aprobación)
-Escribe `docs/planning/PLAN-EJECUCION-OPENCODE.md` con: grafo de dependencias A→B→C, y por cada slice/tarea: ID (`A-01`, `B-01`, `C-01`…), objetivo, archivos probables, criterio de aceptación medible (tomado de la spec), gate, riesgo y dependencias. Registra en el panel (solo atributos aditivos permitidos: `data-id`, `data-phase`, `data-depends-on`, `data-attempts`, `data-commit`) los ítems que correspondan. Luego muestra a Reiner un resumen de máximo 25 líneas y PÍDELE UNA SOLA APROBACIÓN ("¿apruebo el plan? sí/no/cambios"). Tras su "sí", ejecuta TODO sin volver a preguntar, salvo los casos de la sección 7.
+Escribe `docs/planning/PLAN-EJECUCION-OPENCODE.md` con: grafo de dependencias 0→A→B→C, y por cada slice/tarea: ID (`A-01`, `B-01`, `C-01`…), objetivo, archivos probables, criterio de aceptación medible (tomado de la spec), gate, riesgo y dependencias. Registra en el panel (solo atributos aditivos permitidos: `data-id`, `data-phase`, `data-depends-on`, `data-attempts`, `data-commit`) los ítems que correspondan. Luego muestra a Reiner un resumen de máximo 25 líneas y PÍDELE UNA SOLA APROBACIÓN ("¿apruebo el plan? sí/no/cambios"). Tras su "sí", ejecuta TODO sin volver a preguntar, salvo los casos de la sección 7.
 
 ## 3. Bucle por tarea (repite hasta agotar lo abordable)
 1. Orienta: spec + estado + archivos afectados. Registra `started_at`, rama y archivos objetivo (nota en el panel).
@@ -33,6 +34,7 @@ Escribe `docs/planning/PLAN-EJECUCION-OPENCODE.md` con: grafo de dependencias A�
 7. Si un gate no puede correr (p. ej. falta algo del entorno): el ítem queda "no verificado", NO `done`.
 
 ## 4. Metas medibles por bloque (no reportes cerrado sin cumplirlas)
+- **0:** los 6 criterios de la §4 de la spec de staging + gate completo verde. R1–R8 quedan `blocked` para Reiner.
 - **A:** todos los criterios de la §6 de la spec v4 (incluye tests vitest nuevos, e2e `tests/e2e/auth-ui.spec.ts`, capturas desktop/mobile, tabla de contraste AA, LCP medido y reportado) + gate completo en verde.
 - **B:** los 11 criterios de la spec visual (First Load JS ≤ +5 kB, 4 capturas desktop/mobile × oscuro/claro, e2e `visual-premium.spec.ts`, CLS=0, reduced-motion) + gate completo en verde.
 - **C (slices 1–6):** modelo `ScheduledPost` + motor con adaptadores IG/FB + endpoint `run-due` (protegido por `CRON_SECRET`) + workflow `.github/workflows/publish-scheduler.yml` + importador `día N` + UI de calendario + historias; criterios 1–4, 6, 7 y 8 de la §5 de la spec con Meta simulado. El criterio 5 (publicación real) queda `blocked` (ver §7).

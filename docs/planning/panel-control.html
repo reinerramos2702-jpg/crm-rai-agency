@@ -429,6 +429,14 @@ footer{
     <div class="check-item" data-status="pending">
       <div class="checkbox"></div>
       <div class="check-body">
+        <div class="check-title">Bloque 0 — Entorno de staging (Supabase + Vercel Preview separados de producción)</div>
+        <div class="check-desc">Decisión de Reiner (10 oct): armar staging antes de enviar el prompt maestro a OpenCode. Spec en <code>docs/SPEC-entorno-staging.md</code> (v1). Motivo verificado: Supabase tiene <strong>un solo proyecto</strong> (<code>wckufllomfmuwxptegvm</code>, creado el 2 ago), por lo que toda prueba, migración o registro cae en esa base; el login v4 crea usuarios reales y la spec de publicación necesita una URL HTTPS estable para el planificador. Parte de repositorio (OpenCode, rama <code>rai-chore-staging-entorno</code>): <code>env-check</code>, variable <code>APP_ENV</code>, insignia de entorno, guardia de base de datos, plantilla <code>.env.staging.example</code>, <code>docs/ENTORNOS.md</code> y seed de demostración. Infraestructura R1–R8 (proyecto Supabase, variables Preview en Vercel, Upstash/R2 separados, secretos distintos, redirect URI de Meta, migraciones a staging, secretos de GitHub Actions) la aprueba y provisiona Reiner. <strong>No verificado:</strong> a qué base apunta hoy <code>.env.local</code>; límite de 2 proyectos en el plan gratuito de Supabase; variables Preview por rama en Vercel Hobby.</div>
+      </div>
+      <span class="tag tag-open">spec cerrada — infra espera aprobación de Reiner</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
         <div class="check-title">Sistema visual premium para el resto del CRM (efectos <code>fx-*</code>)</div>
         <div class="check-desc">Spec cerrada en <code>docs/SPEC-sistema-visual-premium.md</code> (10 oct 2026): tokens <code>--fx-*</code> y utilidades <code>.fx-*</code> (glass, lift solo con hover real, border-glow, sheen del botón primario, stagger, fondo aurora, glow del item activo del sidebar, halo de estados vacíos, toast glass, anillo <code>:focus-visible</code>, hook <code>useCountUp</code>). Rama <code>rai-feat-visual-premium</code>. <strong>Precondición:</strong> bloque de login cerrado. Reglas: ambos temas, animar solo transform/opacity, <code>prefers-reduced-motion</code>, máximo 2 superficies con <code>backdrop-filter</code> por pantalla, First Load JS ≤ +5 kB, CLS=0, capturas 4 combinaciones (desktop/mobile × oscuro/claro), sin push/merge/deploy.</div>
       </div>

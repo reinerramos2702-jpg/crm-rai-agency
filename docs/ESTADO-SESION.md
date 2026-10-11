@@ -18,6 +18,7 @@
 - Decisión de Reiner (10 oct): no pegar nada en OpenCode hasta terminar las specs; OpenCode produce primero un "plan gigante"; orquestador director autónomo con reglas fijas inmutables y panel + `roadmap-agentes-rai.html` en mano; convertir el proceso en una skill reutilizable. Cualquier cambio de permisos/guardrails requiere su aprobación.
 
 ## Pendiente (orden de ejecución)
+00. Bloque 0 — staging: `docs/SPEC-entorno-staging.md` v1 cerrada (decisión de Reiner 10 oct: se arma antes de enviar el prompt maestro); falta que Reiner apruebe/provisione R1–R8 (Supabase de staging, variables Preview de Vercel, etc.).
 0. Nuevos (10 oct, sin spec/implementación): publicación automática IG+FB (`docs/SPEC-publicacion-contenido-ig-fb.md` v2: decisiones D2–D7 cerradas el 10 oct; falta que Reiner verifique IG Business↔Página y token (D1) y configure secretos/workflow de GitHub (D8); slices 1–6 ejecutables con Meta simulado) y endurecimiento del orquestador (aprobado; preparado en rama local `rai-chore-orquestador-guardrails` `754ec87`, falta que Reiner revise el diff, `CODEOWNERS` y checks en CI) + skill reutilizable `orquestador-panel-autonomo` (propuesta mostrada a Reiner).
 1. OpenCode: releer la spec v4 y salir de modo Plan; ejecutar el bloque con `@backend`, `@frontend` y `@qa` hasta cumplir los criterios de la sección 6 de la spec.
 2. Correr `tsc --noEmit`, lint, `vitest run` y `build` en Windows y registrar resultados reales en el panel.
