@@ -43,7 +43,7 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
         />
         <div className="auth-bg-scrim" />
       </div>
-      <div className="auth-shell-content" style={{ width: '100%', maxWidth: 420 }}>
+      <div className="auth-shell-content" style={{ width: '100%', maxWidth: 440 }}>
         {/* En escritorio el logo ya va en la imagen; este logo solo se muestra en móvil. */}
         <div
           className="auth-shell-logo"
@@ -82,11 +82,17 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
           </div>
         </div>
 
-        <div className="card auth-card" style={{ padding: '28px 24px' }}>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--rai-text)', marginBottom: 4 }}>
-            {title}
-          </h1>
-          <p style={{ fontSize: 13, color: 'var(--rai-muted)', marginBottom: 20 }}>{subtitle}</p>
+        <div className="card auth-card">
+          <header className="auth-card-head">
+            <span className="auth-eyebrow">RAI Agency CRM</span>
+            <h1>{title}</h1>
+            <p>{subtitle}</p>
+            <span className="auth-ornament" aria-hidden="true">
+              <i />
+              <b />
+              <i />
+            </span>
+          </header>
           {children}
         </div>
 
