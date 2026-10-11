@@ -66,3 +66,12 @@
 - **Contenido IG:** por ahora solo 4 días generados (dia-01 a dia-04, copy listo en `Contenido RRSS/Instagram/Plan 31-1102026/salida`). Se programan esos 4 para probar el sistema; los demás días cuando Reiner tenga las imágenes (se generan en ChatGPT Work, lento).
 - **Facebook:** Página "RAI Agency" (categoría Agencia de marketing) creada el 11 oct desde Browser 2. Pendiente: vincularla a @raiagency__, completar datos (sitio raiagency.net) y token Meta (D1, tarea de Reiner).
 - **Skills:** `orquestador-panel-autonomo` v2.1 guardada; `cierre-continuidad-sesion` (punto 19) pendiente de actualizar con la nomenclatura de chats. `git-buenas-practicas` es el punto 12, no el 19.
+
+## Actualización 11 oct 2026 (b) — Staging B: tablas creadas y verificadas
+
+- Tablas de staging creadas vía script SQL (`.env.staging.sql`, git-ignored) aplicando las 11 migraciones en el schema `staging` del proyecto CRM (`bskdozxkgbxifftuulvc`); `_prisma_migrations` de staging pre-poblada con 11 filas (checksum sha256).
+- Verificación read-only (Supabase): `staging` = 40 tablas; `public` = 41 (intacto); `staging._prisma_migrations` = 11; `staging."User".passwordHash` existe; `crm_staging` tiene CRUD en staging y 0 de 41 tablas legibles en `public`.
+- Hallazgo: producción (`public`) NO tiene las migraciones `20260919120000_require_apikey_workspace_scope` ni `20260920120000_add_user_password_hash` (sin `User.passwordHash`). Staging sí. Aplicarlas a producción = decisión explícita de Reiner.
+- Hallazgo pooler: puerto 5432 (session) del pooler `aws-1-us-west-2` no responde; usar 6543 para `DATABASE_URL` y `DIRECT_URL` en `.env.staging`. Prisma CLI sobre 6543 se cuelga en `migrate status`/`deploy` (pgbouncer + advisory lock) → migraciones futuras en staging: SQL manual hasta resolver camino (R7 abierto para futuras).
+- RLS: sin tocar (decisión separada, `PLAN-RLS.md`); se corrió con "Run without RLS".
+- Pendiente Reiner: R3 rama `staging` + env Vercel Preview; R4 Upstash/R2 separados; R5 `JWT_SECRET`/`KEYS_ENCRYPTION_KEY`/`CRON_SECRET` distintos; R6 redirect URIs Meta; R8 secrets GitHub Actions.
