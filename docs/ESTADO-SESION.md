@@ -1,9 +1,9 @@
 # Estado de sesión — CRM RAI Agency
-Última actualización: 10 octubre 2026 (sesión Cowork, rama `rai-feat-login-registro-ui`; verificado 10 oct: sin cambios de código desde el 5 oct, implementación del login sin iniciar). Las secciones marcadas "25 sep" son el cierre anterior de OpenCode, conservado como historial.
+Última actualización: 10 octubre 2026 (sesión Cowork, rama `rai-feat-login-registro-ui`; verificado 10 oct: sin cambios de código desde el 5 oct, implementación del login sin iniciar; specs login v4 y sistema visual premium escritas el 10 oct). Las secciones marcadas "25 sep" son el cierre anterior de OpenCode, conservado como historial.
 
 ## Estado actual (5 oct 2026) — punto de reanudación
 - Rama activa: `rai-feat-login-registro-ui` = `origin/security/fase-0` (`69277fb`) + 3 commits locales solo de documentación e imágenes (`b455270`, `a76be0b`, `0355e6b`). Ninguno está publicado en remoto.
-- Bloque en curso: login/registro premium + auto-registro con workspace propio. Especificación cerrada en `docs/SPEC-login-registro-ui.md` (v3) y registrada en `docs/planning/panel-control.html` (FASE 00). **La implementación no ha empezado**: verificado el 5 oct que `register/route.ts` no tiene rate-limit ni creación de Workspace, `AuthShell.tsx` no tiene fondo ni `@keyframes`, y `/registro` conserva el texto "solo por invitación".
+- Bloque en curso: login/registro premium + auto-registro con workspace propio. Especificación cerrada en `docs/SPEC-login-registro-ui.md` (v4 desde el 10 oct) y registrada en `docs/planning/panel-control.html` (FASE 00). **La implementación no ha empezado**: verificado el 5 oct que `register/route.ts` no tiene rate-limit ni creación de Workspace, `AuthShell.tsx` no tiene fondo ni `@keyframes`, y `/registro` conserva el texto "solo por invitación".
 - Verificación del 5 oct: `tsc --noEmit` sin errores en código fuente (único error: tipos obsoletos en `.next/types`, ignorado por Git, de la rama de calendario). `vitest` no se puede ejecutar desde la VM de Cowork (el `node_modules` es de Windows y falta el binario nativo de rollup para Linux); debe correrse en Windows u OpenCode. Última validación completa documentada: 189/189 tests el 25 sep.
 - Hidromáticos Oriente: la propuesta `docs/INTEGRACION-HIDROMATICOS.md` quedó versionada en la rama local `hidromaticos-docs-integracion-crm` (`35ba210`, base `origin/security/fase-0`, sin publicar). Sigue existiendo una copia sin versionar en el árbol de la rama de login; no debe incluirse en commits del login.
 - Calendario de contenido: `rai-feat-calendario-contenido` está publicada en remoto (`d6f362d`). Estado del PR: sin dato.
@@ -14,8 +14,12 @@
 - Interfaz: fondo completo con las imágenes reales de `public/auth/`, capa oscura para legibilidad, tarjeta flotante, animaciones CSS puras con `prefers-reduced-motion`, y sin el logo duplicado de `AuthShell`.
 - Base de la documentación de Hidromáticos: `security/fase-0`, no `main`, porque el documento cita archivos que solo existen allí (`PLAN-RLS.md`, `AGENTS.md`, `rate-limit.ts`, ruta de login). `origin/main` (`16d2476`) solo añade el workflow `claude-review.yml`; la rama `main` local está obsoleta (`f00b239`).
 
+- Specs (10 oct): login pasa a v4 (copy de `/login`, aislamiento de tema oscuro con `data-auth-shell`, `acceptTerms`, honeypot `website`, páginas placeholder `/terminos` y `/privacidad`, UX/a11y, e2e, contraste AA, deuda diferida en §7). Nueva `docs/SPEC-sistema-visual-premium.md` (efectos `fx-*`, rama `rai-feat-visual-premium`, precondición: login cerrado).
+- Decisión de Reiner (10 oct): no pegar nada en OpenCode hasta terminar las specs; OpenCode produce primero un "plan gigante"; orquestador director autónomo con reglas fijas inmutables y panel + `roadmap-agentes-rai.html` en mano; convertir el proceso en una skill reutilizable. Cualquier cambio de permisos/guardrails requiere su aprobación.
+
 ## Pendiente (orden de ejecución)
-1. OpenCode: releer la spec v3 y salir de modo Plan; ejecutar el bloque con `@backend`, `@frontend` y `@qa` hasta cumplir los criterios de la sección 6 de la spec.
+0. Nuevos (10 oct, sin spec/implementación): publicación automática IG+FB (necesita spec propia, App de Meta y chequeo de estado de cuenta) y endurecimiento del orquestador + skill reutilizable (esperan aprobación de Reiner).
+1. OpenCode: releer la spec v4 y salir de modo Plan; ejecutar el bloque con `@backend`, `@frontend` y `@qa` hasta cumplir los criterios de la sección 6 de la spec.
 2. Correr `tsc --noEmit`, lint, `vitest run` y `build` en Windows y registrar resultados reales en el panel.
 3. Preparar el PR del login y esperar aprobación explícita; sin push, merge ni deploy por inferencia.
 4. Hidromáticos: **PAUSADO (decisión de Reiner, 10 oct)** hasta reunirse con el cliente para que responda las 9 preguntas bloqueantes (§9 del documento); después decidir la base de implementación. No escribir código ni planear implementación antes.
