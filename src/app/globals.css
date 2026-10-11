@@ -1983,7 +1983,9 @@ html * {
 }
 .auth-bg-img {
   object-fit: cover;
-  object-position: center;
+  /* Ancla abajo: en pantallas más anchas que la imagen se recorta el cielo (arriba), no el suelo/robot. */
+  object-position: 50% 100%;
+  transform-origin: 50% 100%;
   animation: auth-bg-drift 28s ease-in-out infinite alternate;
   will-change: transform;
 }
@@ -2010,7 +2012,7 @@ html * {
 }
 @keyframes auth-bg-drift {
   from { transform: scale(1); }
-  to { transform: scale(1.05); }
+  to { transform: scale(1.02); }
 }
 @keyframes auth-card-in {
   from { opacity: 0; transform: translateY(14px); }
