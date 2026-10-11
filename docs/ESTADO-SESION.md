@@ -75,3 +75,9 @@
 - Hallazgo pooler: puerto 5432 (session) del pooler `aws-1-us-west-2` no responde; usar 6543 para `DATABASE_URL` y `DIRECT_URL` en `.env.staging`. Prisma CLI sobre 6543 se cuelga en `migrate status`/`deploy` (pgbouncer + advisory lock) → migraciones futuras en staging: SQL manual hasta resolver camino (R7 abierto para futuras).
 - RLS: sin tocar (decisión separada, `PLAN-RLS.md`); se corrió con "Run without RLS".
 - Pendiente Reiner: R3 rama `staging` + env Vercel Preview; R4 Upstash/R2 separados; R5 `JWT_SECRET`/`KEYS_ENCRYPTION_KEY`/`CRON_SECRET` distintos; R6 redirect URIs Meta; R8 secrets GitHub Actions.
+
+### Smoke test local contra staging (11 oct 2026)
+- `.env.staging` ahora incluye `JWT_SECRET`, `KEYS_ENCRYPTION_KEY`, `CRON_SECRET` únicos de staging (R5 hecho), `SUPER_ADMIN_EMAILS`, `NEXT_PUBLIC_APP_URL=http://localhost:3000`. Sin `DEV_BYPASS_AUTH`. Sin Upstash/R2/Meta aún (R4/R6 abiertos).
+- Prueba en copia aislada (sin `.env.local`/`.env.production`) con Next dev + DB staging por 6543: `/login` 200, `/registro` 200, registro sin invitación 403, registro super admin 200, login mala clave 401, login buena 200 + cookie `rai_session`. Usuario de prueba borrado (staging `User` = 0).
+- Observación: no existe `src/middleware.ts`; rutas de página (ej. `/contactos`) devuelven 200 sin cookie. La protección vive en la API/cliente. Revisar si es decisión de producto (candidato a pendiente de seguridad).
+- Skill `cierre-continuidad-sesion` con sección de nomenclatura: ya guardada (verificado en skills sincronizadas).
