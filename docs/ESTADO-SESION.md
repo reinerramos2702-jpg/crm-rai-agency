@@ -135,3 +135,12 @@
 - Work está generando los días hasta el 15. Pendiente de Claude: revisar cada imagen (errores) y redactar los copies (sin inventar datos; alineados a `PLAN-AUTORIDAD-B2B-31-dias.md`).
 - Prompt maestro para OpenCode: NO se creó un archivo nuevo (evita duplicar la fuente de verdad); se amplió el existente `docs/planning/PROMPT-MAESTRO-OPENCODE.md` con la §9 (adendas del 11 oct) y quedó marcado **BORRADOR — NO ENVIADO**. Reiner lo irá ampliando.
 - Nada enviado a OpenCode. Nada pusheado.
+
+## Registro abierto + fondo amanecer + modelo freemium (11 oct 2026, noche)
+- Decisión de Reiner: el registro NO es solo por invitación; cualquiera se registra y usa el CRM gratis. Funciones básicas gratis; intermedias/complejas de pago (p. ej. publicación automática IG). Planes 34 / 49 / 67 USD. Detalle y preguntas abiertas: `docs/SPEC-planes-monetizacion.md` (v0.1 BORRADOR).
+- Implementado local (`d387b05`, rama `rai-feat-login-registro-ui`, sin push): `POST /api/auth/register` abierto con workspace propio (`businessName` opcional → `Mi negocio` por defecto, máx. 120), `acceptTerms` obligatorio, honeypot `website`, rate limit por email e IP (429 + `Retry-After`), 409 si el email ya tiene cuenta (anti account-takeover de usuarios SSO sin clave; **desviación endurecida respecto a spec v4**). Invitación pendiente → se une al workspace (sin crear otro). Super admin → bootstrap sin workspace.
+- UI: `/registro` (negocio opcional, casilla de términos, honeypot) y `/login` sin «(solo con invitación)» → «Regístrate gratis». Placeholders `/terminos` y `/privacidad` (sin texto legal inventado).
+- Fondo: Reiner cambió a una imagen menos saturada («amanecer», 1672×941; no es 8K real). `public/auth/login-bg-amanecer.webp` (239 KB). Verificado con capturas de `/login` y `/registro`. Sin usar: `login-bg-cosmos.webp`, `login-bg-nocturno.webp` (sin trackear), `login-bg-desktop/mobile.jpg`.
+- Evidencia: 192/192 tests en `src/lib/__tests__` (registro 13), `tsc --noEmit` limpio.
+- **RIESGO:** no desplegar el registro abierto a producción antes del gating de planes (hoy un usuario nuevo accede a todo). Falta: verificación de email, rate limit distribuido, revocación de sesión, e2e `tests/e2e/auth-ui.spec.ts`, fuerza/mostrar contraseña, cuenta regresiva y a11y restante de la spec v4.
+- Nada enviado a OpenCode. Nada pusheado.

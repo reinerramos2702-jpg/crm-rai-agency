@@ -85,9 +85,15 @@ La punta de `rai-feat-login-registro-ui` incluye estos commits locales hechos po
 ### 9.4 — 11 oct 2026: Bloque M propuesto — protección de páginas en servidor
 Spec cerrada: `@docs/SPEC-middleware-proteccion-paginas.md` (v1.0; `src/middleware.ts` + tests; decisión B de Reiner). Orden sugerido: después de A y antes de B, en su propia rama (decide Reiner; no mezclar con staging ni con login). Sin dependencias nuevas.
 
+### 9.6 — 11 oct 2026 (noche): registro abierto ya implementado + freemium
+- `d387b05`: registro abierto con workspace propio, `acceptTerms`, honeypot, rate limit, 409 anti-takeover, `/terminos` y `/privacidad` placeholders, fondo `login-bg-amanecer.webp`. **Bloque A:** NO lo reimplementes; completa solo lo pendiente de la spec v4 (fuerza/mostrar contraseña, cuenta regresiva, e2e, a11y). No toques el copy de `/login` («Regístrate gratis»).
+- Nuevo bloque propuesto **P (planes)**: `@docs/SPEC-planes-monetizacion.md` es BORRADOR con preguntas abiertas (P1–P7). **No lo ejecutes** hasta que Reiner las cierre; no inventes qué funciones van en cada plan ni proveedor de cobro. Cobros/claves/webhooks reales: `blocked` para Reiner.
+- Regla: el registro abierto NO se despliega a producción sin el gating de planes.
+
 ### 9.5 — Pendientes de decisión de Reiner antes de enviar (checklist)
 - [ ] Orden final de bloques (0 → A → M → B → C) y ramas.
-- [ ] Imagen 21:9 del fondo de login recibida y aplicada.
+- [x] Fondo de login aplicado (imagen «amanecer»; la 21:9 ya no es necesaria).
+- [ ] Cerrar P1–P6 de `docs/SPEC-planes-monetizacion.md` (funciones por plan, periodo, proveedor, límites, prueba, degradación).
 - [ ] Autorizar los permisos de Páginas en Meta y decidir dónde se guarda el token primero (local/staging).
 - [ ] Copies de los días 5–15 (los redacta Claude tras revisar las imágenes de Work).
 - [ ] Aprobación explícita para pegar el arranque en OpenCode.

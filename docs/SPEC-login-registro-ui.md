@@ -117,3 +117,10 @@ El CRM tiene tema oscuro (default) y tema claro "Perla" (`[data-theme="light"]` 
 - Aceptación: login con `rememberMe:true` → `Set-Cookie` con `Max-Age=2592000`; sin él → sin `Max-Age`/`Expires`. Cubierto por `auth-login.test.ts` y `session-ttl.test.ts`.
 - Deuda: sin revocación en servidor (JWT sin estado); sin endpoint de logout.
 - Fondo full-bleed: Reiner decidió (11 oct) generar una imagen nueva con el robot y el logo para `/login` y `/registro`; reemplaza o complementa `public/auth/login-bg-*.jpg` al recibirla.
+
+## Adenda 11 oct 2026 (noche) — Registro abierto implementado en local (`d387b05`)
+- Implementado por Claude (local, sin push): backend `POST /api/auth/register` según §3 + `acceptTerms`, honeypot `website`, rate limit email/IP; UI `/registro` y copy de `/login` («Regístrate gratis»); placeholders `/terminos` y `/privacidad`. 13 tests de registro.
+- **Desviación endurecida:** un email que ya existe como usuario sin clave (SSO) y se registra de forma abierta → 409 (evita tomar cuentas ajenas). La spec no lo prohibía de forma explícita.
+- Queda para OpenCode: fuerza/mostrar contraseña, cuenta regresiva, e2e `tests/e2e/auth-ui.spec.ts`, a11y restante, verificación de email (diferida §7).
+- Fondo: imagen «amanecer» (`login-bg-amanecer.webp`) sustituye a la cosmos; ver `docs/ESTADO-SESION.md`.
+- Producto: el registro abierto exige antes el gating de planes (`docs/SPEC-planes-monetizacion.md`).
