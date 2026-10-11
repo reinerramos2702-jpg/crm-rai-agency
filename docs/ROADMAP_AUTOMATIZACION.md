@@ -294,7 +294,7 @@ Todos usan modelos/campos que YA existen (`Contact.tags`, `ContactTask`, `Note`,
 7. Aplicar sistema de botones a todos los módulos existentes.
 8. Conectar Campaign/Dashboard/Launchpad.
 9. Certificación: `tsc --noEmit` + script e2e Node corriendo los 15 casos contra la DB real + capturas Chrome.
-10. Actualizar `PROJECT_MEMORY.md`.
+10. Actualizar `docs/ESTADO-SESION.md` (`PROJECT_MEMORY.md` fue eliminado el 10 oct 2026).
 
 ---
 

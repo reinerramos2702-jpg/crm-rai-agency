@@ -6,7 +6,7 @@ CRM SaaS multi-tenant de RAI Agency: contactos, conversaciones, calendarios, fac
 
 > **Nota (10 oct 2026):** este README conserva la descripción original del MVP de pipeline. Para stack y arquitectura vigentes → `docs/MEMORY.md`; estado actual → `docs/ESTADO-SESION.md`; backlog → `docs/planning/panel-control.html`; reglas del agente → `AGENTS.md`.
 
-**Arquitectura del pipeline** (original): `docs/ARCHITECTURE.md` quedó obsoleto. Resumen: 3 secuencias UI (chat planificación → orquestador autónomo → observador en vivo) con DAG `Copy → (Visual ∥ Audio) → Video → Music`.
+**Arquitectura del pipeline** (original): el antiguo `ARCHITECTURE.md` fue eliminado el 10 oct 2026 (era solo un puntero). Resumen: 3 secuencias UI (chat planificación → orquestador autónomo → observador en vivo) con DAG `Copy → (Visual ∥ Audio) → Video → Music`.
 
 ---
 

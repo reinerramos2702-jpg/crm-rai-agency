@@ -1,1 +1,0 @@
-# ⚠️ ARCHIVO OBSOLETO — ver ESTADO-SESION.md
