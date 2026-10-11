@@ -1,6 +1,6 @@
 # SPEC — Publicación programada de contenido en Instagram + Facebook
 
-Estado: **v2.1 (10 oct 2026) — decisiones D2–D9 cerradas (§9).** Ejecutable por slices 1–6 con Meta simulado; lo que depende de cuentas/secretos reales de Reiner está en §10 y se marca `blocked`, no se pregunta. Requiere login v4 cerrado antes de arrancar (precondición).
+Estado: **v2.2 (11 oct 2026) — decisiones D2–D9 cerradas (§9); §11 añade el registro del token y el tipo de conexión.** Ejecutable por slices 1–6 con Meta simulado; lo que depende de cuentas/secretos reales de Reiner está en §10 y se marca `blocked`, no se pregunta. Requiere login v4 cerrado antes de arrancar (precondición).
 Rama prevista: `rai-feat-publicacion-ig-fb`. Precondición: login (v4) cerrado. Depende de decidir la base respecto a `rai-feat-calendario-contenido` (ver §3).
 
 ## 1. Objetivo
@@ -71,3 +71,49 @@ Estas tareas se dejan listas y registradas en el panel como `blocked` con la cau
 - **D1 pasos 1 y 3 (Meta, real):** Reiner confirmó (10 oct) que `@raiagency__` es cuenta **Instagram Business**. Falta: (a) crear una **Página de Facebook** (gratis) y vincularla a la cuenta, necesaria para publicar en FB y para la ruta Facebook Login de IG; (b) token con permisos de publicación de la app `RAI Agency Publisher`. Verificado el 10 oct: la app existe en modo Desarrollo y Reiner es Administrador; el vínculo IG↔Página y los permisos **no** están verificados. Nota: el navegador 2 no tiene sesión de Instagram iniciada; Reiner debe iniciar sesión él mismo (el agente nunca introduce contraseñas).
 - **D8 secretos y operación:** `CRON_SECRET`, URL de la app y activación del workflow de GitHub los configura Reiner; la migración Prisma remota y cualquier deploy requieren su aprobación.
 - **Criterio de aceptación 5 (publicación real en cuenta de prueba):** se prepara el script/checklist y se marca `blocked` hasta que D1 esté verificado. Los slices 1-6 se verifican con Meta simulado (mock) y no dependen de esto.
+
+## 11. Registro del token de Meta en el CRM (11 oct 2026)
+Objetivo: que el token que Reiner generó en la app `RAI Agency Publisher` quede guardado **cifrado por workspace** y lo use el motor de publicación, sin pasar nunca por chat, logs, repo ni `.env`.
+
+### 11.1 Hechos verificados (código y Meta, 11 oct)
+- **Dónde vive:** tabla `WorkspaceMetaConnection` (una fila por `workspaceId`). Token en `accessTokenCipher/Iv/Tag` (AES-GCM vía `encrypt`/`decrypt` de `src/lib/crypto.ts`, clave `KEYS_ENCRYPTION_KEY`). Campos ya existentes: `igBusinessId`, `pageId`, `tokenExpiresAt`, `connectedAt`, `connectedByUserId`. Repositorio: `saveMetaTokenConnection`, `getMetaConnectionView` (sin secretos), `getMetaConnectionRaw` (solo servidor), `disconnectMeta`.
+- **Cómo entra hoy:** únicamente por OAuth de **Facebook Login** (`/api/workspace/meta/oauth/start` + `/callback`; scopes `instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement`; llamadas a `graph.facebook.com/v19.0`, `me/accounts`, intercambio a token largo). No existe entrada manual de token.
+- **Desajuste:** el token de Reiner es de **Instagram Login** (permisos `instagram_business_basic`, `instagram_business_content_publish`, `instagram_business_manage_insights`; app/caso de uso Instagram). No se obtiene por `me/accounts` ni está ligado a una Página, y el motor actual (`publish/instagram/route.ts`) asume `graph.facebook.com` + `igBusinessId` de Facebook Login. **No asumir que un token funciona contra el otro host: el adaptador debe elegir por tipo de conexión.**
+- **App Meta hoy:** un solo caso de uso, "Administrar mensajes y contenido en Instagram". Falta el caso de uso **"Administra todo en tu página"** (publicar contenido/vídeos, moderar, insights de Página): está en el catálogo y **no está agregado** (pendiente de decisión de Reiner). Sin él no hay permisos de Página para publicar en FB. Los nombres exactos de los permisos que concede ese caso de uso (p. ej. `pages_manage_posts`) **no están verificados**: confirmar en la pantalla de permisos del caso de uso antes de codificar FB.
+- Duración del token largo (~60 días) y endpoint de renovación de Instagram Login: **no verificados** en docs oficiales (ver 11.5).
+
+### 11.2 Cambios al modelo (solo local/dev; migración remota requiere aprobación)
+- Añadir `WorkspaceMetaConnection.authType` (`'facebook_login'` por defecto para filas existentes | `'instagram_login'`). Migración aditiva, nullable/con default, sin tocar filas actuales.
+- Añadir un segundo token opcional para Facebook (`pageAccessToken*Cipher/Iv/Tag`) **solo cuando se implemente FB** (slice 2, adaptador `facebook`); no crear el campo antes.
+- `igBusinessId` en `instagram_login` = el id de cuenta profesional que devuelve la API de Instagram (se guarda al registrar; no se pide a mano si la API lo devuelve con el token).
+
+### 11.3 Entrada del token (sin exponerlo)
+1. **Endpoint** `PUT /api/workspace/meta/token` (RBAC `canManageContent` o superior; scoped por `workspaceId` del contexto, nunca del body). Body: `{ authType, accessToken, tokenExpiresAt? }`. Valida formato/longitud, **cifra en servidor** con `encrypt`, llama a `saveMetaTokenConnection`, responde solo la vista pública (`MetaConnectionPublicView`). Nunca devuelve ni registra el token; errores sanitizados; `logAudit` con acción `meta.token.saved` sin el valor.
+2. **Validación al guardar:** el servidor prueba el token contra el host del `authType` (consulta mínima de identidad de la cuenta) y guarda `igBusinessId`; si falla, no guarda y devuelve error genérico.
+3. **UI** en Ajustes → Conexión Meta (workspace): campo de contraseña tipo "pegar token" (Reiner lo pega él; el agente nunca lo escribe), selector `authType`, estado conectado/no conectado, fecha de vencimiento, botón Desconectar (`disconnectMeta`). Tokens nunca renderizados de vuelta.
+4. **Fuente del token para Reiner:** su nota en Proton Pass. El token no se copia a `.env*`, scripts ni tests (los tests usan tokens falsos).
+5. Alternativa futura (fuera de v1): OAuth de Instagram Login para clientes (deuda "cuentas de clientes", §9-D2).
+
+### 11.4 Adaptador según `authType`
+- `instagram_login` → host y rutas de Instagram Login; permisos `instagram_business_*`.
+- `facebook_login` → comportamiento actual intacto (`graph.facebook.com`), contrato de `publish/instagram/route.ts` sin cambios.
+- Facebook (feed/historias): requiere Página + caso de uso de Páginas (11.1); queda `blocked` hasta que Reiner lo agregue (§10).
+
+### 11.5 Expiración y renovación
+- Guardar `tokenExpiresAt` siempre que se conozca; si no se conoce, la UI lo marca "vencimiento desconocido".
+- Motor: antes de publicar, si `tokenExpiresAt` ya pasó → estado FAILED con causa "token vencido" (sin reintentos inútiles); aviso en la UI a ≤7 días del vencimiento.
+- Renovación automática: **deuda** (§8). Hasta entonces, renovación manual por Reiner (generar token nuevo y pegarlo). Verificar en docs oficiales de Instagram Login la duración real y el endpoint de refresh antes de implementarla.
+
+### 11.6 Criterios de aceptación
+1. Test: guardar token → fila con `accessTokenCipher` ≠ texto plano; descifra a lo original; la respuesta HTTP no contiene el token.
+2. Test: otro workspace no puede leer ni sobrescribir la conexión (aislamiento).
+3. Test: rol sin `canManageContent` recibe 403; token inválido no guarda nada.
+4. Test: `logAudit` no contiene el token. Búsqueda del valor en logs/respuestas = 0 resultados.
+5. Test: filas existentes (`facebook_login`) siguen publicando igual (no regresión).
+6. Prueba real contra cuenta propia solo con D1 verificado (§10); evidencia sin mostrar el token.
+7. Sin push, merge, deploy ni migración remota.
+
+### 11.7 Lo que sigue bloqueado para Reiner (§10)
+- Decidir si agrega el caso de uso "Administra todo en tu página" a la app (cambia la app Meta; lo hace Reiner o lo autoriza explícitamente).
+- Pegar el token en la UI cuando exista (nunca en chat).
+- Decisión de staging: en qué entorno se guarda el token primero (recomendado: local/staging antes que producción).
