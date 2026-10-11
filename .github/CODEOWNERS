@@ -1,0 +1,10 @@
+# Todo cambio a reglas del orquestador, CI, scripts de gate y panel exige revisión de Reiner.
+# Para que sea obligatorio: GitHub > Settings > Branches > regla de protección > "Require review from Code Owners".
+/AGENTS.md                         @reinerramos2702-jpg
+/.opencode/                        @reinerramos2702-jpg
+/.github/                          @reinerramos2702-jpg
+/scripts/gate.mjs                  @reinerramos2702-jpg
+/scripts/panel-check.mjs           @reinerramos2702-jpg
+/scripts/rules-guard.mjs           @reinerramos2702-jpg
+/.rai-rules.lock                   @reinerramos2702-jpg
+/docs/planning/panel-control.html  @reinerramos2702-jpg

@@ -25,6 +25,8 @@ if (!/id="updated-date"/.test(html)) errors.push('Falta <span id="updated-date">
 
 const parts = html.split(/<div class="check-item/).slice(1);
 const ids = new Map();
+const refs = [];
+const PHASES = ['ready', 'in_progress', 'qa', 'needs_decision', 'failed', 'unverified'];
 let done = 0;
 parts.forEach((chunk, idx) => {
   const head = chunk.slice(0, chunk.indexOf('>'));
@@ -49,9 +51,25 @@ parts.forEach((chunk, idx) => {
     if (ids.has(id)) errors.push(`[${title}] data-id duplicado: ${id}`);
     ids.set(id, title);
   }
+  // Atributos aditivos opcionales (convención en docs/planning/GUARDRAILS-ORQUESTADOR.md)
+  const phase = head.match(/data-phase="([^"]*)"/)?.[1];
+  if (phase && !PHASES.includes(phase)) errors.push(`[${title}] data-phase inválido: ${phase}`);
+  const attempts = head.match(/data-attempts="([^"]*)"/)?.[1];
+  if (attempts !== undefined && !/^\d+$/.test(attempts)) errors.push(`[${title}] data-attempts no numérico: ${attempts}`);
+  const commit = head.match(/data-commit="([^"]*)"/)?.[1];
+  if (commit && !/^[0-9a-f]{7,40}$/.test(commit)) errors.push(`[${title}] data-commit inválido: ${commit}`);
+  const deps = head.match(/data-depends-on="([^"]*)"/)?.[1];
+  if (deps) refs.push([title, id, deps.split(',').map((d) => d.trim()).filter(Boolean)]);
   if (status === 'done' && !/(\d+\/\d+|commit|verific|evidencia|[0-9a-f]{7})/i.test(chunk.slice(0, 6000)))
     warnings.push(`[${title}] hecho sin evidencia detectable (commit/tests/verificación)`);
 });
+
+for (const [title, id, list] of refs) {
+  for (const d of list) {
+    if (!ids.has(d)) errors.push(`[${title}] data-depends-on apunta a un id inexistente: ${d}`);
+    if (id && d === id) errors.push(`[${title}] data-depends-on se refiere a sí mismo`);
+  }
+}
 
 console.log(`panel-check: ${parts.length} items, ${done} hechos, ${errors.length} errores, ${warnings.length} avisos`);
 errors.forEach((e) => console.error(`ERROR  ${e}`));
