@@ -81,3 +81,8 @@
 - Prueba en copia aislada (sin `.env.local`/`.env.production`) con Next dev + DB staging por 6543: `/login` 200, `/registro` 200, registro sin invitación 403, registro super admin 200, login mala clave 401, login buena 200 + cookie `rai_session`. Usuario de prueba borrado (staging `User` = 0).
 - Observación: no existe `src/middleware.ts`; rutas de página (ej. `/contactos`) devuelven 200 sin cookie. La protección vive en la API/cliente. Revisar si es decisión de producto (candidato a pendiente de seguridad).
 - Skill `cierre-continuidad-sesion` con sección de nomenclatura: ya guardada (verificado en skills sincronizadas).
+
+### Decisión 11 oct 2026 — middleware (B)
+- Reiner eligió B: proteger páginas en servidor. Spec en `docs/SPEC-middleware-proteccion-paginas.md` (v1.0). Pendiente de ejecución; nada enviado a OpenCode.
+- Facebook: Página "RAI Agency" creada y con sitio web raiagency.net (id 61595435214179). Vincular IG @raiagency__ bloqueado: Business Suite abre el portafolio "Vida Fácil" (no el de Reiner) y pide verificación de cuenta → decisión/acción de Reiner.
+- Verificado: `.env.local` local solo contiene `VERCEL_OIDC_TOKEN` (no apunta a ninguna base).
