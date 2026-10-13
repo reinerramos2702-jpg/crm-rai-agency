@@ -482,6 +482,14 @@ footer{
       </div>
       <span class="tag tag-open">P1 y P4 cerrados — espera P2, P3, P5, P6 de Reiner</span>
     </div>
+    <div class="check-item" data-status="pending" data-id="programacion-ig-automatica">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Programar y publicar automático en Instagram (botón Programar + cron)</div>
+        <div class="check-desc">Pedido de Reiner 13 oct: solo Instagram por ahora; el community manager programa un lote, pulsa Programar y el CRM publica solo cada día. Borrador <code>docs/SPEC-programacion-publicacion-instagram.md</code> v0.1 (modelo <code>ScheduledPost</code>, cron protegido, idempotencia, aislamiento por workspace). Requiere: permisos de Meta añadidos (pestaña de Meta congelada, reintentar), URLs públicas de imagen (¿JPEG?), revisar rama remota <code>claude/rai-instagram-crm-automation-ykkwg2</code>. Lote 1 = días 1–15 en <code>Contenido RRSS/Instagram/Plan 31-1102026/salida</code>. Sin implementar; no enviado a OpenCode.</div>
+      </div>
+      <span class="tag tag-open">Spec borrador — falta permisos Meta</span>
+    </div>
     <div class="check-item done" data-status="done" data-id="recuperar-contrasena">
       <div class="checkbox"></div>
       <div class="check-body">
