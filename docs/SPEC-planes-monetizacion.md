@@ -16,7 +16,7 @@
 | P1 | Qué funciones van en Gratis / 34 / 49 / 67 | **CERRADO 12 oct (Reiner aprobó §2b)** |
 | P2 | Periodo del precio (¿mensual?, ¿anual con descuento?) y moneda de cobro | abierto |
 | P3 | Proveedor de cobro (el panel menciona Stripe; Binance y pago móvil también existen) | abierto |
-| P4 | Límites por plan (publicaciones/mes, workspaces, miembros, generación de imágenes, créditos) | abierto |
+| P4 | Límites por plan (publicaciones/mes, workspaces, miembros, generación de imágenes, créditos) | **CERRADO 12 oct (Reiner aprobó tabla §2c); falta definir precio/costo real del crédito de imagen IA** |
 | P5 | ¿Prueba gratis de los planes de pago? ¿Cuántos días? | abierto |
 | P6 | Qué pasa al bajar de plan o dejar de pagar (solo lectura, degradar, borrar) | abierto |
 | P7 | Meta: la app es de RAI (`shared_app`); la revisión de Meta y el volumen limitan cuántos clientes pueden publicar | verificar con Meta |
@@ -34,7 +34,7 @@ Criterio: **gratis = lo que no cuesta dinero por uso y crea el hábito/guarda su
 
 Nota: los topes numéricos (contactos, créditos, cuentas) NO están definidos — son P4.
 
-## 2c. PROPUESTA de topes (P4) — 12 oct 2026, por validar (cifras NO aprobadas)
+## 2c. Topes (P4) — APROBADOS por Reiner 12 oct 2026 (cifras iniciales, ajustables con datos reales)
 
 Cifras de partida para ajustar con el costo real por imagen/IA y los límites de Meta. Un «crédito» = una generación de imagen (costo por crédito por medir).
 
@@ -49,7 +49,7 @@ Cifras de partida para ajustar con el costo real por imagen/IA y los límites de
 | Biblioteca de contenido | 500 MB | 5 GB | 20 GB | 100 GB |
 | Historial de informes | 30 días | 6 meses | 12 meses | ilimitado |
 
-Pendiente de Reiner: aprobar/ajustar cifras, y P2 (periodo/moneda), P3 (cobro), P5 (prueba gratis), P6 (degradación).
+Pendiente: definir el costo real por generación de imagen y fijar 1 crédito = 1 generación (validar margen de 34 USD con 50 créditos midiendo costo real del proveedor de imágenes). Pendiente de Reiner: P2 (periodo/moneda), P3 (cobro), P5 (prueba gratis), P6 (degradación).
 
 ## 3. Diseño técnico propuesto (para validar, no implementado)
 
