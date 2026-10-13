@@ -34,6 +34,23 @@ Criterio: **gratis = lo que no cuesta dinero por uso y crea el hábito/guarda su
 
 Nota: los topes numéricos (contactos, créditos, cuentas) NO están definidos — son P4.
 
+## 2c. PROPUESTA de topes (P4) — 12 oct 2026, por validar (cifras NO aprobadas)
+
+Cifras de partida para ajustar con el costo real por imagen/IA y los límites de Meta. Un «crédito» = una generación de imagen (costo por crédito por medir).
+
+| Tope | Gratis | 34 USD | 49 USD | 67 USD |
+|---|---|---|---|---|
+| Contactos / clientes potenciales | 250 | 2.500 | 10.000 | 50.000 |
+| Usuarios del workspace | 1 | 2 | 3 | 10 |
+| Workspaces | 1 | 1 | 1 | 3 |
+| Cuentas sociales conectadas | 0 (publicación manual) | 1 | 3 | 10 |
+| Publicaciones automáticas / mes | 0 | 30 | 120 | 500 |
+| Créditos de imagen IA / mes | 0 | 50 | 200 | 600 |
+| Biblioteca de contenido | 500 MB | 5 GB | 20 GB | 100 GB |
+| Historial de informes | 30 días | 6 meses | 12 meses | ilimitado |
+
+Pendiente de Reiner: aprobar/ajustar cifras, y P2 (periodo/moneda), P3 (cobro), P5 (prueba gratis), P6 (degradación).
+
 ## 3. Diseño técnico propuesto (para validar, no implementado)
 
 - `Workspace.plan` (`free` | `starter_34` | `pro_49` | `scale_67`; nombres provisionales) + `planStatus` + `planRenewsAt`.
