@@ -19,9 +19,10 @@
 ## Datos (migración local, NO aplicada)
 `prisma/migrations/20261011180000_add_password_reset_and_phone/migration.sql`: `User.phone` (opcional) + tabla `PasswordResetToken`. Se aplica con aprobación de Reiner (staging primero).
 
-## POR DECIDIR (Reiner) — envío real
-- Proveedor de **email** (dominio `raiagency.net` verificado) y de **SMS** (¿o WhatsApp?, común en Venezuela). Cuesta dinero por mensaje y requiere claves que solo pone Reiner.
-- Hasta entonces: en desarrollo/staging el enlace se imprime en la terminal del servidor (`src/lib/notify.ts`).
+## Envío real
+- **Email: Resend (plan gratuito)** — decisión de Reiner («el que sea gratis», 12 oct). Plan gratuito ≈ 3.000 correos/mes (dato de fuente de terceros; confirmar en resend.com/pricing). Requiere: cuenta Resend, dominio `raiagency.net` verificado (DNS) y las variables `RESEND_API_KEY` y `EMAIL_FROM` (solo las pone Reiner; sin clave el código no envía).
+- **SMS: PENDIENTE.** No hay opción gratuita: la prueba de Twilio solo envía a 5 números verificados y con plantillas propias. Opciones de pago (SMS o WhatsApp) por decidir; hasta entonces la vía Teléfono funciona solo en desarrollo (enlace por consola).
+- Sin proveedor: desarrollo/staging imprime el enlace en la terminal; producción no envía (`src/lib/notify.ts`).
 
 ## Tests
 `src/lib/__tests__/auth-forgot-reset.test.ts` (11) + 1 de teléfono en `auth-register.test.ts`. Suite del área: 203/203.

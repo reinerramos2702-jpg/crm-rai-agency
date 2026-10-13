@@ -1,12 +1,12 @@
 /**
  * Envío del enlace de recuperación de contraseña por email o SMS.
  *
- * Proveedores reales (email / SMS): PENDIENTE de decisión y claves de Reiner
- * (ver docs/SPEC-recuperar-contrasena.md). Hasta entonces:
- *  - desarrollo/staging (NODE_ENV !== 'production'): transporte `console` → el enlace
- *    se imprime en la terminal del servidor para poder probar el flujo completo.
- *  - producción sin proveedor configurado: NO envía y devuelve ok:false (nunca imprime
- *    el enlace en logs de producción).
+ * - EMAIL: proveedor Resend (plan gratuito) → se activa con `RESEND_API_KEY` y `EMAIL_FROM`
+ *   (remitente de un dominio verificado en Resend, ej. `RAI Agency <no-reply@raiagency.net>`).
+ *   La clave la pone Reiner en el entorno; nunca va en código ni commits.
+ * - SMS: proveedor PENDIENTE (no hay opción gratuita; ver docs/SPEC-recuperar-contrasena.md).
+ * - Sin proveedor: desarrollo/staging (NODE_ENV !== 'production') imprime el enlace en la
+ *   terminal del servidor; producción NO envía ni imprime el enlace (devuelve ok:false).
  */
 export type ResetChannel = 'email' | 'sms';
 
@@ -17,6 +17,22 @@ export interface ResetMessage {
 }
 
 export async function sendPasswordReset(msg: ResetMessage): Promise<{ ok: boolean }> {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.EMAIL_FROM;
+  if (msg.channel === 'email' && apiKey && from) {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from,
+        to: [msg.to],
+        subject: 'Restablece tu contraseña — RAI Agency',
+        text: `Recibimos una solicitud para restablecer tu contraseña.\n\nAbre este enlace (vence en 30 minutos):\n${msg.link}\n\nSi no fuiste tú, ignora este mensaje.`,
+        html: `<p>Recibimos una solicitud para restablecer tu contraseña.</p><p><a href="${msg.link}">Crear una contraseña nueva</a> (vence en 30 minutos).</p><p>Si no fuiste tú, ignora este mensaje.</p>`,
+      }),
+    });
+    return { ok: res.ok };
+  }
   if (process.env.NODE_ENV !== 'production') {
     // eslint-disable-next-line no-console
     console.log(`[auth] Enlace de recuperación (${msg.channel} → ${msg.to}): ${msg.link}`);

@@ -13,7 +13,7 @@
 
 | # | Pregunta | Estado |
 |---|----------|--------|
-| P1 | Qué funciones van en Gratis / 34 / 49 / 67 | abierto (Reiner) |
+| P1 | Qué funciones van en Gratis / 34 / 49 / 67 | **CERRADO 12 oct (Reiner aprobó §2b)** |
 | P2 | Periodo del precio (¿mensual?, ¿anual con descuento?) y moneda de cobro | abierto |
 | P3 | Proveedor de cobro (el panel menciona Stripe; Binance y pago móvil también existen) | abierto |
 | P4 | Límites por plan (publicaciones/mes, workspaces, miembros, generación de imágenes, créditos) | abierto |
@@ -21,9 +21,9 @@
 | P6 | Qué pasa al bajar de plan o dejar de pagar (solo lectura, degradar, borrar) | abierto |
 | P7 | Meta: la app es de RAI (`shared_app`); la revisión de Meta y el volumen limitan cuántos clientes pueden publicar | verificar con Meta |
 
-## 2b. PROPUESTA de Claude para P1 (11 oct 2026, por validar con Reiner)
+## 2b. Reparto por plan — APROBADO por Reiner el 12 oct 2026 (P1 cerrado)
 
-Criterio: **gratis = lo que no cuesta dinero por uso y crea el hábito/guarda sus datos**; **de pago = lo que consume IA, imágenes o APIs externas, o ahorra horas (automatización)**. Basada en los nombres de módulos del CRM; confirmar qué hace cada uno antes de cerrar.
+Criterio: **gratis = lo que no cuesta dinero por uso y crea el hábito/guarda sus datos**; **de pago = lo que consume IA, imágenes o APIs externas, o ahorra horas (automatización)**. Basada en los nombres de módulos del CRM; antes de implementar se confirma qué hace cada módulo (ajustes menores no reabren P1).
 
 | Plan | Qué incluye (propuesta) |
 |---|---|
