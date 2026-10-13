@@ -50,7 +50,7 @@ Hallazgos verificados:
 
 ## 7. Plan por cortes (propuesto; no implementado; sin enviar a OpenCode)
 
-Corte A — Configuración real por workspace (rápido, base de todo):
+Corte A — Configuración real por workspace (rápido, base de todo) — **HECHO local 13 oct, rama `rai-feat-automatizacion-config`, commit 42a5562** (columna `Settings.contentPlannerConfig`, migración `20261013120000_add_content_planner_config` pendiente de aplicar en staging por Reiner, API `/api/content-planner/config`, hook `useContentPlannerSync`, interruptor deshabilitado «Próximamente» hasta corte B; 25 tests nuevos, 233 en total, `tsc` limpio; pendiente verificación visual en localhost PC y móvil):
 - Guardar handle, hora por defecto, zona horaria, marca y reglas en BD por workspace (nuevo modelo o JSON en `Workspace`/ajustes), con migración; el handle sale de la conexión Meta, sin valores por defecto de otros negocios.
 - Corregir el interruptor y el estado visual; migrar lo que haya en `localStorage` una sola vez.
 
