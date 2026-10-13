@@ -345,6 +345,8 @@ model Settings {
   automationsEnabled       Boolean   @default(true) // kill switch del workspace: pausar sus flujos
   automationNotifyEmail    String? // destino de notificaciones internas (alertas a gerente)
   aiBuilderProvider        String? // 'anthropic' | null - si hay API key configurada en /keys
+  // Configuración del planificador de contenido (/automatizacion): marca, reglas, horario
+  contentPlannerConfig     Json?
   updatedAt                DateTime  @updatedAt
 
   workspace                Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)

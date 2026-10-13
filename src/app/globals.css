@@ -2191,3 +2191,20 @@ html * {
 .auth-seg button:hover { color: #fff !important; background: rgba(255, 255, 255, 0.05) !important; }
 .auth-seg button.is-on { color: #1a1405 !important; background: linear-gradient(135deg, #f4d97f, #d4af37 55%, #a9842e) !important; box-shadow: 0 6px 16px -8px rgba(232, 185, 35, 0.7); }
 @media (prefers-reduced-motion: reduce) { .auth-seg button { transition: none; } }
+
+/* ============================================
+   /automatizacion — interruptor, chips y estado de guardado
+   (button.rai-switch con !important: el selector global de botones tiene especificidad alta)
+   ============================================ */
+.rai-switch-row{display:flex;gap:14px;align-items:flex-start;margin-top:16px;padding-top:14px;border-top:1px solid var(--rai-border)}
+button.rai-switch{position:relative;flex:0 0 auto;width:44px !important;height:24px !important;min-width:44px !important;padding:0 !important;border-radius:999px !important;border:1px solid var(--rai-border) !important;background:var(--rai-card) !important;cursor:pointer;transition:background .2s,border-color .2s;box-shadow:none !important}
+button.rai-switch .rai-switch-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--rai-muted);transition:transform .2s,background .2s}
+button.rai-switch.is-on{background:var(--rai-gold) !important;border-color:var(--rai-gold) !important}
+button.rai-switch.is-on .rai-switch-knob{transform:translateX(20px);background:#14141C}
+button.rai-switch:disabled{opacity:.55;cursor:not-allowed}
+button.rai-switch:focus-visible{outline:2px solid var(--rai-gold);outline-offset:2px}
+.rai-soon-tag{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;color:var(--rai-gold);border:1px solid var(--rai-gold);vertical-align:middle}
+.rai-conn-chip{margin-left:auto;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;color:var(--rai-muted);border:1px solid var(--rai-border)}
+.rai-conn-chip.is-ok{color:#2ecc71;border-color:#2ecc71}
+.rai-sync-status{margin-top:16px;font-size:12px;color:var(--rai-muted)}
+.rai-sync-status.is-error{color:var(--rai-error,#ef4444)}

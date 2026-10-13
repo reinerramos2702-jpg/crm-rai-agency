@@ -25,6 +25,9 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import { EMPTY_CONFIG, type ContentPlannerConfig } from '@/lib/content-planner-config';
+import { apiFetch } from '@/lib/client-api';
+import { useContentPlannerSync } from './useContentPlannerSync';
 
 type CampaignStatus = 'planning' | 'generating' | 'review' | 'scheduled' | 'publishing' | 'completed';
 type ContentType = 'carousel' | 'reel' | 'post';
@@ -134,32 +137,33 @@ export default function ContentIGTab() {
   const [selectedModel, setSelectedModel] = useState(() => loadFromStorage('selectedModel', 'gemini-2.5-flash'));
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const [publishTime, setPublishTime] = useState(() => loadFromStorage('publishTime', '20:47'));
-  const [igHandle, setIgHandle] = useState(() => loadFromStorage('igHandle', '@Hotel_mpv'));
-  const [autoPublish, setAutoPublish] = useState(() => loadFromStorage('autoPublish', false));
+  const [publishTime, setPublishTime] = useState<string>(EMPTY_CONFIG.publishTime);
+  const [igHandle, setIgHandle] = useState<string>(EMPTY_CONFIG.igHandle);
+  const [timezone, setTimezone] = useState<string>(EMPTY_CONFIG.timezone);
+  const [autoPublish, setAutoPublish] = useState<boolean>(EMPTY_CONFIG.autoPublish);
 
   // Brand & Business Config
-  const [businessName, setBusinessName] = useState(() => loadFromStorage('businessName', ''));
-  const [businessType, setBusinessType] = useState(() => loadFromStorage('businessType', ''));
-  const [businessLocation, setBusinessLocation] = useState(() => loadFromStorage('businessLocation', ''));
-  const [businessPhone, setBusinessPhone] = useState(() => loadFromStorage('businessPhone', ''));
-  const [businessWhatsApp, setBusinessWhatsApp] = useState(() => loadFromStorage('businessWhatsApp', ''));
-  const [businessWebsite, setBusinessWebsite] = useState(() => loadFromStorage('businessWebsite', ''));
-  const [brandColors, setBrandColors] = useState(() => loadFromStorage('brandColors', ''));
-  const [brandTone, setBrandTone] = useState(() => loadFromStorage('brandTone', 'amigable'));
-  const [brandDocName, setBrandDocName] = useState(() => loadFromStorage('brandDocName', ''));
-  const [brandDocContent, setBrandDocContent] = useState(() => loadFromStorage('brandDocContent', ''));
+  const [businessName, setBusinessName] = useState<string>(EMPTY_CONFIG.businessName);
+  const [businessType, setBusinessType] = useState<string>(EMPTY_CONFIG.businessType);
+  const [businessLocation, setBusinessLocation] = useState<string>(EMPTY_CONFIG.businessLocation);
+  const [businessPhone, setBusinessPhone] = useState<string>(EMPTY_CONFIG.businessPhone);
+  const [businessWhatsApp, setBusinessWhatsApp] = useState<string>(EMPTY_CONFIG.businessWhatsApp);
+  const [businessWebsite, setBusinessWebsite] = useState<string>(EMPTY_CONFIG.businessWebsite);
+  const [brandColors, setBrandColors] = useState<string>(EMPTY_CONFIG.brandColors);
+  const [brandTone, setBrandTone] = useState<string>(EMPTY_CONFIG.brandTone);
+  const [brandDocName, setBrandDocName] = useState<string>(EMPTY_CONFIG.brandDocName);
+  const [brandDocContent, setBrandDocContent] = useState<string>(EMPTY_CONFIG.brandDocContent);
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>(() => loadFromStorage('uploadedPhotos', []));
-  const [photoMode, setPhotoMode] = useState(() => loadFromStorage('photoMode', 'mixed'));
-  const [logoMode, setLogoMode] = useState(() => loadFromStorage('logoMode', 'manual'));
-  const [targetAudience, setTargetAudience] = useState(() => loadFromStorage('targetAudience', ''));
-  const [services, setServices] = useState(() => loadFromStorage('services', ''));
-  const [competitors, setCompetitors] = useState(() => loadFromStorage('competitors', ''));
-  const [contentNotes, setContentNotes] = useState(() => loadFromStorage('contentNotes', ''));
+  const [photoMode, setPhotoMode] = useState<string>(EMPTY_CONFIG.photoMode);
+  const [logoMode, setLogoMode] = useState<string>(EMPTY_CONFIG.logoMode);
+  const [targetAudience, setTargetAudience] = useState<string>(EMPTY_CONFIG.targetAudience);
+  const [services, setServices] = useState<string>(EMPTY_CONFIG.services);
+  const [competitors, setCompetitors] = useState<string>(EMPTY_CONFIG.competitors);
+  const [contentNotes, setContentNotes] = useState<string>(EMPTY_CONFIG.contentNotes);
 
   // Brand Language Rules
   interface BrandRule { forbidden: string; replacement: string; reason: string; }
-  const [brandRules, setBrandRules] = useState<BrandRule[]>(() => loadFromStorage('brandRules', []));
+  const [brandRules, setBrandRules] = useState<BrandRule[]>(EMPTY_CONFIG.brandRules);
   const [newForbidden, setNewForbidden] = useState('');
   const [newReplacement, setNewReplacement] = useState('');
   const [newReason, setNewReason] = useState('');
@@ -171,27 +175,51 @@ export default function ContentIGTab() {
   useEffect(() => { saveToStorage('chatMessages', chatMessages); }, [chatMessages]);
   useEffect(() => { saveToStorage('chatInput', chatInput); }, [chatInput]);
   useEffect(() => { saveToStorage('selectedModel', selectedModel); }, [selectedModel]);
-  useEffect(() => { saveToStorage('publishTime', publishTime); }, [publishTime]);
-  useEffect(() => { saveToStorage('igHandle', igHandle); }, [igHandle]);
-  useEffect(() => { saveToStorage('autoPublish', autoPublish); }, [autoPublish]);
-  useEffect(() => { saveToStorage('businessName', businessName); }, [businessName]);
-  useEffect(() => { saveToStorage('businessType', businessType); }, [businessType]);
-  useEffect(() => { saveToStorage('businessLocation', businessLocation); }, [businessLocation]);
-  useEffect(() => { saveToStorage('businessPhone', businessPhone); }, [businessPhone]);
-  useEffect(() => { saveToStorage('businessWhatsApp', businessWhatsApp); }, [businessWhatsApp]);
-  useEffect(() => { saveToStorage('businessWebsite', businessWebsite); }, [businessWebsite]);
-  useEffect(() => { saveToStorage('brandColors', brandColors); }, [brandColors]);
-  useEffect(() => { saveToStorage('brandTone', brandTone); }, [brandTone]);
-  useEffect(() => { saveToStorage('brandDocName', brandDocName); }, [brandDocName]);
-  useEffect(() => { saveToStorage('brandDocContent', brandDocContent); }, [brandDocContent]);
   useEffect(() => { saveToStorage('uploadedPhotos', uploadedPhotos); }, [uploadedPhotos]);
-  useEffect(() => { saveToStorage('photoMode', photoMode); }, [photoMode]);
-  useEffect(() => { saveToStorage('logoMode', logoMode); }, [logoMode]);
-  useEffect(() => { saveToStorage('targetAudience', targetAudience); }, [targetAudience]);
-  useEffect(() => { saveToStorage('services', services); }, [services]);
-  useEffect(() => { saveToStorage('competitors', competitors); }, [competitors]);
-  useEffect(() => { saveToStorage('contentNotes', contentNotes); }, [contentNotes]);
-  useEffect(() => { saveToStorage('brandRules', brandRules); }, [brandRules]);
+
+  // Estado de conexión de Instagram (solo lectura; sin secretos).
+  const [metaState, setMetaState] = useState<'unknown' | 'connected' | 'disconnected'>('unknown');
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch('/api/workspace/meta')
+      .then(async (res) => {
+        if (!res.ok) return; // sin permiso o sin datos: queda "sin datos"
+        const v = (await res.json()) as { isConnected?: boolean; igBusinessId?: string | null };
+        if (!cancelled) setMetaState(v.isConnected && v.igBusinessId ? 'connected' : 'disconnected');
+      })
+      .catch(() => { /* indicador opcional */ });
+    return () => { cancelled = true; };
+  }, []);
+  const timezoneOptions = React.useMemo(() => {
+    let all: string[] = [];
+    try {
+      all = (Intl as unknown as { supportedValuesOf?: (k: string) => string[] }).supportedValuesOf?.('timeZone') ?? [];
+    } catch { /* navegador sin soporte */ }
+    return Array.from(new Set([...(all.length ? all : ['UTC']), timezone]));
+  }, [timezone]);
+
+  // Config del planificador: vive en la BD de la empresa (no en localStorage).
+  const plannerConfig: ContentPlannerConfig = {
+    igHandle, publishTime, timezone, autoPublish,
+    businessName, businessType, businessLocation, businessPhone, businessWhatsApp, businessWebsite,
+    brandColors, brandTone, brandDocName, brandDocContent, photoMode, logoMode,
+    targetAudience, services, competitors, contentNotes, brandRules,
+  };
+  const { status: syncStatus, ready: configReady, saveNow } = useContentPlannerSync(plannerConfig, (c) => {
+    setIgHandle(c.igHandle); setPublishTime(c.publishTime); setTimezone(c.timezone); setAutoPublish(c.autoPublish);
+    setBusinessName(c.businessName); setBusinessType(c.businessType); setBusinessLocation(c.businessLocation);
+    setBusinessPhone(c.businessPhone); setBusinessWhatsApp(c.businessWhatsApp); setBusinessWebsite(c.businessWebsite);
+    setBrandColors(c.brandColors); setBrandTone(c.brandTone); setBrandDocName(c.brandDocName);
+    setBrandDocContent(c.brandDocContent); setPhotoMode(c.photoMode); setLogoMode(c.logoMode);
+    setTargetAudience(c.targetAudience); setServices(c.services); setCompetitors(c.competitors);
+    setContentNotes(c.contentNotes); setBrandRules(c.brandRules);
+  });
+  const syncLabel =
+    syncStatus === 'loading' ? 'Cargando configuración…'
+    : syncStatus === 'saving' ? 'Guardando…'
+    : syncStatus === 'saved' ? 'Guardado'
+    : syncStatus === 'error' ? 'No se pudo guardar. Revisa tu conexión o permisos.'
+    : 'Cambios se guardan solos';
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -353,7 +381,10 @@ export default function ContentIGTab() {
           )}
 
           {/* ===== CONFIGURACIÓN COMPLETA ===== */}
-          <div style={{ display: 'grid', gap: 16, maxWidth: 800, marginTop: 24 }}>
+          <div className={`rai-sync-status ${syncStatus === 'error' ? 'is-error' : ''}`} role="status" aria-live="polite">
+            {syncLabel}
+          </div>
+          <div style={{ display: 'grid', gap: 16, maxWidth: 800, marginTop: 12, opacity: configReady ? 1 : 0.55, pointerEvents: configReady ? 'auto' : 'none' }}>
 
             {/* --- Datos del Negocio --- */}
             <div className="card">
@@ -364,11 +395,11 @@ export default function ContentIGTab() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Nombre del negocio</label>
-                  <input className="input" placeholder="Hotel Muévete por Vargas" value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
+                  <input className="input" placeholder="Nombre de tu empresa" value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
                 </div>
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Tipo de negocio</label>
-                  <input className="input" placeholder="Hotel, Restaurante, Tienda..." value={businessType} onChange={(e) => setBusinessType(e.target.value)} />
+                  <input className="input" placeholder="Restaurante, Hotel, Tienda, Clínica…" value={businessType} onChange={(e) => setBusinessType(e.target.value)} />
                 </div>
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Ubicación</label>
@@ -389,11 +420,11 @@ export default function ContentIGTab() {
               </div>
               <div style={{ marginTop: 12 }}>
                 <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Servicios / Productos principales</label>
-                <textarea className="input" rows={3} placeholder="Ej: 6 tipos de habitación, WiFi, AC, traslado aeropuerto incluido, piscina, restaurante..." value={services} onChange={(e) => setServices(e.target.value)} style={{ resize: 'vertical', width: '100%' }} />
+                <textarea className="input" rows={3} placeholder="Ej: lista de productos o servicios principales, qué incluye cada uno, qué los diferencia…" value={services} onChange={(e) => setServices(e.target.value)} style={{ resize: 'vertical', width: '100%' }} />
               </div>
               <div style={{ marginTop: 12 }}>
                 <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Cliente ideal / Público objetivo</label>
-                <textarea className="input" rows={2} placeholder="Ej: Viajeros 25-55 años, familias, parejas, viajeros de negocios que buscan hotel cerca del aeropuerto..." value={targetAudience} onChange={(e) => setTargetAudience(e.target.value)} style={{ resize: 'vertical', width: '100%' }} />
+                <textarea className="input" rows={2} placeholder="Ej: edad, intereses, ciudad, qué problema resuelves para ellos…" value={targetAudience} onChange={(e) => setTargetAudience(e.target.value)} style={{ resize: 'vertical', width: '100%' }} />
               </div>
               <div style={{ marginTop: 12 }}>
                 <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Competidores principales (opcional)</label>
@@ -525,22 +556,45 @@ export default function ContentIGTab() {
             <div className="card">
               <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, fontSize: 15 }}>
                 <Instagram size={16} style={{ color: '#E4405F' }} /> Configuración de Instagram
+                <span className={`rai-conn-chip ${metaState === 'connected' ? 'is-ok' : ''}`}>
+                  {metaState === 'connected' ? 'Instagram conectado' : metaState === 'disconnected' ? 'Instagram sin conectar' : 'Conexión: sin datos'}
+                </span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
                 <div>
-                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Handle de Instagram</label>
+                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Cuenta de Instagram</label>
                   <input className="input" placeholder="@tu_cuenta" value={igHandle} onChange={(e) => setIgHandle(e.target.value)} />
                 </div>
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Hora de publicación por defecto</label>
                   <input className="input" type="time" value={publishTime} onChange={(e) => setPublishTime(e.target.value)} />
                 </div>
+                <div>
+                  <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Zona horaria</label>
+                  <select className="input" value={timezone} onChange={(e) => setTimezone(e.target.value)}>
+                    {timezoneOptions.map((z) => <option key={z} value={z}>{z}</option>)}
+                  </select>
+                </div>
               </div>
-              <div className="row" style={{ gap: 8, alignItems: 'center', marginTop: 12 }}>
-                <input type="checkbox" checked={autoPublish} onChange={(e) => setAutoPublish(e.target.checked)} id="auto-publish" />
-                <label htmlFor="auto-publish" className="muted" style={{ fontSize: 13 }}>
-                  Publicación automática vía API de Instagram (requiere token configurado)
-                </label>
+              <div className="rai-switch-row">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={autoPublish}
+                  aria-label="Publicación automática en Instagram"
+                  disabled
+                  className={`rai-switch ${autoPublish ? 'is-on' : ''}`}
+                >
+                  <span className="rai-switch-knob" />
+                </button>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>
+                    Publicación automática en Instagram <span className="rai-soon-tag">Próximamente</span>
+                  </div>
+                  <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
+                    Al activarla, el CRM publicará cada día lo que dejes programado, sin que tengas que entrar. Requiere conectar tu cuenta de Instagram Business.
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -579,15 +633,15 @@ export default function ContentIGTab() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr auto', gap: 8, alignItems: 'end' }}>
                 <div>
                   <label className="muted" style={{ fontSize: 11, display: 'block', marginBottom: 2 }}>Palabra prohibida</label>
-                  <input className="input" placeholder="cuarto" value={newForbidden} onChange={(e) => setNewForbidden(e.target.value)} style={{ fontSize: 13 }} />
+                  <input className="input" placeholder="barato" value={newForbidden} onChange={(e) => setNewForbidden(e.target.value)} style={{ fontSize: 13 }} />
                 </div>
                 <div>
                   <label className="muted" style={{ fontSize: 11, display: 'block', marginBottom: 2 }}>Reemplazo</label>
-                  <input className="input" placeholder="habitación" value={newReplacement} onChange={(e) => setNewReplacement(e.target.value)} style={{ fontSize: 13 }} />
+                  <input className="input" placeholder="accesible" value={newReplacement} onChange={(e) => setNewReplacement(e.target.value)} style={{ fontSize: 13 }} />
                 </div>
                 <div>
                   <label className="muted" style={{ fontSize: 11, display: 'block', marginBottom: 2 }}>Razón (opcional)</label>
-                  <input className="input" placeholder="Más profesional para hotelería" value={newReason} onChange={(e) => setNewReason(e.target.value)} style={{ fontSize: 13 }} />
+                  <input className="input" placeholder="Suena a descuento, no a calidad" value={newReason} onChange={(e) => setNewReason(e.target.value)} style={{ fontSize: 13 }} />
                 </div>
                 <button
                   onClick={() => {
@@ -612,7 +666,7 @@ export default function ContentIGTab() {
 
             {/* --- Botón Guardar y Planificar --- */}
             <button
-              onClick={() => setView('planner')}
+              onClick={async () => { await saveNow(); setView('planner'); }}
               style={{
                 width: '100%',
                 padding: '14px 24px',
