@@ -63,4 +63,6 @@ Corte C — Interfaz (mejora completa):
 - Rediseño de `/automatizacion` en pasos o pestañas (Marca, Instagram, Reglas, Contexto) con tarjetas más ligeras; vista de calendario con tarjeta por día y estado visible; botón «Programar lote» con resumen y confirmación; indicador de conexión Meta (conectado / expirado).
 - Visible en móvil (localhost móvil) y PC; sin efectos de desenfoque.
 
+Reconciliación 13 oct: el disparador del corte B NO es `vercel.json` `crons` sino D4 de `SPEC-publicacion-contenido-ig-fb.md` (GitHub Actions + `run-due` con `CRON_SECRET`; Hobby limita la frecuencia). El slice 7 de esa spec (`BrandProfile`) se sustituye por `Settings.contentPlannerConfig` (corte A). Los carruseles entran en alcance (esa spec los excluía). Detalle en `docs/planning/PROMPT-MAESTRO-OPENCODE.md` §9.7.
+
 Orden recomendado: A → B → C, con evidencia en cada corte (tests, `tsc`, captura en PC y móvil). Corte B depende de los permisos de Meta y de URLs públicas de imagen (ver §5).
