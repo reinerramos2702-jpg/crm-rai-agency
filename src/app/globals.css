@@ -2580,3 +2580,55 @@ button.rai-tour-btn:focus-visible,button.rai-tour-x:focus-visible{outline:2px so
 .rai-toptabs{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .rai-toptabs::-webkit-scrollbar{display:none}
 .rai-toptabs > button{flex:0 0 auto;white-space:nowrap}
+
+/* ============================================
+   PROGRAMACIÓN DE LOTE (Corte B) — sin blur, solo tokens, animación transform/opacity
+   ============================================ */
+.rai-sched-mode{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:9px 12px;border-radius:12px;border:1px dashed color-mix(in srgb,var(--rai-purple) 55%,var(--rai-border));background:color-mix(in srgb,var(--rai-purple) 8%,transparent);font-size:12px;color:var(--rai-muted);overflow-wrap:anywhere}
+.rai-sched-mode i{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--rai-purple)}
+.rai-sched-mode.is-warn{border-color:color-mix(in srgb,var(--rai-warning) 60%,var(--rai-border));background:color-mix(in srgb,var(--rai-warning) 9%,transparent)}
+.rai-sched-mode.is-warn i{background:var(--rai-warning)}
+
+.rai-day.is-selected{border-color:var(--rai-gold);box-shadow:0 0 0 1px var(--rai-gold)}
+.rai-sched-chip{display:grid;gap:4px;margin-top:2px;padding:8px 9px;border-radius:10px;border:1px solid color-mix(in srgb,var(--sc) 40%,var(--rai-border));background:color-mix(in srgb,var(--sc) 9%,transparent);cursor:default;min-width:0}
+.rai-sched-state{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--sc)}
+.rai-sched-state i{width:6px;height:6px;border-radius:50%;background:var(--sc)}
+.rai-sched-when{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--rai-muted)}
+.rai-sched-err{font-size:11px;line-height:1.35;color:var(--rai-error);overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+button.rai-sched-act{display:inline-flex !important;align-items:center;justify-content:center !important;gap:5px;width:100%;padding:5px 8px !important;border-radius:8px !important;font-size:11px !important;font-weight:700;background:transparent !important;color:var(--rai-text) !important;border:1px solid var(--rai-border) !important;cursor:pointer;min-height:28px}
+@media (hover:hover){button.rai-sched-act:hover{border-color:var(--rai-gold) !important;color:var(--rai-gold) !important}}
+
+.rai-sheet-backdrop{position:fixed;inset:0;z-index:1100;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(6,6,12,.78);animation:raiFade .16s ease}
+[data-theme="light"] .rai-sheet-backdrop{background:rgba(40,32,16,.55)}
+.rai-sheet{width:100%;max-width:480px;max-height:92vh;overflow:auto;display:grid;gap:14px;padding:22px;border-radius:20px;border:1px solid var(--rai-border);background:linear-gradient(180deg,color-mix(in srgb,var(--rai-gold) 6%,var(--rai-card)),var(--rai-card) 38%);box-shadow:0 24px 70px rgba(0,0,0,.45);animation:raiRise .22s ease}
+.rai-sheet-head{display:flex;align-items:center;gap:12px}
+.rai-sheet-head h3{margin:0;font-size:18px;font-weight:800;letter-spacing:-.01em}
+.rai-sheet-head p{margin:2px 0 0;font-size:12px;color:var(--rai-muted);overflow-wrap:anywhere}
+.rai-sheet-head > div{flex:1;min-width:0}
+.rai-sheet-ico{flex:0 0 auto;display:grid;place-items:center;width:38px;height:38px;border-radius:12px;color:var(--rai-gold);background:color-mix(in srgb,var(--rai-gold) 14%,transparent);border:1px solid color-mix(in srgb,var(--rai-gold) 40%,var(--rai-border))}
+button.rai-sheet-x{display:grid !important;place-items:center;width:32px;height:32px;padding:0 !important;border-radius:10px !important;background:transparent !important;border:1px solid var(--rai-border) !important;color:var(--rai-muted) !important;cursor:pointer}
+.rai-sheet-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rai-sheet-grid > div{display:grid;gap:2px;padding:12px;border-radius:14px;border:1px solid var(--rai-border);background:color-mix(in srgb,var(--rai-gold) 5%,transparent);text-align:center;min-width:0}
+.rai-sheet-grid strong{font-size:22px;font-weight:800;color:var(--rai-gold);line-height:1.1;overflow-wrap:anywhere}
+.rai-sheet-grid span{font-size:11px;color:var(--rai-muted);overflow-wrap:anywhere}
+.rai-sheet-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.rai-sheet-list li{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:8px 0;border-bottom:1px solid color-mix(in srgb,var(--rai-border) 70%,transparent)}
+.rai-sheet-list li span{color:var(--rai-muted);flex:0 0 auto}
+.rai-sheet-list li b{font-weight:600;text-align:right;overflow-wrap:anywhere;min-width:0}
+.rai-sheet-note{display:flex;gap:8px;align-items:flex-start;margin:0;padding:10px 12px;border-radius:12px;font-size:12px;line-height:1.45;color:var(--rai-muted);border:1px solid var(--rai-border);background:color-mix(in srgb,var(--rai-purple) 8%,transparent);overflow-wrap:anywhere}
+.rai-sheet-note svg{flex:0 0 auto;margin-top:2px}
+.rai-sheet-note.is-warn{border-color:color-mix(in srgb,var(--rai-warning) 55%,var(--rai-border));background:color-mix(in srgb,var(--rai-warning) 9%,transparent);color:var(--rai-text)}
+.rai-sheet-note.is-err{border-color:color-mix(in srgb,var(--rai-error) 55%,var(--rai-border));background:color-mix(in srgb,var(--rai-error) 9%,transparent);color:var(--rai-text)}
+.rai-sheet-skips{margin:6px 0 0 18px;padding:0;font-size:12px;color:var(--rai-muted)}
+.rai-sheet-done p{margin:0 0 8px;font-size:14px}
+.rai-sheet-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+button.rai-sheet-btn{display:inline-flex !important;align-items:center;justify-content:center !important;gap:8px;min-height:40px;padding:0 18px !important;font-size:13px !important;font-weight:700;border-radius:12px !important;cursor:pointer}
+button.rai-sheet-btn:disabled{opacity:.55;cursor:not-allowed}
+@keyframes raiFade{from{opacity:0}to{opacity:1}}
+@keyframes raiRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (max-width:480px){
+  .rai-sheet-backdrop{align-items:flex-end;padding:0}
+  .rai-sheet{max-width:none;border-radius:20px 20px 0 0;padding:18px 16px 20px}
+  .rai-sheet-actions{display:grid;grid-template-columns:1fr 1fr}
+}
+@media (prefers-reduced-motion:reduce){.rai-sheet-backdrop,.rai-sheet{animation:none}}

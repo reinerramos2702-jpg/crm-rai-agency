@@ -27,11 +27,17 @@ import {
   Check,
   ArrowRight,
   HelpCircle,
+  CalendarClock,
+  RotateCcw,
+  Ban,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { EMPTY_CONFIG, type ContentPlannerConfig } from '@/lib/content-planner-config';
 import { apiFetch } from '@/lib/client-api';
 import { useContentPlannerSync } from './useContentPlannerSync';
 import ProductTour, { type TourStep } from './ProductTour';
+import ScheduleBatchDialog from './ScheduleBatchDialog';
+import { useScheduledPosts, type BatchDayInput, type ScheduledPostView } from './useScheduledPosts';
 
 const TOUR_KEY = 'rai-tour-ig-v1';
 
@@ -105,6 +111,47 @@ const STATUS_LABELS: Record<string, string> = {
   published: 'Publicado',
   failed: 'Fallido',
 };
+
+const SCHED_LABELS: Record<ScheduledPostView['status'], string> = {
+  draft: 'Borrador',
+  scheduled: 'Programado',
+  publishing: 'Publicando',
+  published: 'Publicado',
+  failed: 'Falló',
+  cancelled: 'Cancelado',
+};
+
+const SCHED_COLORS: Record<ScheduledPostView['status'], string> = {
+  draft: 'var(--rai-muted)',
+  scheduled: 'var(--rai-gold)',
+  publishing: 'var(--rai-purple)',
+  published: 'var(--rai-success)',
+  failed: 'var(--rai-error)',
+  cancelled: 'var(--rai-muted)',
+};
+
+/** Fecha ISO del día: la del plan si es válida; si no, inicio de campaña + (día-1). */
+function dayIsoDate(startDate: string, day: ContentDay): string | null {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(day.date)) return day.date;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return null;
+  const d = new Date(`${startDate}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + day.day - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function composeCaption(day: ContentDay): string {
+  const parts = [day.caption?.trim(), day.cta?.trim(), day.hashtags?.trim()].filter(Boolean) as string[];
+  // evita duplicar el CTA o los hashtags si el caption ya los trae
+  return parts.filter((p, i) => i === 0 || !parts[0].includes(p)).join('\n\n');
+}
+
+function fmtWhen(iso: string, tz: string): string {
+  try {
+    return new Intl.DateTimeFormat('es', { timeZone: tz, day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(iso));
+  } catch {
+    return iso.slice(0, 16).replace('T', ' ');
+  }
+}
 
 const CFG_SECTION_IDS = ['cfg-negocio', 'cfg-marca', 'cfg-fotos', 'cfg-instagram', 'cfg-reglas', 'cfg-notas'];
 
@@ -317,6 +364,80 @@ export default function ContentIGTab() {
   }
 
   const [tourOpen, setTourOpen] = useState(false);
+
+  // ---- Programación (Corte B): estado real desde BD, por workspace ----
+  const sched = useScheduledPosts(activeCampaign?.id ?? null);
+  const [schedOpen, setSchedOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [nextBusy, setNextBusy] = useState(false);
+
+  const batch = React.useMemo(() => {
+    const valid: BatchDayInput[] = [];
+    const invalid: Array<{ day: number; reason: string }> = [];
+    if (!activeCampaign) return { valid, invalid };
+    for (const d of activeCampaign.days) {
+      const date = dayIsoDate(activeCampaign.startDate, d);
+      const caption = composeCaption(d);
+      const existing = sched.byDay.get(d.day);
+      if (existing && (existing.status === 'published' || existing.status === 'publishing')) continue; // ya resuelto
+      if (!date) { invalid.push({ day: d.day, reason: 'fecha inválida' }); continue; }
+      if (!caption) { invalid.push({ day: d.day, reason: 'sin texto' }); continue; }
+      valid.push({ day: d.day, date, caption, mediaType: d.type === 'carousel' ? 'carousel' : 'image' });
+    }
+    return { valid, invalid };
+  }, [activeCampaign, sched.byDay]);
+
+  // Lo publicado en el servidor se refleja en el estado del día de la campaña.
+  useEffect(() => {
+    if (!activeCampaign) return;
+    const changed = activeCampaign.days.some((d) => {
+      const p = sched.byDay.get(d.day);
+      return (p?.status === 'published' && d.status !== 'published') || (p?.status === 'failed' && d.status === 'approved');
+    });
+    if (!changed) return;
+    const apply = (c: Campaign): Campaign => {
+      const days = c.days.map((d) => {
+        const p = sched.byDay.get(d.day);
+        if (p?.status === 'published') return { ...d, status: 'published' as const };
+        if (p?.status === 'failed' && d.status === 'approved') return { ...d, status: 'failed' as const };
+        return d;
+      });
+      return { ...c, days, published: days.filter((d) => d.status === 'published').length };
+    };
+    setActiveCampaign((c) => (c && c.id === activeCampaign.id ? apply(c) : c));
+    setCampaigns((list) => list.map((c) => (c.id === activeCampaign.id ? apply(c) : c)));
+  }, [sched.byDay, activeCampaign]);
+
+  const confirmBatch = async () => {
+    if (!activeCampaign) return { ok: false, error: 'Sin campaña activa' };
+    return sched.schedule({ campaignRef: activeCampaign.id, time: publishTime, timezone, posts: batch.valid });
+  };
+
+  const publishNext = async () => {
+    const next = [...sched.posts]
+      .filter((p) => p.status === 'scheduled' || p.status === 'draft')
+      .sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt))[0];
+    if (!next) { toast('No hay publicaciones programadas pendientes'); return; }
+    setNextBusy(true);
+    const r = await sched.act(next.id, 'publish-now');
+    setNextBusy(false);
+    if (r.ok) toast.success(`Día ${next.dayNumber} ${sched.mode === 'simulated' ? 'publicado (simulado)' : 'publicado en Instagram'}`);
+    else toast.error(r.error ?? 'No se pudo publicar');
+  };
+
+  const regenerateDay = () => {
+    if (!activeCampaign || selectedDay == null) return;
+    const d = activeCampaign.days.find((x) => x.day === selectedDay);
+    if (!d) return;
+    setChatInput(`Regenera el día ${d.day} (pilar ${d.pillar}, ${CONTENT_TYPE_LABELS[d.type]}): mantén el mismo pilar pero propón un gancho y un caption nuevos.`);
+    setView('planner');
+  };
+
+  const cancelOrRetry = async (post: ScheduledPostView, action: 'cancel' | 'retry') => {
+    const r = await sched.act(post.id, action);
+    if (r.ok) toast.success(action === 'cancel' ? `Día ${post.dayNumber} cancelado` : `Día ${post.dayNumber} reprogramado`);
+    else toast.error(r.error ?? 'No se pudo completar la acción');
+  };
   useEffect(() => {
     let seen = false;
     try {
@@ -925,11 +1046,33 @@ export default function ContentIGTab() {
                   </p>
                 </div>
                 <div className="row" style={{ gap: 8 }}>
-                  <button className="ghost" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                    <RefreshCw size={14} /> Regenerar día
+                  <button
+                    className="ghost"
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
+                    onClick={regenerateDay}
+                    disabled={selectedDay == null}
+                    title={selectedDay == null ? 'Toca un día del calendario para elegirlo' : `Pedir a la IA un nuevo contenido para el día ${selectedDay}`}
+                  >
+                    <RefreshCw size={14} /> {selectedDay == null ? 'Regenerar día' : `Regenerar día ${selectedDay}`}
                   </button>
-                  <button className="primary" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                    <Play size={14} /> Publicar siguiente
+                  <button
+                    className="ghost"
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
+                    onClick={publishNext}
+                    disabled={nextBusy || !sched.posts.some((p) => p.status === 'scheduled' || p.status === 'draft')}
+                    title="Publica ya la siguiente pieza programada"
+                  >
+                    {nextBusy ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />} Publicar siguiente
+                  </button>
+                  <button
+                    className="primary"
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
+                    onClick={() => setSchedOpen(true)}
+                    disabled={batch.valid.length === 0}
+                    data-tour="schedule-btn"
+                    title={batch.valid.length === 0 ? 'No hay piezas pendientes de programar' : 'Programa el lote: el CRM publica solo'}
+                  >
+                    <CalendarClock size={14} /> Programar lote{batch.valid.length > 0 ? ` (${batch.valid.length})` : ''}
                   </button>
                 </div>
               </div>
@@ -944,10 +1087,23 @@ export default function ContentIGTab() {
                 ))}
               </div>
 
+              {sched.mode === 'simulated' && (
+                <p className="rai-sched-mode"><i /> Modo simulado: programar y publicar recorre todo el ciclo sin tocar tu Instagram real.</p>
+              )}
+              {!sched.available && (
+                <p className="rai-sched-mode is-warn"><i /> La programación no está disponible todavía en este entorno (falta aplicar la migración).</p>
+              )}
+
               {/* Calendar grid */}
               <div className="rai-cal-grid">
                 {activeCampaign.days.map((day) => (
-                  <div key={day.day} className="rai-day" style={{ '--pc': PILLAR_COLORS[day.pillar] || 'var(--rai-border)', '--sc': STATUS_COLORS[day.status] } as React.CSSProperties}>
+                  <div
+                    key={day.day}
+                    className={`rai-day${selectedDay === day.day ? ' is-selected' : ''}`}
+                    style={{ '--pc': PILLAR_COLORS[day.pillar] || 'var(--rai-border)', '--sc': STATUS_COLORS[day.status] } as React.CSSProperties}
+                    onClick={() => setSelectedDay((cur) => (cur === day.day ? null : day.day))}
+                    aria-pressed={selectedDay === day.day}
+                  >
                     <div className="rai-day-top">
                       <span className="rai-day-n">{String(day.day).padStart(2, '0')}</span>
                       <span className="rai-day-status"><i />{STATUS_LABELS[day.status]}</span>
@@ -958,6 +1114,24 @@ export default function ContentIGTab() {
                       <span className="rai-tag rai-tag-pillar">{day.pillar}</span>
                       <span className="rai-tag">{CONTENT_TYPE_ICONS[day.type]} {CONTENT_TYPE_LABELS[day.type]}</span>
                     </div>
+                    {(() => {
+                      const p = sched.byDay.get(day.day);
+                      if (!p) return null;
+                      return (
+                        <div className="rai-sched-chip" style={{ '--sc': SCHED_COLORS[p.status] } as React.CSSProperties} onClick={(e) => e.stopPropagation()}>
+                          <span className="rai-sched-state"><i />{SCHED_LABELS[p.status]}{p.simulated && p.status === 'published' ? ' · simulado' : ''}</span>
+                          <span className="rai-sched-when"><CalendarClock size={11} /> {fmtWhen(p.scheduledAt, p.timezone)}</span>
+                          {p.status === 'failed' && p.lastError && <span className="rai-sched-err" title={p.lastError}>{p.lastError}</span>}
+                          {p.status === 'scheduled' && p.attempts > 0 && p.lastError && <span className="rai-sched-err" title={p.lastError}>Reintento pendiente</span>}
+                          {(p.status === 'scheduled' || p.status === 'draft' || p.status === 'failed') && (
+                            <button type="button" className="rai-sched-act" onClick={() => cancelOrRetry(p, 'cancel')} title="Cancelar publicación"><Ban size={11} /> Cancelar</button>
+                          )}
+                          {(p.status === 'failed' || p.status === 'cancelled') && (
+                            <button type="button" className="rai-sched-act" onClick={() => cancelOrRetry(p, 'retry')} title="Volver a programar"><RotateCcw size={11} /> Reintentar</button>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 ))}
               </div>
@@ -1006,6 +1180,20 @@ export default function ContentIGTab() {
           )}
         </div>
       )}
+
+      <ScheduleBatchDialog
+        open={schedOpen}
+        campaignName={activeCampaign?.name ?? ''}
+        days={batch.valid}
+        invalidDays={batch.invalid}
+        igHandle={igHandle}
+        time={publishTime}
+        timezone={timezone}
+        mode={sched.mode}
+        metaConnected={metaState === 'unknown' ? null : metaState === 'connected'}
+        onClose={() => setSchedOpen(false)}
+        onConfirm={confirmBatch}
+      />
 
       <ProductTour steps={tourSteps} open={tourOpen} onClose={closeTour} onStep={onTourStep} />
     </div>

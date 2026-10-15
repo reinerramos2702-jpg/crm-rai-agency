@@ -73,6 +73,7 @@ model Workspace {
   apiKeys           ApiKey[]
   metaConnection    WorkspaceMetaConnection?
   settings          Settings?
+  scheduledPosts    ScheduledPost[]
 
   // Guía de Inicio (/launchpad): overrides manuales para los ítems del checklist
   // que no tienen una condición verificable en la base de datos hoy (ej. "conecta
@@ -980,4 +981,41 @@ model PasswordResetToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+
+// ============================================
+// PUBLICACIÓN PROGRAMADA EN INSTAGRAM (Corte B)
+// El community manager programa un lote; un cron protegido publica cada post
+// cuando llega su hora. Un post = una fila. Ver docs/SPEC-programacion-publicacion-instagram.md.
+// status: draft | scheduled | publishing | published | failed | cancelled
+// ============================================
+model ScheduledPost {
+  id              String    @id @default(cuid())
+  workspaceId     String
+  campaignRef     String? // id local de la campaña del planificador
+  dayNumber       Int? // día dentro de la campaña (idempotencia de programación)
+  caption         String    @db.Text
+  mediaUrls       String[] // URLs públicas (JPEG). Vacío solo en modo simulado.
+  mediaType       String    @default("image") // image | carousel
+  scheduledAt     DateTime
+  timezone        String    @default("UTC")
+  status          String    @default("scheduled")
+  attempts        Int       @default(0)
+  lastError       String?   @db.Text
+  igContainerId   String? // se guarda apenas existe: permite reanudar sin duplicar
+  igMediaId       String?
+  permalink       String?
+  simulated       Boolean   @default(false)
+  lockedAt        DateTime?
+  publishedAt     DateTime?
+  createdByUserId String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, campaignRef, dayNumber])
+  @@index([status, scheduledAt])
+  @@index([workspaceId, scheduledAt])
 }
