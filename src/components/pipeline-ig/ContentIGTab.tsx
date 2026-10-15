@@ -342,7 +342,7 @@ export default function ContentIGTab() {
   const goSection = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   return (
-    <div>
+    <div className="rai-stage">
       {/* Sub-navigation */}
       <div className="rai-subnav" role="tablist" aria-label="Contenido de Instagram">
         {([
@@ -438,6 +438,7 @@ export default function ContentIGTab() {
         <div className="rai-cfg">
           <div className="rai-cfg-head card">
             <div className="rai-cfg-head-main">
+              <div className="rai-eyebrow">Contenido · Instagram</div>
               <div className="rai-cfg-head-title">Configuración de contenido</div>
               <div className="muted" style={{ fontSize: 13 }}>
                 Lo que defines aquí alimenta a la IA y a la publicación diaria. Se guarda solo.
