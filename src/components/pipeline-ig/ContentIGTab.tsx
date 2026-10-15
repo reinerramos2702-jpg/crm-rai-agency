@@ -26,10 +26,14 @@ import {
   X,
   Check,
   ArrowRight,
+  HelpCircle,
 } from 'lucide-react';
 import { EMPTY_CONFIG, type ContentPlannerConfig } from '@/lib/content-planner-config';
 import { apiFetch } from '@/lib/client-api';
 import { useContentPlannerSync } from './useContentPlannerSync';
+import ProductTour, { type TourStep } from './ProductTour';
+
+const TOUR_KEY = 'rai-tour-ig-v1';
 
 type CampaignStatus = 'planning' | 'generating' | 'review' | 'scheduled' | 'publishing' | 'completed';
 type ContentType = 'carousel' | 'reel' | 'post';
@@ -312,6 +316,45 @@ export default function ContentIGTab() {
     setChatLoading(false);
   }
 
+  const [tourOpen, setTourOpen] = useState(false);
+  useEffect(() => {
+    let seen = false;
+    try {
+      seen = localStorage.getItem(TOUR_KEY) === 'done';
+    } catch {
+      seen = false;
+    }
+    if (seen) return;
+    const t = window.setTimeout(() => setTourOpen(true), 1000);
+    return () => window.clearTimeout(t);
+  }, []);
+  const tourSteps: TourStep[] = [
+    { id: 'welcome', view: 'campaigns', title: 'Bienvenido a tu Contenido de Instagram', body: 'En 2 minutos verás cómo dejar tu marca lista y programar tus publicaciones. Puedes salir cuando quieras y volver desde «Ver recorrido».' },
+    { id: 'subnav', view: 'campaigns', target: '[data-tour="subnav"]', placement: 'bottom', title: 'Tus 4 espacios de trabajo', body: 'Mis campañas, Planear contenido, Calendario y Marca y cuenta. Empieza por Marca y cuenta: es lo que hace que la IA hable como tu negocio.' },
+    { id: 'progress', view: 'config', target: '[data-tour="cfg-progress"]', placement: 'left', title: 'Tu avance', body: 'Este anillo muestra cuántas secciones esenciales llevas. Se completa solo a medida que llenas tus datos.' },
+    { id: 'nav', view: 'config', target: '[data-tour="cfg-nav"]', placement: 'right', title: 'Salta entre secciones', body: 'Toca una sección para ir directo. El check verde significa que está lista. Reglas y Notas son opcionales.' },
+    { id: 'negocio', view: 'config', target: '#cfg-negocio .rai-cfg-title', placement: 'bottom', title: 'Datos del negocio', body: 'Nombre, tipo, ubicación y servicios. Todo esto se envía a la IA para que escriba contenido preciso sobre ti.' },
+    { id: 'instagram', view: 'config', target: '#cfg-instagram', placement: 'top', title: 'Tu cuenta y tu horario', body: 'Escribe tu @usuario, la hora a la que quieres publicar cada día y tu zona horaria. El estado de conexión aparece arriba a la derecha de esta tarjeta.' },
+    { id: 'switch', view: 'config', target: '[data-tour="auto-switch"]', placement: 'top', title: 'Publicación automática', body: 'Muy pronto: al activarla, el CRM publicará cada día lo que dejes programado, sin que tengas que entrar. Requiere conectar tu Instagram Business.' },
+    { id: 'save', view: 'config', target: '[data-tour="savebar"]', placement: 'top', title: 'Todo se guarda solo', body: 'Cada cambio se guarda automáticamente. Cuando termines, pulsa «Guardar y planear contenido» para pasar al planificador.' },
+    { id: 'chat', view: 'planner', target: '[data-tour="chat"]', placement: 'right', title: 'Tu planificador con IA', body: 'Cuéntale a la IA sobre tu negocio y armará hasta 30 días de contenido. Puedes elegir el modelo arriba a la derecha.' },
+    { id: 'plan', view: 'planner', target: '[data-tour="plan-preview"]', placement: 'left', title: 'Vista previa del plan', body: 'Aquí aparece el plan en tiempo real: cada fila es un día con su pilar, tipo de pieza y estado.' },
+    { id: 'calendar', view: 'calendar', target: '[data-tour="calendar"]', placement: 'bottom', title: 'Tu calendario', body: 'Aquí revisas, apruebas y programas cada pieza. Los colores indican el estado: pendiente, generado, aprobado o publicado.' },
+    { id: 'done', view: 'config', title: '¡Listo para empezar!', body: 'Completa «Marca y cuenta» y luego planea tu primer mes. Puedes repetir este recorrido cuando quieras con el botón «Ver recorrido».' },
+  ];
+  const onTourStep = (step: TourStep) => {
+    if (step.view) setView(step.view as 'campaigns' | 'planner' | 'calendar' | 'config');
+  };
+  const closeTour = (completed: boolean) => {
+    try {
+      localStorage.setItem(TOUR_KEY, 'done');
+    } catch {
+      /* sin almacenamiento: el recorrido se podrá repetir */
+    }
+    setTourOpen(false);
+    setView(completed ? 'config' : 'campaigns');
+  };
+
   const cfgSections = [
     { id: 'cfg-negocio', label: 'Negocio', done: !!(businessName.trim() && businessType.trim()), hint: 'Nombre y tipo' },
     { id: 'cfg-marca', label: 'Marca', done: !!(brandColors.trim() || brandDocContent.trim()), hint: 'Colores o manual' },
@@ -344,7 +387,8 @@ export default function ContentIGTab() {
   return (
     <div className="rai-stage">
       {/* Sub-navigation */}
-      <div className="rai-subnav" role="tablist" aria-label="Contenido de Instagram">
+      <div className="rai-subnav-row">
+      <div className="rai-subnav" role="tablist" aria-label="Contenido de Instagram" data-tour="subnav">
         {([
           ['campaigns', 'Mis campañas', FolderOpen],
           ['planner', 'Planear contenido', Sparkles],
@@ -362,6 +406,10 @@ export default function ContentIGTab() {
             {key === 'config' && !cfgComplete && <span className="rai-dot" aria-label="Configuración pendiente" />}
           </button>
         ))}
+      </div>
+      <button type="button" className="rai-help-btn" onClick={() => setTourOpen(true)} title="Ver el recorrido guiado">
+        <HelpCircle size={15} /> <span>Ver recorrido</span>
+      </button>
       </div>
 
       {/* ============ VIEW: CAMPAIGNS ============ */}
@@ -446,7 +494,7 @@ export default function ContentIGTab() {
               <div className="rai-cfg-count">{cfgDone} de {cfgRequired.length} secciones esenciales listas</div>
             </div>
             <div className="rai-cfg-head-side">
-              <div className="rai-ring" role="progressbar" aria-valuenow={cfgPct} aria-valuemin={0} aria-valuemax={100} aria-label="Avance de configuración" style={{ '--p': cfgPct } as React.CSSProperties}>
+              <div className="rai-ring" data-tour="cfg-progress" role="progressbar" aria-valuenow={cfgPct} aria-valuemin={0} aria-valuemax={100} aria-label="Avance de configuración" style={{ '--p': cfgPct } as React.CSSProperties}>
                 <span>{cfgPct}%</span>
               </div>
               <div className={`rai-sync-pill ${syncStatus === 'error' ? 'is-error' : ''}`} role="status" aria-live="polite">{syncLabel}</div>
@@ -454,7 +502,7 @@ export default function ContentIGTab() {
           </div>
 
           <div className="rai-cfg-layout">
-            <nav className="rai-cfg-nav" aria-label="Secciones">
+            <nav className="rai-cfg-nav" aria-label="Secciones" data-tour="cfg-nav">
               {cfgSections.map((x) => (
                 <button key={x.id} type="button" className={`rai-cfg-link ${x.done ? 'is-done' : ''} ${activeSection === x.id ? 'is-active' : ''}`} onClick={() => goSection(x.id)}>
                   <span className="rai-cfg-check">{x.done ? <Check size={12} /> : null}</span>
@@ -473,6 +521,7 @@ export default function ContentIGTab() {
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Nombre del negocio</label>
                   <input className="input" placeholder="Nombre de tu empresa" value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
+                  <small className="rai-hint">Así firmará la IA tus textos.</small>
                 </div>
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Tipo de negocio</label>
@@ -518,6 +567,7 @@ export default function ContentIGTab() {
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Colores de marca</label>
                   <input className="input" placeholder="Azul oscuro, dorado, blanco..." value={brandColors} onChange={(e) => setBrandColors(e.target.value)} />
+                  <small className="rai-hint">Sepáralos con comas.</small>
                 </div>
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Tono de comunicación</label>
@@ -641,19 +691,22 @@ export default function ContentIGTab() {
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Cuenta de Instagram</label>
                   <input className="input" placeholder="@tu_cuenta" value={igHandle} onChange={(e) => setIgHandle(e.target.value)} />
+                  <small className="rai-hint">Tu usuario público; con o sin @ funciona.</small>
                 </div>
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Hora de publicación por defecto</label>
                   <input className="input" type="time" value={publishTime} onChange={(e) => setPublishTime(e.target.value)} />
+                  <small className="rai-hint">Hora a la que saldrá cada publicación.</small>
                 </div>
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Zona horaria</label>
                   <select className="input" value={timezone} onChange={(e) => setTimezone(e.target.value)}>
                     {timezoneOptions.map((z) => <option key={z} value={z}>{z}</option>)}
                   </select>
+                  <small className="rai-hint">La de tu audiencia.</small>
                 </div>
               </div>
-              <div className="rai-switch-row">
+              <div className="rai-switch-row" data-tour="auto-switch">
                 <button
                   type="button"
                   role="switch"
@@ -743,7 +796,7 @@ export default function ContentIGTab() {
             </div>
           </div>
 
-          <div className="rai-savebar">
+          <div className="rai-savebar" data-tour="savebar">
             <div className="rai-savebar-info">
               <span className={`rai-sync-dot ${syncStatus === 'error' ? 'is-error' : ''}`} />
               <span>{syncLabel}</span>
@@ -759,7 +812,7 @@ export default function ContentIGTab() {
       {view === 'planner' && (
         <div className="rai-planner">
           {/* Chat area */}
-          <div className="card rai-chat">
+          <div className="card rai-chat" data-tour="chat">
             <div className="rai-chat-head">
               <span className="rai-chat-ico"><MessageSquare size={16} /></span>
               <div className="rai-chat-title">
@@ -814,7 +867,7 @@ export default function ContentIGTab() {
           </div>
 
           {/* Side panel - Plan preview */}
-          <div className="card rai-plan-side">
+          <div className="card rai-plan-side" data-tour="plan-preview">
             <div className="rai-cfg-title" style={{ fontSize: 14 }}>
               <Calendar size={15} style={{ color: 'var(--rai-gold)' }} />
               Vista previa del plan
@@ -857,7 +910,7 @@ export default function ContentIGTab() {
 
       {/* ============ VIEW: CALENDAR ============ */}
       {view === 'calendar' && (
-        <div>
+        <div data-tour="calendar">
           {activeCampaign ? (
             <div>
               <div className="row-between mb-4">
@@ -953,6 +1006,8 @@ export default function ContentIGTab() {
           )}
         </div>
       )}
+
+      <ProductTour steps={tourSteps} open={tourOpen} onClose={closeTour} onStep={onTourStep} />
     </div>
   );
 }

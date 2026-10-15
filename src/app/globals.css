@@ -2519,3 +2519,50 @@ button.rai-subnav-btn{padding:11px 18px !important;border-radius:12px !important
 [data-theme="light"] button.rai-savebar-btn,
 [data-theme="light"] .rai-msg.is-user{color:#FFF8E7 !important}
 [data-theme="light"] button.rai-subnav-btn.is-on .rai-dot{background:#FFF8E7}
+
+/* ============================================
+   Correcciones de colisión + ayuda + recorrido guiado (product tour)
+   ============================================ */
+/* El numeral fantasma chocaba con chips/etiquetas alineados a la derecha → eliminado */
+.rai-cfg-card::after{content:none}
+.rai-cfg-title{flex-wrap:wrap}
+.rai-cfg-title .rai-conn-chip{margin-left:auto;white-space:nowrap}
+.rai-hint{display:block;margin-top:6px;font-size:11px;line-height:1.35;color:var(--rai-muted)}
+
+.rai-subnav-row{display:flex;align-items:stretch;gap:10px;margin-bottom:24px}
+.rai-subnav-row .rai-subnav{flex:1;min-width:0;margin-bottom:0}
+button.rai-help-btn{display:inline-flex !important;align-items:center;gap:8px;flex:0 0 auto;padding:0 16px !important;border-radius:14px !important;border:1px solid color-mix(in srgb,var(--rai-gold) 40%,var(--rai-border)) !important;background:color-mix(in srgb,var(--rai-gold) 8%,transparent) !important;color:var(--rai-gold) !important;font-size:13px !important;font-weight:600 !important;cursor:pointer;white-space:nowrap;box-shadow:none !important;transition:background .2s,color .2s}
+@media (hover:hover){button.rai-help-btn:hover{background:var(--rai-gold) !important;color:#14141C !important}}
+button.rai-help-btn:focus-visible{outline:2px solid var(--rai-gold);outline-offset:2px}
+
+.rai-tour-layer{position:fixed;inset:0;z-index:100000}
+.rai-tour-block{position:fixed;inset:0;background:transparent}
+.rai-tour-dim{position:fixed;inset:0;background:rgba(6,6,12,.78)}
+.rai-tour-spot{position:fixed;border-radius:16px;pointer-events:none;box-shadow:0 0 0 9999px rgba(6,6,12,.76),0 0 0 2px var(--rai-gold-br),0 0 28px 2px color-mix(in srgb,var(--rai-gold-br) 55%,transparent)}
+.rai-tour-card{position:fixed;z-index:1;padding:18px 20px 16px;border-radius:18px;border:1px solid color-mix(in srgb,var(--rai-gold) 45%,var(--rai-border));background:linear-gradient(180deg,color-mix(in srgb,var(--rai-gold) 8%,var(--rai-card)),var(--rai-card) 120px);color:var(--rai-text);box-shadow:0 30px 60px -20px rgba(0,0,0,.85),0 1px 0 color-mix(in srgb,var(--rai-text) 8%,transparent) inset}
+.rai-tour-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.rai-tour-count{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--rai-gold)}
+button.rai-tour-x{display:inline-grid !important;place-items:center;width:28px;height:28px;padding:0 !important;border:0 !important;border-radius:8px !important;background:transparent !important;color:var(--rai-muted) !important;cursor:pointer;box-shadow:none !important}
+button.rai-tour-x:hover{background:color-mix(in srgb,var(--rai-text) 8%,transparent) !important;color:var(--rai-text) !important}
+.rai-tour-title{margin:0 0 6px;font-size:17px;font-weight:800;letter-spacing:-.01em}
+.rai-tour-body{font-size:13.5px;line-height:1.55;color:var(--rai-muted)}
+.rai-tour-dots{display:flex;gap:5px;margin:16px 0 14px}
+.rai-tour-dots i{width:6px;height:6px;border-radius:999px;background:var(--rai-border)}
+.rai-tour-dots i.is-past{background:var(--rai-gold-dim)}
+.rai-tour-dots i.is-on{width:20px;background:var(--rai-gold-br)}
+.rai-tour-actions{display:flex;align-items:center;justify-content:space-between;gap:10px}
+button.rai-tour-btn{display:inline-flex !important;align-items:center;gap:6px;padding:9px 16px !important;border-radius:10px !important;font-size:13px !important;font-weight:700 !important;cursor:pointer;box-shadow:none !important}
+button.rai-tour-btn.is-primary{border:0 !important;color:#14141C !important;background:linear-gradient(135deg,var(--rai-gold-br),var(--rai-gold)) !important}
+button.rai-tour-btn.is-ghost{border:1px solid var(--rai-border) !important;background:transparent !important;color:var(--rai-text) !important}
+button.rai-tour-btn.is-link{border:0 !important;background:transparent !important;color:var(--rai-muted) !important;padding-left:4px !important}
+button.rai-tour-btn:focus-visible,button.rai-tour-x:focus-visible{outline:2px solid var(--rai-gold-br);outline-offset:2px}
+[data-theme="light"] button.rai-tour-btn.is-primary{color:#FFF8E7 !important}
+@media (max-width:640px){
+  button.rai-help-btn span{display:none}
+  button.rai-help-btn{padding:0 12px !important}
+}
+@media (prefers-reduced-motion: no-preference){
+  @keyframes rai-tour-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .rai-tour-card{animation:rai-tour-in .28s ease-out both}
+  .rai-tour-spot{transition:opacity .2s}
+}
