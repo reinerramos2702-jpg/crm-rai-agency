@@ -510,7 +510,7 @@ export default function AutomatizacionPage() {
       )}
 
       {/* Top tabs */}
-      <div className="row mb-6" style={{ gap: 8, borderBottom: '1px solid var(--rai-border)', paddingBottom: 0 }}>
+      <div className="row mb-6 rai-toptabs" style={{ gap: 8, borderBottom: '1px solid var(--rai-border)', paddingBottom: 0 }}>
         {TOP_TABS.map((tab) => {
           const Icon = tab.icon;
           const active = topTab === tab.id;

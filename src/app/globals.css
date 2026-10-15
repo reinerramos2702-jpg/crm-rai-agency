@@ -2566,3 +2566,17 @@ button.rai-tour-btn:focus-visible,button.rai-tour-x:focus-visible{outline:2px so
   .rai-tour-card{animation:rai-tour-in .28s ease-out both}
   .rai-tour-spot{transition:opacity .2s}
 }
+
+/* Responsive: evitar que contenidos con ancho mínimo ensanchen las tarjetas en pantallas muy angostas */
+.rai-cfg > *,.rai-cfg-layout > *,.rai-planner > *{min-width:0}
+.rai-cfg-head-title,.rai-cfg-head-main .muted,.rai-tour-title,.rai-tour-body{overflow-wrap:anywhere}
+@media (max-width:640px){
+  .rai-cfg-head-side{flex-wrap:wrap;gap:8px}
+  .rai-sync-pill{white-space:normal;text-align:center}
+}
+
+/* Layout: el contenido principal puede encogerse (evita desborde horizontal con barra lateral en 1024 px) */
+.app-main{min-width:0}
+.rai-toptabs{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.rai-toptabs::-webkit-scrollbar{display:none}
+.rai-toptabs > button{flex:0 0 auto;white-space:nowrap}
