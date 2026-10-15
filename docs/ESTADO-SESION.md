@@ -1,6 +1,12 @@
 # Estado de sesión — CRM RAI Agency
 Última actualización: 10 octubre 2026 (sesión Cowork, rama `rai-feat-login-registro-ui`; verificado 10 oct: sin cambios de código desde el 5 oct, implementación del login sin iniciar; specs login v4 y sistema visual premium escritas el 10 oct). Las secciones marcadas "25 sep" son el cierre anterior de OpenCode, conservado como historial.
 
+## Actualización 15 oct 2026 — Contenido IG (rama `rai-feat-programacion-ig`, solo commits locales)
+- Cadena de ramas locales (sin push): `rai-feat-automatizacion-config` (Corte A) → `rai-feat-automatizacion-ui` (Corte C: UI premium, tour, responsive) → `rai-feat-programacion-ig` (Corte B + extensión premium/tour a las demás pestañas; commits da14717, 0229698).
+- Corte B (programar y publicar solo) listo en modo SIMULADO; 275 tests y `tsc` en verde. Detalle, deuda y comandos en `docs/SPEC-programacion-publicacion-instagram.md` (sección «Corte B — implementación local»).
+- Para verlo en vivo en staging: pegar `docs/planning/staging-scheduledpost.sql` en el SQL editor (solo schema staging), luego `npx prisma generate` y reiniciar con `node --env-file=.env.staging node_modules/next/dist/bin/next dev`.
+- Bloqueado hasta autorización de Reiner: push, merge, migración en producción, `IG_PUBLISH_MODE=live`, secretos de GitHub (`APP_URL`, `CRON_SECRET`).
+
 ## Estado actual (5 oct 2026) — punto de reanudación
 - Rama activa: `rai-feat-login-registro-ui` = `origin/security/fase-0` (`69277fb`) + 3 commits locales solo de documentación e imágenes (`b455270`, `a76be0b`, `0355e6b`). Ninguno está publicado en remoto.
 - Bloque en curso: login/registro premium + auto-registro con workspace propio. Especificación cerrada en `docs/SPEC-login-registro-ui.md` (v4 desde el 10 oct) y registrada en `docs/planning/panel-control.html` (FASE 00). **La implementación no ha empezado**: verificado el 5 oct que `register/route.ts` no tiene rate-limit ni creación de Workspace, `AuthShell.tsx` no tiene fondo ni `@keyframes`, y `/registro` conserva el texto "solo por invitación".
