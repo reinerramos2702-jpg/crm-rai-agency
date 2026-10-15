@@ -68,3 +68,5 @@ Reconciliación 13 oct: el disparador del corte B NO es `vercel.json` `crons` si
 Permisos Meta (14 oct, verificado en una pestaña nueva): añadidos y en «Listo para prueba» `instagram_business_basic`, `instagram_business_content_publish`, `instagram_basic`, `instagram_content_publish`, `pages_show_list` y `pages_read_engagement` (Meta mostró «Se ha producido un error» al añadir este último, pero se aplicó; recargar la página antes de dar por fallida una acción). App sigue «Sin publicar»: solo cuentas con rol.
 
 Orden recomendado: A → B → C, con evidencia en cada corte (tests, `tsc`, captura en PC y móvil). Corte B depende de los permisos de Meta y de URLs públicas de imagen (ver §5).
+
+Corte C (UI) — 15 oct, rama `rai-feat-automatizacion-ui` (local): pestaña «Marca y cuenta» dentro de Contenido IG (antes la config colgaba bajo las campañas), cabecera con % de avance, nav de secciones con checks, barra de guardado fija, banner «Completa tu configuración», pasos Configura→Planea→Programa en estado vacío, campos responsive (verificado en 390 px sin desborde horizontal), placeholders neutros. Sin cambios de API/DB.

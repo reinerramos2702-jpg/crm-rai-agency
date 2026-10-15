@@ -2208,3 +2208,89 @@ button.rai-switch:focus-visible{outline:2px solid var(--rai-gold);outline-offset
 .rai-conn-chip.is-ok{color:#2ecc71;border-color:#2ecc71}
 .rai-sync-status{margin-top:16px;font-size:12px;color:var(--rai-muted)}
 .rai-sync-status.is-error{color:var(--rai-error,#ef4444)}
+
+/* ============================================
+   /automatizacion — Contenido IG: rediseño (sub-nav, configuración, banner, pasos)
+   Botones con !important: el selector global de botones tiene especificidad alta.
+   ============================================ */
+.rai-subnav{display:flex;gap:4px;padding:4px;margin-bottom:24px;border:1px solid var(--rai-border);border-radius:14px;background:var(--rai-dark);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.rai-subnav::-webkit-scrollbar{display:none}
+button.rai-subnav-btn{display:inline-flex !important;align-items:center;gap:8px;flex:0 0 auto;padding:10px 16px !important;border:0 !important;border-radius:10px !important;background:transparent !important;color:var(--rai-muted) !important;font-size:13px !important;font-weight:600 !important;white-space:nowrap;cursor:pointer;box-shadow:none !important;transition:background .2s,color .2s}
+button.rai-subnav-btn:hover{color:var(--rai-text) !important;background:rgba(255,255,255,.05) !important}
+button.rai-subnav-btn.is-on{color:#14141C !important;background:var(--rai-gold) !important}
+button.rai-subnav-btn:focus-visible{outline:2px solid var(--rai-gold);outline-offset:2px}
+.rai-dot{width:8px;height:8px;border-radius:50%;background:var(--rai-warning)}
+button.rai-subnav-btn.is-on .rai-dot{background:#14141C}
+
+.rai-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;padding:14px 18px;border:1px solid var(--rai-gold-dim);border-radius:12px;background:rgba(201,168,76,.08);font-size:13px;color:var(--rai-text)}
+.rai-banner span{color:var(--rai-muted)}
+button.rai-banner-btn{display:inline-flex !important;align-items:center;gap:6px;flex:0 0 auto;padding:8px 14px !important;border-radius:8px !important;border:1px solid var(--rai-gold) !important;background:transparent !important;color:var(--rai-gold) !important;font-size:13px !important;font-weight:600 !important;cursor:pointer}
+button.rai-banner-btn:hover{background:var(--rai-gold) !important;color:#14141C !important}
+
+.rai-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:720px;margin:0 auto 28px;text-align:left}
+.rai-step{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--rai-border);border-radius:12px;background:var(--rai-dark)}
+.rai-step strong{display:block;font-size:13px;margin-bottom:2px}
+.rai-step p{margin:0;font-size:12px;color:var(--rai-muted);line-height:1.4}
+.rai-step-n{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:rgba(201,168,76,.15);color:var(--rai-gold);font-size:12px;font-weight:700}
+
+.rai-cfg{display:grid;gap:16px}
+.rai-cfg-head{display:flex;gap:24px;align-items:center;justify-content:space-between}
+.rai-cfg-head-main{flex:1;min-width:0}
+.rai-cfg-head-title{font-size:18px;font-weight:700;margin-bottom:4px}
+.rai-progress{height:6px;margin-top:14px;border-radius:999px;background:var(--rai-border);overflow:hidden}
+.rai-progress span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--rai-gold-dim),var(--rai-gold-br));transition:width .4s ease}
+.rai-cfg-head-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:0 0 auto}
+.rai-cfg-pct{font-size:28px;font-weight:800;color:var(--rai-gold);line-height:1}
+.rai-sync-pill{padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;color:var(--rai-muted);border:1px solid var(--rai-border)}
+.rai-sync-pill.is-error{color:var(--rai-error);border-color:var(--rai-error)}
+
+.rai-cfg-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;align-items:start}
+.rai-cfg-nav{position:sticky;top:16px;display:grid;gap:4px;padding:8px;border:1px solid var(--rai-border);border-radius:14px;background:var(--rai-dark)}
+button.rai-cfg-link{display:flex !important;justify-content:flex-start !important;align-items:center;gap:10px;width:100%;padding:9px 10px !important;border:0 !important;border-radius:10px !important;background:transparent !important;color:var(--rai-muted) !important;text-align:left;cursor:pointer;box-shadow:none !important}
+button.rai-cfg-link:hover{background:rgba(255,255,255,.05) !important;color:var(--rai-text) !important}
+.rai-cfg-check{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--rai-border);color:#14141C}
+button.rai-cfg-link.is-done .rai-cfg-check{background:var(--rai-success);border-color:var(--rai-success)}
+.rai-cfg-link-text{display:grid;line-height:1.25;min-width:0}
+.rai-cfg-link-text strong{font-size:13px;color:var(--rai-text)}
+.rai-cfg-link-text small{font-size:11px;color:var(--rai-muted)}
+
+.rai-cfg-body{display:grid;gap:16px;min-width:0}
+.rai-cfg-card{scroll-margin-top:16px}
+.rai-cfg-title{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:15px;font-weight:600}
+.rai-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.rai-fields.rai-fields-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.rai-rule-row{display:grid;grid-template-columns:1fr 1fr 2fr auto;gap:8px;align-items:center}
+.rai-rule-head{margin-bottom:6px}
+.rai-rule-item{padding:8px 0;border-bottom:1px solid var(--rai-border)}
+.rai-rule-add{align-items:end}
+
+.rai-savebar{position:sticky;bottom:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;border:1px solid var(--rai-border);border-radius:14px;background:var(--rai-dark);box-shadow:0 -8px 24px -12px rgba(0,0,0,.6)}
+.rai-savebar-info{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--rai-muted)}
+.rai-sync-dot{width:8px;height:8px;border-radius:50%;background:var(--rai-success)}
+.rai-sync-dot.is-error{background:var(--rai-error)}
+button.rai-savebar-btn{display:inline-flex !important;align-items:center;gap:8px;padding:11px 20px !important;border:0 !important;border-radius:10px !important;background:linear-gradient(135deg,var(--rai-gold-br),var(--rai-gold)) !important;color:#14141C !important;font-size:14px !important;font-weight:700 !important;cursor:pointer;white-space:nowrap;transition:filter .2s}
+button.rai-savebar-btn:hover{filter:brightness(1.08)}
+button.rai-savebar-btn:focus-visible{outline:2px solid var(--rai-gold);outline-offset:2px}
+
+@media (max-width: 900px){
+  .rai-cfg-layout{grid-template-columns:minmax(0,1fr)}
+  .rai-cfg-nav{position:static;display:flex;overflow-x:auto;scrollbar-width:none}
+  .rai-cfg-nav::-webkit-scrollbar{display:none}
+  button.rai-cfg-link{flex:0 0 auto;width:auto}
+  .rai-cfg-link-text small{display:none}
+}
+@media (max-width: 640px){
+  .rai-steps{grid-template-columns:1fr}
+  .rai-fields,.rai-fields.rai-fields-3{grid-template-columns:minmax(0,1fr)}
+  .rai-rule-row{grid-template-columns:1fr 1fr}
+  .rai-rule-head{display:none}
+  .rai-cfg-head{flex-direction:column;align-items:stretch;gap:14px}
+  .rai-cfg-head-side{flex-direction:row;align-items:center;justify-content:space-between}
+  .rai-banner{flex-direction:column;align-items:flex-start}
+  .rai-savebar{flex-direction:column;align-items:stretch;gap:10px}
+  button.rai-savebar-btn{justify-content:center}
+  .rai-savebar-info{justify-content:center}
+}
+@media (prefers-reduced-motion: reduce){
+  .rai-progress span,button.rai-subnav-btn,button.rai-savebar-btn{transition:none}
+}

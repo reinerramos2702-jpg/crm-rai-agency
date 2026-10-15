@@ -24,6 +24,8 @@ import {
   MapPin,
   Trash2,
   X,
+  Check,
+  ArrowRight,
 } from 'lucide-react';
 import { EMPTY_CONFIG, type ContentPlannerConfig } from '@/lib/content-planner-config';
 import { apiFetch } from '@/lib/client-api';
@@ -128,7 +130,7 @@ function saveToStorage(key: string, value: unknown) {
 }
 
 export default function ContentIGTab() {
-  const [view, setView] = useState<'campaigns' | 'planner' | 'calendar'>(() => loadFromStorage('view', 'campaigns'));
+  const [view, setView] = useState<'campaigns' | 'planner' | 'calendar' | 'config'>(() => loadFromStorage('view', 'campaigns'));
   const [campaigns, setCampaigns] = useState<Campaign[]>(() => loadFromStorage('campaigns', []));
   const [activeCampaign, setActiveCampaign] = useState<Campaign | null>(() => loadFromStorage('activeCampaign', null));
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => loadFromStorage('chatMessages', [DEFAULT_WELCOME]));
@@ -292,44 +294,55 @@ export default function ContentIGTab() {
     setChatLoading(false);
   }
 
+  const cfgSections = [
+    { id: 'cfg-negocio', label: 'Negocio', done: !!(businessName.trim() && businessType.trim()), hint: 'Nombre y tipo' },
+    { id: 'cfg-marca', label: 'Marca', done: !!(brandColors.trim() || brandDocContent.trim()), hint: 'Colores o manual' },
+    { id: 'cfg-fotos', label: 'Fotos', done: photoMode === 'ai' || uploadedPhotos.length > 0, hint: 'Fotos o modo IA' },
+    { id: 'cfg-instagram', label: 'Instagram', done: !!(igHandle.trim() && publishTime && timezone), hint: 'Cuenta, hora y zona' },
+    { id: 'cfg-reglas', label: 'Reglas', done: brandRules.length > 0, hint: 'Opcional' },
+    { id: 'cfg-notas', label: 'Notas', done: !!contentNotes.trim(), hint: 'Opcional' },
+  ];
+  const cfgRequired = cfgSections.filter((x) => !['cfg-reglas', 'cfg-notas'].includes(x.id));
+  const cfgDone = cfgRequired.filter((x) => x.done).length;
+  const cfgPct = Math.round((cfgDone / cfgRequired.length) * 100);
+  const cfgComplete = cfgDone === cfgRequired.length;
+  const goSection = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
   return (
     <div>
       {/* Sub-navigation */}
-      <div className="row mb-6" style={{ gap: 8 }}>
-        <button
-          className={view === 'campaigns' ? 'primary' : 'ghost'}
-          onClick={() => setView('campaigns')}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', fontSize: 13 }}
-        >
-          <FolderOpen size={14} /> Mis campañas
-        </button>
-        <button
-          className={view === 'planner' ? 'primary' : 'ghost'}
-          onClick={() => setView('planner')}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', fontSize: 13 }}
-        >
-          <Sparkles size={14} /> Planear contenido
-        </button>
-        <button
-          className={view === 'calendar' ? 'primary' : 'ghost'}
-          onClick={() => setView('calendar')}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', fontSize: 13 }}
-        >
-          <Calendar size={14} /> Calendario
-        </button>
-        <div style={{ flex: 1 }} />
-        <button
-          className="ghost"
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', fontSize: 13 }}
-          onClick={() => setView('campaigns')}
-        >
-          <Settings size={14} /> Configurar IG
-        </button>
+      <div className="rai-subnav" role="tablist" aria-label="Contenido de Instagram">
+        {([
+          ['campaigns', 'Mis campañas', FolderOpen],
+          ['planner', 'Planear contenido', Sparkles],
+          ['calendar', 'Calendario', Calendar],
+          ['config', 'Marca y cuenta', Settings],
+        ] as const).map(([key, label, Icon]) => (
+          <button
+            key={key}
+            role="tab"
+            aria-selected={view === key}
+            className={`rai-subnav-btn ${view === key ? 'is-on' : ''}`}
+            onClick={() => setView(key)}
+          >
+            <Icon size={15} /> <span>{label}</span>
+            {key === 'config' && !cfgComplete && <span className="rai-dot" aria-label="Configuración pendiente" />}
+          </button>
+        ))}
       </div>
 
       {/* ============ VIEW: CAMPAIGNS ============ */}
       {view === 'campaigns' && (
         <div>
+          {!cfgComplete && configReady && (
+            <div className="rai-banner">
+              <div>
+                <strong>Completa tu configuración</strong>
+                <span> — {cfgDone} de {cfgRequired.length} secciones listas. Con tu marca lista, la IA planea contenido mucho más preciso.</span>
+              </div>
+              <button className="rai-banner-btn" onClick={() => setView('config')}>Configurar <ArrowRight size={14} /></button>
+            </div>
+          )}
           {campaigns.length === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: '64px 32px' }}>
               <Instagram size={48} style={{ color: 'var(--rai-gold)', marginBottom: 16, opacity: 0.6 }} />
@@ -338,6 +351,11 @@ export default function ContentIGTab() {
                 Planea 30 días de contenido para Instagram en una sola sesión. La IA te guía paso a paso:
                 define tu marca, elige pilares, genera hooks, captions y visuales. Todo automático.
               </p>
+              <div className="rai-steps">
+                <div className="rai-step"><span className="rai-step-n">1</span><div><strong>Configura</strong><p>Marca, tono y tu cuenta de Instagram.</p></div></div>
+                <div className="rai-step"><span className="rai-step-n">2</span><div><strong>Planea</strong><p>La IA arma hasta 30 días de piezas.</p></div></div>
+                <div className="rai-step"><span className="rai-step-n">3</span><div><strong>Programa</strong><p>Revisas el calendario y el CRM publica.</p></div></div>
+              </div>
               <button className="primary" onClick={() => setView('planner')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 <Sparkles size={16} /> Planear mi primer mes de contenido
               </button>
@@ -379,20 +397,45 @@ export default function ContentIGTab() {
               ))}
             </div>
           )}
+        </div>
+      )}
 
-          {/* ===== CONFIGURACIÓN COMPLETA ===== */}
-          <div className={`rai-sync-status ${syncStatus === 'error' ? 'is-error' : ''}`} role="status" aria-live="polite">
-            {syncLabel}
+      {/* ============ VIEW: CONFIG ============ */}
+      {view === 'config' && (
+        <div className="rai-cfg">
+          <div className="rai-cfg-head card">
+            <div className="rai-cfg-head-main">
+              <div className="rai-cfg-head-title">Configuración de contenido</div>
+              <div className="muted" style={{ fontSize: 13 }}>
+                Lo que defines aquí alimenta a la IA y a la publicación diaria. Se guarda solo.
+              </div>
+              <div className="rai-progress" role="progressbar" aria-valuenow={cfgPct} aria-valuemin={0} aria-valuemax={100} aria-label="Avance de configuración">
+                <span style={{ width: `${cfgPct}%` }} />
+              </div>
+            </div>
+            <div className="rai-cfg-head-side">
+              <div className="rai-cfg-pct">{cfgPct}%</div>
+              <div className={`rai-sync-pill ${syncStatus === 'error' ? 'is-error' : ''}`} role="status" aria-live="polite">{syncLabel}</div>
+            </div>
           </div>
-          <div style={{ display: 'grid', gap: 16, maxWidth: 800, marginTop: 12, opacity: configReady ? 1 : 0.55, pointerEvents: configReady ? 'auto' : 'none' }}>
 
+          <div className="rai-cfg-layout">
+            <nav className="rai-cfg-nav" aria-label="Secciones">
+              {cfgSections.map((x) => (
+                <button key={x.id} type="button" className={`rai-cfg-link ${x.done ? 'is-done' : ''}`} onClick={() => goSection(x.id)}>
+                  <span className="rai-cfg-check">{x.done ? <Check size={12} /> : null}</span>
+                  <span className="rai-cfg-link-text"><strong>{x.label}</strong><small>{x.hint}</small></span>
+                </button>
+              ))}
+            </nav>
+            <div className="rai-cfg-body" style={{ opacity: configReady ? 1 : 0.55, pointerEvents: configReady ? 'auto' : 'none' }}>
             {/* --- Datos del Negocio --- */}
-            <div className="card">
-              <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, fontSize: 15 }}>
+            <div id="cfg-negocio" className="card rai-cfg-card">
+              <div className="rai-cfg-title">
                 <MapPin size={16} style={{ color: 'var(--rai-gold)' }} /> Datos del Negocio
               </div>
               <p className="muted" style={{ fontSize: 12, marginBottom: 12 }}>Esta información se inyecta automáticamente al planificador IA para generar contenido preciso.</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="rai-fields">
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Nombre del negocio</label>
                   <input className="input" placeholder="Nombre de tu empresa" value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
@@ -403,7 +446,7 @@ export default function ContentIGTab() {
                 </div>
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Ubicación</label>
-                  <input className="input" placeholder="Maiquetía, Venezuela" value={businessLocation} onChange={(e) => setBusinessLocation(e.target.value)} />
+                  <input className="input" placeholder="Ciudad, País" value={businessLocation} onChange={(e) => setBusinessLocation(e.target.value)} />
                 </div>
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Sitio web</label>
@@ -411,11 +454,11 @@ export default function ContentIGTab() {
                 </div>
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Teléfono</label>
-                  <input className="input" placeholder="(0212) 351.03.03" value={businessPhone} onChange={(e) => setBusinessPhone(e.target.value)} />
+                  <input className="input" placeholder="+58 212 000 0000" value={businessPhone} onChange={(e) => setBusinessPhone(e.target.value)} />
                 </div>
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>WhatsApp</label>
-                  <input className="input" placeholder="584241292814" value={businessWhatsApp} onChange={(e) => setBusinessWhatsApp(e.target.value)} />
+                  <input className="input" placeholder="+58 412 000 0000" value={businessWhatsApp} onChange={(e) => setBusinessWhatsApp(e.target.value)} />
                 </div>
               </div>
               <div style={{ marginTop: 12 }}>
@@ -433,11 +476,11 @@ export default function ContentIGTab() {
             </div>
 
             {/* --- Marca y Estilo --- */}
-            <div className="card">
-              <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, fontSize: 15 }}>
+            <div id="cfg-marca" className="card rai-cfg-card">
+              <div className="rai-cfg-title">
                 <Palette size={16} style={{ color: 'var(--rai-purple)' }} /> Marca y Estilo Visual
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="rai-fields">
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Colores de marca</label>
                   <input className="input" placeholder="Azul oscuro, dorado, blanco..." value={brandColors} onChange={(e) => setBrandColors(e.target.value)} />
@@ -499,11 +542,11 @@ export default function ContentIGTab() {
             </div>
 
             {/* --- Fotos y Assets --- */}
-            <div className="card">
-              <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, fontSize: 15 }}>
+            <div id="cfg-fotos" className="card rai-cfg-card">
+              <div className="rai-cfg-title">
                 <Camera size={16} style={{ color: 'var(--rai-success)' }} /> Fotos y Assets
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+              <div className="rai-fields" style={{ marginBottom: 16 }}>
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Modo de imágenes</label>
                   <select className="input" value={photoMode} onChange={(e) => setPhotoMode(e.target.value)}>
@@ -553,14 +596,14 @@ export default function ContentIGTab() {
             </div>
 
             {/* --- Config de Instagram --- */}
-            <div className="card">
-              <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, fontSize: 15 }}>
+            <div id="cfg-instagram" className="card rai-cfg-card">
+              <div className="rai-cfg-title">
                 <Instagram size={16} style={{ color: '#E4405F' }} /> Configuración de Instagram
                 <span className={`rai-conn-chip ${metaState === 'connected' ? 'is-ok' : ''}`}>
                   {metaState === 'connected' ? 'Instagram conectado' : metaState === 'disconnected' ? 'Instagram sin conectar' : 'Conexión: sin datos'}
                 </span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+              <div className="rai-fields rai-fields-3">
                 <div>
                   <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Cuenta de Instagram</label>
                   <input className="input" placeholder="@tu_cuenta" value={igHandle} onChange={(e) => setIgHandle(e.target.value)} />
@@ -599,8 +642,8 @@ export default function ContentIGTab() {
             </div>
 
             {/* --- Reglas de Lenguaje de Marca --- */}
-            <div className="card">
-              <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: 15 }}>
+            <div id="cfg-reglas" className="card rai-cfg-card">
+              <div className="rai-cfg-title">
                 <AlertCircle size={16} style={{ color: '#ef4444' }} /> Reglas de Lenguaje de Marca
               </div>
               <p className="muted" style={{ fontSize: 12, marginBottom: 14 }}>
@@ -610,14 +653,14 @@ export default function ContentIGTab() {
               {/* Existing rules */}
               {brandRules.length > 0 && (
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr auto', gap: 6, marginBottom: 6 }}>
+                  <div className="rai-rule-row rai-rule-head">
                     <span className="muted" style={{ fontSize: 11, fontWeight: 600 }}>PROHIBIDA</span>
                     <span className="muted" style={{ fontSize: 11, fontWeight: 600 }}>USAR EN SU LUGAR</span>
                     <span className="muted" style={{ fontSize: 11, fontWeight: 600 }}>RAZÓN</span>
                     <span />
                   </div>
                   {brandRules.map((rule, i) => (
-                    <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr auto', gap: 6, alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--rai-border)' }}>
+                    <div key={i} className="rai-rule-row rai-rule-item">
                       <span style={{ fontSize: 13, color: '#ef4444', fontWeight: 600, textDecoration: 'line-through' }}>{rule.forbidden}</span>
                       <span style={{ fontSize: 13, color: 'var(--rai-success)', fontWeight: 600 }}>{rule.replacement}</span>
                       <span className="muted" style={{ fontSize: 12 }}>{rule.reason}</span>
@@ -630,7 +673,7 @@ export default function ContentIGTab() {
               )}
 
               {/* Add new rule */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr auto', gap: 8, alignItems: 'end' }}>
+              <div className="rai-rule-row rai-rule-add">
                 <div>
                   <label className="muted" style={{ fontSize: 11, display: 'block', marginBottom: 2 }}>Palabra prohibida</label>
                   <input className="input" placeholder="barato" value={newForbidden} onChange={(e) => setNewForbidden(e.target.value)} style={{ fontSize: 13 }} />
@@ -657,41 +700,23 @@ export default function ContentIGTab() {
             </div>
 
             {/* --- Notas adicionales --- */}
-            <div className="card">
-              <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, fontSize: 15 }}>
+            <div id="cfg-notas" className="card rai-cfg-card">
+              <div className="rai-cfg-title">
                 <FileText size={16} style={{ color: 'var(--rai-muted)' }} /> Notas y contexto adicional
               </div>
               <textarea className="input" rows={3} placeholder="Cualquier información extra para el planificador: promociones actuales, eventos próximos, temporada alta, restricciones de contenido, cosas que NO mencionar..." value={contentNotes} onChange={(e) => setContentNotes(e.target.value)} style={{ resize: 'vertical', width: '100%' }} />
             </div>
+            </div>
+          </div>
 
-            {/* --- Botón Guardar y Planificar --- */}
-            <button
-              onClick={async () => { await saveNow(); setView('planner'); }}
-              style={{
-                width: '100%',
-                padding: '14px 24px',
-                background: 'linear-gradient(135deg, var(--rai-gold), #d4a017)',
-                color: '#000',
-                border: 'none',
-                borderRadius: 8,
-                fontSize: 16,
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 10,
-                letterSpacing: '0.5px',
-                transition: 'opacity 0.2s',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-            >
-              <Sparkles size={20} />
-              GUARDAR CONFIGURACIÓN Y PLANIFICAR CONTENIDO
-              <ChevronRight size={20} />
+          <div className="rai-savebar">
+            <div className="rai-savebar-info">
+              <span className={`rai-sync-dot ${syncStatus === 'error' ? 'is-error' : ''}`} />
+              <span>{syncLabel}</span>
+            </div>
+            <button className="rai-savebar-btn" onClick={async () => { await saveNow(); setView('planner'); }}>
+              <Sparkles size={16} /> Guardar y planear contenido <ArrowRight size={16} />
             </button>
-
           </div>
         </div>
       )}
