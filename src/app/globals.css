@@ -2294,3 +2294,121 @@ button.rai-savebar-btn:focus-visible{outline:2px solid var(--rai-gold);outline-o
 @media (prefers-reduced-motion: reduce){
   .rai-progress span,button.rai-subnav-btn,button.rai-savebar-btn{transition:none}
 }
+
+/* ============================================
+   /automatizacion — Contenido IG: capa premium
+   Solo tokens var(--rai-*); sin blur; solo transform/opacity animados;
+   hover bajo (hover:hover); reduced-motion respetado.
+   ============================================ */
+.rai-subnav{background:color-mix(in srgb,var(--rai-card) 70%,var(--rai-dark));box-shadow:inset 0 1px 0 color-mix(in srgb,var(--rai-text) 5%,transparent)}
+button.rai-subnav-btn.is-on{background:linear-gradient(135deg,var(--rai-gold-br),var(--rai-gold) 60%,var(--rai-gold-dim)) !important;box-shadow:0 6px 18px -8px color-mix(in srgb,var(--rai-gold-br) 70%,transparent) !important}
+
+/* Cabecera de configuración */
+.rai-cfg-head{position:relative;overflow:hidden;padding:22px 24px;background:radial-gradient(120% 140% at 100% 0%,color-mix(in srgb,var(--rai-gold) 12%,transparent),transparent 55%),var(--rai-card)}
+.rai-cfg-head-title{font-size:20px;letter-spacing:-.01em}
+.rai-cfg-count{margin-top:12px;font-size:12px;font-weight:600;color:var(--rai-gold);letter-spacing:.02em}
+.rai-ring{--p:0;position:relative;display:grid;place-items:center;width:76px;height:76px;border-radius:50%;background:conic-gradient(var(--rai-gold-br) calc(var(--p) * 1%),var(--rai-border) 0)}
+.rai-ring::before{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--rai-card)}
+.rai-ring span{position:relative;font-size:18px;font-weight:800;color:var(--rai-gold-br)}
+.rai-cfg-pct,.rai-progress{display:none}
+
+/* Tarjetas de sección */
+.rai-cfg-card{position:relative;padding:22px 24px;border-radius:16px;background:linear-gradient(180deg,color-mix(in srgb,var(--rai-gold) 4%,var(--rai-card)),var(--rai-card) 140px);box-shadow:0 1px 0 color-mix(in srgb,var(--rai-text) 5%,transparent) inset,0 12px 28px -18px rgba(0,0,0,.55)}
+.rai-cfg-card::before{content:'';position:absolute;left:24px;right:24px;top:0;height:1px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--rai-gold) 55%,transparent),transparent);opacity:.7}
+.rai-cfg-title{font-size:16px;font-weight:700;letter-spacing:-.005em}
+.rai-cfg-title > svg:first-child{box-sizing:content-box;width:16px;height:16px;padding:8px;border-radius:10px;background:color-mix(in srgb,currentColor 14%,transparent);border:1px solid color-mix(in srgb,currentColor 28%,transparent)}
+.rai-cfg-body .input:focus,.rai-cfg-body select:focus,.rai-cfg-body textarea:focus{outline:none !important;border-color:var(--rai-gold) !important;box-shadow:0 0 0 3px color-mix(in srgb,var(--rai-gold) 18%,transparent) !important}
+
+/* Nav lateral */
+.rai-cfg-nav{padding:10px;border-radius:16px;background:linear-gradient(180deg,color-mix(in srgb,var(--rai-gold) 5%,var(--rai-card)),var(--rai-dark))}
+button.rai-cfg-link{position:relative;transition:background .2s,color .2s}
+button.rai-cfg-link.is-active{background:color-mix(in srgb,var(--rai-gold) 10%,transparent) !important}
+button.rai-cfg-link.is-active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--rai-gold-br)}
+button.rai-cfg-link.is-active .rai-cfg-link-text strong{color:var(--rai-gold-br)}
+.rai-cfg-check svg{stroke-width:3}
+
+/* Barra de guardado */
+.rai-savebar{padding:14px 18px;border-radius:16px;background:linear-gradient(180deg,color-mix(in srgb,var(--rai-gold) 6%,var(--rai-card)),var(--rai-dark));box-shadow:0 -10px 28px -14px rgba(0,0,0,.7),0 1px 0 color-mix(in srgb,var(--rai-gold) 25%,transparent) inset}
+button.rai-savebar-btn{position:relative;overflow:hidden;box-shadow:0 10px 22px -10px color-mix(in srgb,var(--rai-gold-br) 80%,transparent) !important}
+button.rai-savebar-btn::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:translateX(0) skewX(-20deg);opacity:0}
+@media (hover:hover){button.rai-savebar-btn:hover::after{opacity:1;transform:translateX(420%) skewX(-20deg);transition:transform .7s ease,opacity .2s}}
+
+/* Zonas de carga */
+.rai-cfg-card [style*="dashed"]{border-radius:12px !important;background:color-mix(in srgb,var(--rai-gold) 3%,transparent);transition:border-color .2s,background .2s}
+@media (hover:hover){.rai-cfg-card [style*="dashed"]:hover{border-color:var(--rai-gold-dim) !important;background:color-mix(in srgb,var(--rai-gold) 6%,transparent)}}
+
+/* Estado vacío */
+.rai-empty{background:radial-gradient(80% 90% at 50% 0%,color-mix(in srgb,var(--rai-gold) 10%,transparent),transparent 70%),var(--rai-card)}
+.rai-halo{position:relative;display:inline-grid;place-items:center;width:76px;height:76px;margin-bottom:18px;border-radius:50%;color:var(--rai-gold-br);background:radial-gradient(circle,color-mix(in srgb,var(--rai-gold) 22%,transparent),transparent 70%);border:1px solid color-mix(in srgb,var(--rai-gold) 35%,transparent)}
+.rai-empty-mini{padding:28px 14px;text-align:center;font-size:13px;color:var(--rai-muted)}
+.rai-empty-mini svg{display:block;margin:0 auto 10px;opacity:.45}
+
+/* Planificador */
+.rai-planner{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;min-height:540px}
+.rai-chat{display:flex;flex-direction:column;padding:0;overflow:hidden;border-radius:16px}
+.rai-chat-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--rai-border);background:linear-gradient(180deg,color-mix(in srgb,var(--rai-gold) 6%,transparent),transparent)}
+.rai-chat-ico{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;color:var(--rai-gold-br);background:color-mix(in srgb,var(--rai-gold) 14%,transparent);border:1px solid color-mix(in srgb,var(--rai-gold) 30%,transparent)}
+.rai-chat-title{display:grid;line-height:1.25;flex:1;min-width:0}
+.rai-chat-title span{font-size:14px;font-weight:700}
+.rai-chat-title small{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--rai-muted)}
+.rai-live{width:7px;height:7px;border-radius:50%;background:var(--rai-success)}
+.rai-chat-msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;max-height:560px}
+.rai-msg{max-width:84%;padding:12px 16px;font-size:14px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.rai-msg.is-ai{align-self:flex-start;border-radius:18px 18px 18px 5px;background:color-mix(in srgb,var(--rai-text) 6%,var(--rai-card));border:1px solid var(--rai-border)}
+.rai-msg.is-user{align-self:flex-end;border-radius:18px 18px 5px 18px;color:#14141C;font-weight:500;background:linear-gradient(135deg,var(--rai-gold-br),var(--rai-gold));box-shadow:0 8px 20px -12px color-mix(in srgb,var(--rai-gold-br) 80%,transparent)}
+.rai-chat-input{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--rai-border);background:var(--rai-dark)}
+.rai-plan-side{border-radius:16px;overflow:auto;max-height:640px}
+.rai-plan-row{display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:4px;border-radius:10px;font-size:12px;border:1px solid var(--rai-border);border-left:3px solid var(--pc);background:color-mix(in srgb,var(--rai-text) 3%,transparent)}
+.rai-plan-n{width:22px;font-weight:800;color:var(--rai-muted)}
+.rai-plan-pillar{width:22px;font-weight:700;color:var(--pc)}
+.rai-plan-hook{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rai-plan-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;background:var(--sc)}
+
+/* Calendario */
+.rai-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.rai-stat{display:grid;gap:2px;padding:14px 16px;border-radius:14px;border:1px solid var(--rai-border);background:linear-gradient(180deg,color-mix(in srgb,var(--sc) 8%,var(--rai-card)),var(--rai-card))}
+.rai-stat strong{font-size:26px;font-weight:800;line-height:1;color:var(--sc)}
+.rai-stat span{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--rai-muted)}
+.rai-stat i,.rai-day-status i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--sc)}
+.rai-cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.rai-day{position:relative;display:grid;gap:6px;padding:14px 14px 12px;border-radius:14px;border:1px solid var(--rai-border);background:linear-gradient(180deg,color-mix(in srgb,var(--pc) 7%,var(--rai-card)),var(--rai-card) 60%);overflow:hidden;cursor:pointer;transition:transform .18s ease,border-color .18s ease}
+.rai-day::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--pc)}
+@media (hover:hover){.rai-day:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--pc) 55%,var(--rai-border))}}
+.rai-day-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rai-day-n{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.rai-day-status{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--sc)}
+.rai-day-date{font-size:11px;color:var(--rai-muted)}
+.rai-day-hook{margin:0;font-size:12px;line-height:1.4;color:var(--rai-text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:34px}
+.rai-day-tags{display:flex;flex-wrap:wrap;gap:6px}
+.rai-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;color:var(--rai-muted);border:1px solid var(--rai-border)}
+.rai-tag-pillar{color:var(--pc);border-color:color-mix(in srgb,var(--pc) 45%,transparent);background:color-mix(in srgb,var(--pc) 12%,transparent)}
+
+@media (max-width: 900px){
+  .rai-planner{grid-template-columns:minmax(0,1fr)}
+  .rai-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width: 640px){
+  .rai-cfg-card{padding:18px 16px}
+  .rai-cfg-head{padding:18px 16px}
+  .rai-msg{max-width:94%}
+  .rai-cal-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+}
+@media (prefers-reduced-motion: no-preference){
+  @keyframes rai-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes rai-breathe{0%,100%{opacity:.65}50%{opacity:1}}
+  .rai-cfg-body > .card{animation:rai-rise .45s ease-out both}
+  .rai-cfg-body > .card:nth-child(2){animation-delay:.05s}
+  .rai-cfg-body > .card:nth-child(3){animation-delay:.1s}
+  .rai-cfg-body > .card:nth-child(4){animation-delay:.15s}
+  .rai-cfg-body > .card:nth-child(5){animation-delay:.2s}
+  .rai-cfg-body > .card:nth-child(6){animation-delay:.25s}
+  .rai-cal-grid > .rai-day{animation:rai-rise .4s ease-out both}
+  .rai-halo{animation:rai-breathe 4s ease-in-out infinite}
+  .rai-live{animation:rai-breathe 2.4s ease-in-out infinite}
+}
+@media (prefers-reduced-motion: reduce){
+  .rai-day,button.rai-cfg-link,button.rai-savebar-btn::after,.rai-cfg-card [style*="dashed"]{transition:none}
+}
+.rai-cfg-check{border:1.5px solid color-mix(in srgb,var(--rai-muted) 60%,transparent)}
+button.rai-cfg-link.is-active .rai-cfg-check{border-color:var(--rai-gold-br)}
+button.rai-cfg-link.is-done .rai-cfg-check{border-color:var(--rai-success)}

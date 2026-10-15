@@ -94,6 +94,16 @@ const PILLAR_COLORS: Record<string, string> = {
   P5: '#ec4899',
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  pending: 'Pendiente',
+  generated: 'Generado',
+  approved: 'Aprobado',
+  published: 'Publicado',
+  failed: 'Fallido',
+};
+
+const CFG_SECTION_IDS = ['cfg-negocio', 'cfg-marca', 'cfg-fotos', 'cfg-instagram', 'cfg-reglas', 'cfg-notas'];
+
 const AVAILABLE_MODELS = [
   { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'Google' },
   { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'Google' },
@@ -108,6 +118,14 @@ const DEFAULT_WELCOME: ChatMessage = {
   role: 'system',
   content: '¡Hola! Soy tu asistente de contenido para Instagram. Vamos a planear 30 días de contenido para tu negocio. Para empezar necesito saber:\n\n1. **¿Cuál es tu negocio?** (tipo, nombre, ubicación)\n2. **¿Quién es tu cliente ideal?** (edad, intereses, necesidades)\n3. **¿Qué servicios o productos ofreces?**\n4. **¿Tienes fotos reales de tu negocio?**\n\nCuéntame y yo me encargo de crear tu plan completo.',
 };
+
+function renderRich(text: string): React.ReactNode[] {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+    part.length > 4 && part.startsWith('**') && part.endsWith('**')
+      ? <strong key={i}>{part.slice(2, -2)}</strong>
+      : <React.Fragment key={i}>{part}</React.Fragment>,
+  );
+}
 
 function loadFromStorage<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback;
@@ -306,6 +324,21 @@ export default function ContentIGTab() {
   const cfgDone = cfgRequired.filter((x) => x.done).length;
   const cfgPct = Math.round((cfgDone / cfgRequired.length) * 100);
   const cfgComplete = cfgDone === cfgRequired.length;
+  const [activeSection, setActiveSection] = useState<string>(CFG_SECTION_IDS[0]);
+  useEffect(() => {
+    if (view !== 'config' || typeof IntersectionObserver === 'undefined') return;
+    const els = CFG_SECTION_IDS.map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
+    if (!els.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        const top = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (top) setActiveSection(top.target.id);
+      },
+      { rootMargin: '-10% 0px -65% 0px' },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [view, configReady]);
   const goSection = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   return (
@@ -344,9 +377,9 @@ export default function ContentIGTab() {
             </div>
           )}
           {campaigns.length === 0 ? (
-            <div className="card" style={{ textAlign: 'center', padding: '64px 32px' }}>
-              <Instagram size={48} style={{ color: 'var(--rai-gold)', marginBottom: 16, opacity: 0.6 }} />
-              <h3 style={{ fontWeight: 600, marginBottom: 8 }}>Aún no tienes campañas de contenido</h3>
+            <div className="card rai-empty" style={{ textAlign: 'center', padding: '56px 32px' }}>
+              <div className="rai-halo"><Instagram size={30} /></div>
+              <h3 style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>Aún no tienes campañas de contenido</h3>
               <p className="muted" style={{ fontSize: 14, marginBottom: 24, maxWidth: 480, margin: '0 auto 24px' }}>
                 Planea 30 días de contenido para Instagram en una sola sesión. La IA te guía paso a paso:
                 define tu marca, elige pilares, genera hooks, captions y visuales. Todo automático.
@@ -409,12 +442,12 @@ export default function ContentIGTab() {
               <div className="muted" style={{ fontSize: 13 }}>
                 Lo que defines aquí alimenta a la IA y a la publicación diaria. Se guarda solo.
               </div>
-              <div className="rai-progress" role="progressbar" aria-valuenow={cfgPct} aria-valuemin={0} aria-valuemax={100} aria-label="Avance de configuración">
-                <span style={{ width: `${cfgPct}%` }} />
-              </div>
+              <div className="rai-cfg-count">{cfgDone} de {cfgRequired.length} secciones esenciales listas</div>
             </div>
             <div className="rai-cfg-head-side">
-              <div className="rai-cfg-pct">{cfgPct}%</div>
+              <div className="rai-ring" role="progressbar" aria-valuenow={cfgPct} aria-valuemin={0} aria-valuemax={100} aria-label="Avance de configuración" style={{ '--p': cfgPct } as React.CSSProperties}>
+                <span>{cfgPct}%</span>
+              </div>
               <div className={`rai-sync-pill ${syncStatus === 'error' ? 'is-error' : ''}`} role="status" aria-live="polite">{syncLabel}</div>
             </div>
           </div>
@@ -422,7 +455,7 @@ export default function ContentIGTab() {
           <div className="rai-cfg-layout">
             <nav className="rai-cfg-nav" aria-label="Secciones">
               {cfgSections.map((x) => (
-                <button key={x.id} type="button" className={`rai-cfg-link ${x.done ? 'is-done' : ''}`} onClick={() => goSection(x.id)}>
+                <button key={x.id} type="button" className={`rai-cfg-link ${x.done ? 'is-done' : ''} ${activeSection === x.id ? 'is-active' : ''}`} onClick={() => goSection(x.id)}>
                   <span className="rai-cfg-check">{x.done ? <Check size={12} /> : null}</span>
                   <span className="rai-cfg-link-text"><strong>{x.label}</strong><small>{x.hint}</small></span>
                 </button>
@@ -723,12 +756,15 @@ export default function ContentIGTab() {
 
       {/* ============ VIEW: PLANNER (AI Chat) ============ */}
       {view === 'planner' && (
-        <div className="grid" style={{ gridTemplateColumns: '1fr 320px', gap: 16, minHeight: 500 }}>
+        <div className="rai-planner">
           {/* Chat area */}
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rai-border)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <MessageSquare size={16} style={{ color: 'var(--rai-gold)' }} />
-              <span style={{ fontWeight: 600, fontSize: 14 }}>Planificador de contenido IG</span>
+          <div className="card rai-chat">
+            <div className="rai-chat-head">
+              <span className="rai-chat-ico"><MessageSquare size={16} /></span>
+              <div className="rai-chat-title">
+                <span>Planificador de contenido IG</span>
+                <small><i className="rai-live" /> Asistente listo</small>
+              </div>
               <div style={{ flex: 1 }} />
               <select
                 className="input"
@@ -745,27 +781,14 @@ export default function ContentIGTab() {
             </div>
 
             {/* Messages */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="rai-chat-msgs">
               {chatMessages.map((msg, i) => (
-                <div
-                  key={i}
-                  style={{
-                    alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                    maxWidth: '85%',
-                    padding: '10px 14px',
-                    borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                    background: msg.role === 'user' ? 'var(--rai-gold)' : 'rgba(0,0,0,0.04)',
-                    color: msg.role === 'user' ? '#0A0A0F' : 'inherit',
-                    fontSize: 14,
-                    lineHeight: 1.5,
-                    whiteSpace: 'pre-wrap',
-                  }}
-                >
-                  {msg.content}
+                <div key={i} className={`rai-msg ${msg.role === 'user' ? 'is-user' : 'is-ai'}`}>
+                  {renderRich(msg.content)}
                 </div>
               ))}
               {chatLoading && (
-                <div style={{ alignSelf: 'flex-start', padding: '10px 14px', borderRadius: '16px 16px 16px 4px', background: 'rgba(0,0,0,0.04)' }}>
+                <div className="rai-msg is-ai">
                   <Loader2 className="animate-spin" size={16} style={{ color: 'var(--rai-gold)' }} />
                 </div>
               )}
@@ -773,7 +796,7 @@ export default function ContentIGTab() {
             </div>
 
             {/* Input */}
-            <div style={{ padding: '12px 16px', borderTop: '1px solid var(--rai-border)', display: 'flex', gap: 8 }}>
+            <div className="rai-chat-input">
               <input
                 className="input"
                 style={{ flex: 1 }}
@@ -783,15 +806,15 @@ export default function ContentIGTab() {
                 onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
                 disabled={chatLoading}
               />
-              <button className="primary" onClick={sendMessage} disabled={chatLoading || !chatInput.trim()}>
+              <button className="primary" aria-label="Enviar mensaje" onClick={sendMessage} disabled={chatLoading || !chatInput.trim()}>
                 <Send size={16} />
               </button>
             </div>
           </div>
 
           {/* Side panel - Plan preview */}
-          <div className="card" style={{ overflow: 'auto' }}>
-            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div className="card rai-plan-side">
+            <div className="rai-cfg-title" style={{ fontSize: 14 }}>
               <Calendar size={15} style={{ color: 'var(--rai-gold)' }} />
               Vista previa del plan
             </div>
@@ -809,37 +832,19 @@ export default function ContentIGTab() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {activeCampaign.days.map((day) => (
-                    <div
-                      key={day.day}
-                      style={{
-                        padding: '6px 8px',
-                        borderRadius: 6,
-                        background: 'rgba(0,0,0,0.03)',
-                        border: '1px solid var(--rai-border)',
-                        fontSize: 12,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                      }}
-                    >
-                      <span style={{ width: 24, fontWeight: 700, color: 'var(--rai-muted)' }}>
-                        {String(day.day).padStart(2, '0')}
-                      </span>
-                      <span style={{ color: PILLAR_COLORS[day.pillar] || 'var(--rai-muted)', fontWeight: 600, width: 22 }}>
-                        {day.pillar}
-                      </span>
+                    <div key={day.day} className="rai-plan-row" style={{ '--pc': PILLAR_COLORS[day.pillar] || 'var(--rai-muted)', '--sc': STATUS_COLORS[day.status] } as React.CSSProperties}>
+                      <span className="rai-plan-n">{String(day.day).padStart(2, '0')}</span>
+                      <span className="rai-plan-pillar">{day.pillar}</span>
                       {CONTENT_TYPE_ICONS[day.type]}
-                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {day.hook}
-                      </span>
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: STATUS_COLORS[day.status], flexShrink: 0 }} />
+                      <span className="rai-plan-hook">{day.hook}</span>
+                      <i className="rai-plan-dot" title={STATUS_LABELS[day.status]} />
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '32px 16px' }}>
-                <Calendar size={32} style={{ color: 'var(--rai-muted)', marginBottom: 8, opacity: 0.4 }} />
+              <div className="rai-empty-mini">
+                <Calendar size={30} />
                 <p className="muted" style={{ fontSize: 13 }}>
                   Chatea con la IA para planear tu contenido. El plan aparecerá aquí cuando esté listo.
                 </p>
@@ -875,52 +880,30 @@ export default function ContentIGTab() {
                 </div>
               </div>
 
+              {/* Resumen */}
+              <div className="rai-stats">
+                {(['published', 'approved', 'generated', 'pending'] as const).map((st) => (
+                  <div key={st} className="rai-stat" style={{ '--sc': STATUS_COLORS[st] } as React.CSSProperties}>
+                    <strong>{activeCampaign.days.filter((d) => d.status === st).length}</strong>
+                    <span><i />{STATUS_LABELS[st]}</span>
+                  </div>
+                ))}
+              </div>
+
               {/* Calendar grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+              <div className="rai-cal-grid">
                 {activeCampaign.days.map((day) => (
-                  <div
-                    key={day.day}
-                    className="card"
-                    style={{
-                      padding: '10px 12px',
-                      cursor: 'pointer',
-                      borderLeft: `3px solid ${PILLAR_COLORS[day.pillar] || 'var(--rai-border)'}`,
-                      position: 'relative',
-                    }}
-                  >
-                    <div className="row-between" style={{ marginBottom: 4 }}>
-                      <span style={{ fontWeight: 700, fontSize: 13 }}>Día {day.day}</span>
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: STATUS_COLORS[day.status] }} />
+                  <div key={day.day} className="rai-day" style={{ '--pc': PILLAR_COLORS[day.pillar] || 'var(--rai-border)', '--sc': STATUS_COLORS[day.status] } as React.CSSProperties}>
+                    <div className="rai-day-top">
+                      <span className="rai-day-n">{String(day.day).padStart(2, '0')}</span>
+                      <span className="rai-day-status"><i />{STATUS_LABELS[day.status]}</span>
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--rai-muted)', marginBottom: 4 }}>
-                      {day.date}
+                    <div className="rai-day-date">{day.date}</div>
+                    <p className="rai-day-hook">{day.hook}</p>
+                    <div className="rai-day-tags">
+                      <span className="rai-tag rai-tag-pillar">{day.pillar}</span>
+                      <span className="rai-tag">{CONTENT_TYPE_ICONS[day.type]} {CONTENT_TYPE_LABELS[day.type]}</span>
                     </div>
-                    <div className="row" style={{ gap: 4, marginBottom: 4 }}>
-                      <span style={{
-                        fontSize: 10,
-                        padding: '1px 6px',
-                        borderRadius: 4,
-                        background: PILLAR_COLORS[day.pillar] ? `${PILLAR_COLORS[day.pillar]}22` : 'rgba(0,0,0,0.04)',
-                        color: PILLAR_COLORS[day.pillar] || 'var(--rai-muted)',
-                        fontWeight: 600,
-                      }}>
-                        {day.pillar}
-                      </span>
-                      <span style={{
-                        fontSize: 10,
-                        padding: '1px 6px',
-                        borderRadius: 4,
-                        background: 'rgba(0,0,0,0.04)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 3,
-                      }}>
-                        {CONTENT_TYPE_ICONS[day.type]} {CONTENT_TYPE_LABELS[day.type]}
-                      </span>
-                    </div>
-                    <p style={{ fontSize: 11, lineHeight: 1.3, color: 'var(--rai-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {day.hook}
-                    </p>
                   </div>
                 ))}
               </div>
