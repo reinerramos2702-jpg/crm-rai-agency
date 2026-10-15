@@ -488,7 +488,7 @@ footer{
         <div class="check-title">Programar y publicar automático en Instagram (botón Programar + cron)</div>
         <div class="check-desc">Pedido de Reiner 13 oct: solo Instagram por ahora; el community manager programa un lote, pulsa Programar y el CRM publica solo cada día. Borrador <code>docs/SPEC-programacion-publicacion-instagram.md</code> v0.1 (modelo <code>ScheduledPost</code>, cron protegido, idempotencia, aislamiento por workspace). Requiere: permisos de Meta añadidos (pestaña de Meta congelada, reintentar), URLs públicas de imagen (¿JPEG?), revisar rama remota <code>claude/rai-instagram-crm-automation-ykkwg2</code>. Lote 1 = días 1–15 en <code>Contenido RRSS/Instagram/Plan 31-1102026/salida</code>. <strong>13 oct:</strong> auditoría hecha (config solo en localStorage, interruptor sin backend, handle por defecto de otro negocio, sin cron ni carrusel). Plan en cortes A (config por workspace) → B (carrusel + ScheduledPost + cron) → C (rediseño de interfaz) en §6–7 del spec. Sin implementar; no enviado a OpenCode.</div>
       </div>
-      <span class="tag tag-open">Corte A hecho local (rama rai-feat-automatizacion-config) — B y C pendientes; falta permisos Meta</span>
+      <span class="tag tag-open">Corte A hecho y verificado en staging (guardar/recargar OK, 14 oct; rama rai-feat-automatizacion-config) — B y C pendientes; permisos Meta listos</span>
     </div>
     <div class="check-item done" data-status="done" data-id="recuperar-contrasena">
       <div class="checkbox"></div>
