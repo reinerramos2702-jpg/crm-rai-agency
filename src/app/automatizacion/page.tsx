@@ -24,8 +24,10 @@ import {
   AlertTriangle,
   ExternalLink,
   Instagram,
+  HelpCircle,
 } from 'lucide-react';
 import ContentIGTab from '@/components/pipeline-ig/ContentIGTab';
+import ProductTour, { type TourStep } from '@/components/pipeline-ig/ProductTour';
 import toast from 'react-hot-toast';
 import {
   TRIGGER_META,
@@ -44,6 +46,22 @@ const TOP_TABS = [
 ] as const;
 
 type TopTab = (typeof TOP_TABS)[number]['id'];
+
+const PAGE_TOUR_KEY = 'rai-tour-auto-v1';
+
+const PAGE_TOUR_STEPS: TourStep[] = [
+  { id: 'welcome', view: 'flujos', title: 'Bienvenido a Automatización', body: 'En 1 minuto ves cómo el CRM trabaja por ti: flujos que reaccionan solos, plantillas listas, historial de lo ocurrido y el motor de contenido para Instagram.' },
+  { id: 'stats', view: 'flujos', target: '[data-tour="auto-stats"]', placement: 'bottom', title: 'Tu resumen', body: 'Cuántos flujos están activos y cuántas veces se han ejecutado. Si algo no corre, empiezas a mirar aquí.' },
+  { id: 'tabs', view: 'flujos', target: '[data-tour="auto-tabs"]', placement: 'bottom', title: 'Cinco áreas', body: 'Flujos, Plantillas, Contenido IG, Actividad y Configuración. Puedes saltar entre ellas sin perder nada.' },
+  { id: 'folders', view: 'flujos', target: '[data-tour="flows-folders"]', placement: 'right', title: 'Carpetas', body: 'Ordena tus flujos por área (servicios, retail, mayoreo…). "Todos los flujos" muestra todo.' },
+  { id: 'flows', view: 'flujos', target: '[data-tour="flows-list"]', placement: 'left', title: 'Tus flujos', body: 'Cada flujo es una regla: "cuando pasa X, haz Y". Aquí los creas con "Nuevo flujo", los activas, pausas, duplicas o eliminas.' },
+  { id: 'tpl-filters', view: 'plantillas', target: '[data-tour="tpl-filters"]', placement: 'bottom', title: 'Plantillas por tipo de negocio', body: 'Filtra por servicios, retail o mayoreo. Es la forma más rápida de empezar: no partes de cero.' },
+  { id: 'tpl-grid', view: 'plantillas', target: '[data-tour="tpl-grid"]', placement: 'top', title: 'Usa una plantilla', body: 'Cada tarjeta muestra el disparador y los pasos. "Usar plantilla" crea tu flujo listo para ajustar.' },
+  { id: 'activity', view: 'actividad', target: '[data-tour="activity"]', placement: 'top', title: 'Qué pasó y cuándo', body: 'Historial de ejecuciones con filtros por flujo y estado. Si algo falló, aquí ves el porqué.' },
+  { id: 'settings', view: 'configuracion', target: '[data-tour="settings"]', placement: 'right', title: 'Interruptor general', body: 'Pausa toda la automatización de golpe, y define a qué correo llegan las alertas internas.' },
+  { id: 'ig', view: 'configuracion', target: '[data-tour="tab-contenido-ig"]', placement: 'bottom', title: 'Contenido IG', body: 'Planea 30 días de Instagram con IA y deja que el CRM publique solo. Tiene su propio recorrido guiado al abrirlo.' },
+  { id: 'done', view: 'flujos', title: '¡Listo!', body: 'Puedes repetir este recorrido cuando quieras con el botón "Ver recorrido" de arriba.' },
+];
 
 interface FolderT {
   id: string;
@@ -118,6 +136,26 @@ function fmtDate(iso: string | null) {
 
 export default function AutomatizacionPage() {
   const [topTab, setTopTab] = useState<TopTab>('flujos');
+  const [pageTourOpen, setPageTourOpen] = useState(false);
+
+  // Recorrido guiado de la página: se ofrece una sola vez por navegador.
+  useEffect(() => {
+    let seen = false;
+    try { seen = localStorage.getItem(PAGE_TOUR_KEY) === 'done'; } catch { /* sin storage */ }
+    if (seen) return;
+    const t = window.setTimeout(() => setPageTourOpen(true), 1200);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  const onPageTourStep = (step: TourStep) => {
+    if (step.view && TOP_TABS.some((t) => t.id === step.view)) setTopTab(step.view as TopTab);
+  };
+  const closePageTour = (completed: boolean) => {
+    try { localStorage.setItem(PAGE_TOUR_KEY, 'done'); } catch { /* sin storage */ }
+    setPageTourOpen(false);
+    setTopTab('flujos');
+    void completed;
+  };
 
   // ---- Flujos ----
   const [folders, setFolders] = useState<FolderT[]>([]);
@@ -469,8 +507,8 @@ export default function AutomatizacionPage() {
   // Render
   // ============================================================
   return (
-    <div className="container">
-      <div className="mb-6 row-between">
+    <div className={`container rai-page${topTab !== 'contenido-ig' ? ' rai-stage' : ''}`}>
+      <div className="mb-6 row-between rai-page-head">
         <div>
           <h1 className="h1" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Zap size={24} color="var(--rai-gold)" /> Automatización
@@ -480,7 +518,12 @@ export default function AutomatizacionPage() {
             segundo plano según el calendario, sin tocar una sola línea de código.
           </p>
         </div>
-        <div className="row" style={{ gap: 16 }}>
+        <div className="row rai-page-stats" style={{ gap: 16 }} data-tour="auto-stats">
+          {topTab !== 'contenido-ig' && (
+            <button type="button" className="rai-help-btn" onClick={() => setPageTourOpen(true)} title="Ver el recorrido guiado de Automatización">
+              <HelpCircle size={15} /> Ver recorrido
+            </button>
+          )}
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--rai-gold)' }}>{activeCount}</div>
             <div className="muted" style={{ fontSize: 12 }}>Flujos activos</div>
@@ -510,13 +553,14 @@ export default function AutomatizacionPage() {
       )}
 
       {/* Top tabs */}
-      <div className="row mb-6 rai-toptabs" style={{ gap: 8, borderBottom: '1px solid var(--rai-border)', paddingBottom: 0 }}>
+      <div className="row mb-6 rai-toptabs" data-tour="auto-tabs" style={{ gap: 8, borderBottom: '1px solid var(--rai-border)', paddingBottom: 0 }}>
         {TOP_TABS.map((tab) => {
           const Icon = tab.icon;
           const active = topTab === tab.id;
           return (
             <button
               key={tab.id}
+              data-tour={`tab-${tab.id}`}
               className="ghost"
               onClick={() => setTopTab(tab.id)}
               style={{
@@ -544,7 +588,7 @@ export default function AutomatizacionPage() {
       {topTab === 'flujos' && (
         <div className="grid" style={{ gridTemplateColumns: '240px 1fr', gap: 24, alignItems: 'start' }}>
           {/* Sidebar de carpetas */}
-          <div className="card">
+          <div className="card" data-tour="flows-folders">
             <div className="row-between mb-4">
               <span style={{ fontWeight: 600 }}>Carpetas</span>
               <button className="btn-sm secondary" onClick={() => setShowFolderModal(true)}>
@@ -604,7 +648,7 @@ export default function AutomatizacionPage() {
           </div>
 
           {/* Lista de flujos */}
-          <div className="card">
+          <div className="card" data-tour="flows-list">
             <div className="row-between mb-4">
               <span style={{ fontWeight: 600 }}>
                 {folderFilter === 'all' ? 'Todos los flujos' : selectedFolder?.name || 'Flujos'}
@@ -738,7 +782,7 @@ export default function AutomatizacionPage() {
       {/* ===================== TAB: PLANTILLAS ===================== */}
       {topTab === 'plantillas' && (
         <div>
-          <div className="row mb-6" style={{ gap: 8 }}>
+          <div className="row mb-6" style={{ gap: 8 }} data-tour="tpl-filters">
             <button className={nicheFilter === 'todos' ? 'primary' : 'ghost'} onClick={() => setNicheFilter('todos')}>
               Todas
             </button>
@@ -758,7 +802,7 @@ export default function AutomatizacionPage() {
               <Loader2 className="animate-spin" size={24} />
             </div>
           ) : (
-            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: 16 }} data-tour="tpl-grid">
               {filteredTemplates.map((tpl) => {
                 const trigMeta = TRIGGER_META[tpl.trigger?.type as TriggerType];
                 return (
@@ -785,7 +829,7 @@ export default function AutomatizacionPage() {
 
       {/* ===================== TAB: ACTIVIDAD ===================== */}
       {topTab === 'actividad' && (
-        <div className="card">
+        <div className="card" data-tour="activity">
           <div className="row mb-4" style={{ gap: 8 }}>
             <select className="input" style={{ width: 240 }} value={runWorkflowFilter} onChange={(e) => setRunWorkflowFilter(e.target.value)}>
               <option value="">Todos los flujos</option>
@@ -884,7 +928,7 @@ export default function AutomatizacionPage() {
 
       {/* ===================== TAB: CONFIGURACIÓN ===================== */}
       {topTab === 'configuracion' && (
-        <div className="grid" style={{ gap: 16, maxWidth: 760 }}>
+        <div className="grid" style={{ gap: 16, maxWidth: 760 }} data-tour="settings">
           <div className="card">
             <div className="row-between">
               <div>
@@ -959,6 +1003,7 @@ export default function AutomatizacionPage() {
           </div>
         </div>
       )}
+      <ProductTour steps={PAGE_TOUR_STEPS} open={pageTourOpen} onClose={closePageTour} onStep={onPageTourStep} />
     </div>
   );
 }

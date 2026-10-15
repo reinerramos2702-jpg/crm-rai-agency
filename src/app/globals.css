@@ -2632,3 +2632,68 @@ button.rai-sheet-btn:disabled{opacity:.55;cursor:not-allowed}
   .rai-sheet-actions{display:grid;grid-template-columns:1fr 1fr}
 }
 @media (prefers-reduced-motion:reduce){.rai-sheet-backdrop,.rai-sheet{animation:none}}
+
+/* ============================================
+   /automatizacion — acabados premium en Flujos, Plantillas, Actividad y Configuración
+   (mismas reglas: tokens, sin blur, solo transform/opacity animados, hover bajo (hover:hover))
+   ============================================ */
+.modal-backdrop{backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+.rai-page.container > *{min-width:0}
+.rai-page .h1{font-weight:800;letter-spacing:-.025em;background:linear-gradient(100deg,var(--rai-text) 30%,var(--rai-gold-br));-webkit-background-clip:text;background-clip:text;color:transparent;overflow-wrap:anywhere}
+.rai-page-head{gap:16px;flex-wrap:wrap}
+.rai-page-stats{flex-wrap:wrap;align-items:center;justify-content:flex-end}
+.rai-page .card{position:relative;border-radius:16px;background-color:transparent;background-image:linear-gradient(180deg,color-mix(in srgb,var(--rai-gold) 5%,color-mix(in srgb,var(--rai-card) 90%,transparent)),color-mix(in srgb,var(--rai-card) 90%,transparent) 150px);box-shadow:0 1px 0 color-mix(in srgb,var(--rai-text) 6%,transparent) inset,0 22px 44px -30px rgba(0,0,0,.75)}
+.rai-page .table th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--rai-muted)}
+@media (hover:hover){
+  .rai-page .table tbody tr{transition:background-color .15s ease}
+  .rai-page .table tbody tr:hover{background:color-mix(in srgb,var(--rai-gold) 6%,transparent)}
+  .rai-page .grid > .card{transition:transform .2s ease,border-color .2s ease}
+  .rai-page [data-tour="tpl-grid"] > .card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--rai-gold) 55%,var(--rai-border))}
+}
+@media (prefers-reduced-motion:no-preference){
+  @keyframes rai-page-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .rai-page [data-tour="tpl-grid"] > .card,.rai-page [data-tour="settings"] > .card,.rai-page [data-tour="flows-folders"],.rai-page [data-tour="flows-list"],.rai-page [data-tour="activity"]{animation:rai-page-rise .42s ease-out both}
+  .rai-page [data-tour="tpl-grid"] > .card:nth-child(2),.rai-page [data-tour="settings"] > .card:nth-child(2){animation-delay:.06s}
+  .rai-page [data-tour="tpl-grid"] > .card:nth-child(3),.rai-page [data-tour="settings"] > .card:nth-child(3){animation-delay:.12s}
+  .rai-page [data-tour="tpl-grid"] > .card:nth-child(n+4){animation-delay:.16s}
+}
+[data-theme="light"] .rai-page .h1{background:linear-gradient(100deg,var(--rai-text) 30%,var(--rai-gold));-webkit-background-clip:text;background-clip:text}
+@media (max-width:640px){
+  .rai-page-stats{justify-content:flex-start;width:100%}
+  .rai-page [data-tour="flows-list"] .table{display:block;overflow-x:auto}
+}
+.rai-page-head > div:first-child{flex:1 1 360px;min-width:0}
+.rai-page-stats{flex:0 0 auto}
+.rai-page.rai-stage::before,.rai-page.rai-stage::after{inset:-28px 0}
+
+/* ============================================
+   Micro-animaciones con propósito (máx. 1 visible a la vez; reduced-motion las desactiva)
+   - Anillo de avance: trazo SVG + color que progresa (muted → dorado → verde al completar)
+   - Línea Configura → Planea → Programa que se "dibuja"
+   - Check que se traza al quedar publicado
+   ============================================ */
+.rai-ring{background:none !important;--rc:var(--rai-gold-dim)}
+.rai-ring[data-level="mid"]{--rc:var(--rai-gold-br)}
+.rai-ring[data-level="done"]{--rc:var(--rai-success)}
+.rai-ring-svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.rai-ring-track,.rai-ring-bar{fill:none;stroke-width:3.2}
+.rai-ring-track{stroke:var(--rai-border)}
+.rai-ring-bar{stroke:var(--rc);stroke-linecap:round;stroke-dasharray:calc(var(--p) * 1) 100;transition:stroke-dasharray .9s cubic-bezier(.22,.8,.24,1),stroke .6s ease}
+.rai-ring span{color:var(--rc);transition:color .6s ease}
+.rai-ring[data-level="done"]{box-shadow:0 0 0 6px color-mix(in srgb,var(--rai-success) 9%,transparent),0 0 28px -6px color-mix(in srgb,var(--rai-success) 55%,transparent)}
+.rai-ring::before{z-index:0}
+.rai-ring-svg{z-index:1}
+.rai-ring span{z-index:2}
+
+.rai-steps{position:relative}
+.rai-steps::before{content:'';position:absolute;left:13%;right:13%;top:27px;height:1px;background:linear-gradient(90deg,var(--rai-gold),var(--rai-purple));opacity:.5;transform-origin:left center;pointer-events:none}
+.rai-steps > .rai-step{position:relative;z-index:1}
+@media (max-width:640px){.rai-steps::before{display:none}}
+
+.rai-check-draw{fill:none;stroke:var(--sc);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:16;stroke-dashoffset:0}
+@media (prefers-reduced-motion:no-preference){
+  @keyframes rai-draw{from{stroke-dashoffset:16}to{stroke-dashoffset:0}}
+  @keyframes rai-line-draw{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  .rai-check-draw{animation:rai-draw .5s ease-out .1s both}
+  .rai-steps::before{animation:rai-line-draw 1s ease-out .2s both}
+}

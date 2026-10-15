@@ -615,7 +615,11 @@ export default function ContentIGTab() {
               <div className="rai-cfg-count">{cfgDone} de {cfgRequired.length} secciones esenciales listas</div>
             </div>
             <div className="rai-cfg-head-side">
-              <div className="rai-ring" data-tour="cfg-progress" role="progressbar" aria-valuenow={cfgPct} aria-valuemin={0} aria-valuemax={100} aria-label="Avance de configuración" style={{ '--p': cfgPct } as React.CSSProperties}>
+              <div className="rai-ring" data-tour="cfg-progress" role="progressbar" aria-valuenow={cfgPct} aria-valuemin={0} aria-valuemax={100} aria-label="Avance de configuración" data-level={cfgPct >= 100 ? 'done' : cfgPct >= 50 ? 'mid' : 'low'} style={{ '--p': cfgPct } as React.CSSProperties}>
+                <svg className="rai-ring-svg" viewBox="0 0 36 36" aria-hidden="true">
+                  <circle className="rai-ring-track" cx="18" cy="18" r="15.9155" pathLength={100} />
+                  <circle className="rai-ring-bar" cx="18" cy="18" r="15.9155" pathLength={100} />
+                </svg>
                 <span>{cfgPct}%</span>
               </div>
               <div className={`rai-sync-pill ${syncStatus === 'error' ? 'is-error' : ''}`} role="status" aria-live="polite">{syncLabel}</div>
@@ -1119,7 +1123,7 @@ export default function ContentIGTab() {
                       if (!p) return null;
                       return (
                         <div className="rai-sched-chip" style={{ '--sc': SCHED_COLORS[p.status] } as React.CSSProperties} onClick={(e) => e.stopPropagation()}>
-                          <span className="rai-sched-state"><i />{SCHED_LABELS[p.status]}{p.simulated && p.status === 'published' ? ' · simulado' : ''}</span>
+                          <span className="rai-sched-state">{p.status === 'published' ? <svg className="rai-check-draw" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg> : <i />}{SCHED_LABELS[p.status]}{p.simulated && p.status === 'published' ? ' · simulado' : ''}</span>
                           <span className="rai-sched-when"><CalendarClock size={11} /> {fmtWhen(p.scheduledAt, p.timezone)}</span>
                           {p.status === 'failed' && p.lastError && <span className="rai-sched-err" title={p.lastError}>{p.lastError}</span>}
                           {p.status === 'scheduled' && p.attempts > 0 && p.lastError && <span className="rai-sched-err" title={p.lastError}>Reintento pendiente</span>}
