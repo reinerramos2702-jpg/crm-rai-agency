@@ -50,7 +50,7 @@ Hallazgos verificados:
 
 ## 7. Plan por cortes (propuesto; no implementado; sin enviar a OpenCode)
 
-Corte A — Configuración real por workspace (rápido, base de todo) — **HECHO local 13 oct, rama `rai-feat-automatizacion-config`, commit 42a5562** (columna `Settings.contentPlannerConfig`, migración `20261013120000_add_content_planner_config` pendiente de aplicar en staging por Reiner, API `/api/content-planner/config`, hook `useContentPlannerSync`, interruptor deshabilitado «Próximamente» hasta corte B; 25 tests nuevos, 233 en total, `tsc` limpio; pendiente verificación visual en localhost PC y móvil):
+Corte A — Configuración real por workspace (rápido, base de todo) — **HECHO local 13 oct, rama `rai-feat-automatizacion-config`, commit 42a5562** (columna `Settings.contentPlannerConfig`, migración `20261013120000_add_content_planner_config` APLICADA en staging el 13 oct por Reiner (verificada: columna `staging.Settings.contentPlannerConfig` tipo jsonb; producción sin tocar), API `/api/content-planner/config`, hook `useContentPlannerSync`, interruptor deshabilitado «Próximamente» hasta corte B; 25 tests nuevos, 233 en total, `tsc` limpio; pendiente verificación visual en localhost PC y móvil):
 - Guardar handle, hora por defecto, zona horaria, marca y reglas en BD por workspace (nuevo modelo o JSON en `Workspace`/ajustes), con migración; el handle sale de la conexión Meta, sin valores por defecto de otros negocios.
 - Corregir el interruptor y el estado visual; migrar lo que haya en `localStorage` una sola vez.
 
@@ -64,5 +64,7 @@ Corte C — Interfaz (mejora completa):
 - Visible en móvil (localhost móvil) y PC; sin efectos de desenfoque.
 
 Reconciliación 13 oct: el disparador del corte B NO es `vercel.json` `crons` sino D4 de `SPEC-publicacion-contenido-ig-fb.md` (GitHub Actions + `run-due` con `CRON_SECRET`; Hobby limita la frecuencia). El slice 7 de esa spec (`BrandProfile`) se sustituye por `Settings.contentPlannerConfig` (corte A). Los carruseles entran en alcance (esa spec los excluía). Detalle en `docs/planning/PROMPT-MAESTRO-OPENCODE.md` §9.7.
+
+Permisos Meta (14 oct): añadidos `instagram_business_basic`, `instagram_business_content_publish`, `instagram_business_manage_insights`, `instagram_business_manage_messages`, `pages_show_list`, `instagram_basic` e `instagram_content_publish`. Falta `pages_read_engagement`: Meta devuelve «Se ha producido un error» al añadirlo (también toca el caso de uso de Páginas); reintentar más tarde.
 
 Orden recomendado: A → B → C, con evidencia en cada corte (tests, `tsc`, captura en PC y móvil). Corte B depende de los permisos de Meta y de URLs públicas de imagen (ver §5).
