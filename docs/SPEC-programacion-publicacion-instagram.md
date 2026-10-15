@@ -65,6 +65,6 @@ Corte C — Interfaz (mejora completa):
 
 Reconciliación 13 oct: el disparador del corte B NO es `vercel.json` `crons` sino D4 de `SPEC-publicacion-contenido-ig-fb.md` (GitHub Actions + `run-due` con `CRON_SECRET`; Hobby limita la frecuencia). El slice 7 de esa spec (`BrandProfile`) se sustituye por `Settings.contentPlannerConfig` (corte A). Los carruseles entran en alcance (esa spec los excluía). Detalle en `docs/planning/PROMPT-MAESTRO-OPENCODE.md` §9.7.
 
-Permisos Meta (14 oct): añadidos `instagram_business_basic`, `instagram_business_content_publish`, `instagram_business_manage_insights`, `instagram_business_manage_messages`, `pages_show_list`, `instagram_basic` e `instagram_content_publish`. Falta `pages_read_engagement`: Meta devuelve «Se ha producido un error» al añadirlo (también toca el caso de uso de Páginas); reintentar más tarde.
+Permisos Meta (14 oct, verificado en una pestaña nueva): añadidos y en «Listo para prueba» `instagram_business_basic`, `instagram_business_content_publish`, `instagram_basic`, `instagram_content_publish`, `pages_show_list` y `pages_read_engagement` (Meta mostró «Se ha producido un error» al añadir este último, pero se aplicó; recargar la página antes de dar por fallida una acción). App sigue «Sin publicar»: solo cuentas con rol.
 
 Orden recomendado: A → B → C, con evidencia en cada corte (tests, `tsc`, captura en PC y móvil). Corte B depende de los permisos de Meta y de URLs públicas de imagen (ver §5).
