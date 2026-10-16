@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import '../styles/effects.css';
 import { Sidebar } from '@/components/layout/Sidebar';
 import TourHost from '@/components/tour/TourHost';
 import { ClickFx } from '@/components/ui/ClickFx';
@@ -35,6 +36,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem('rai-theme');if(t)document.documentElement.setAttribute('data-theme',t);if(localStorage.getItem('rai-sidebar-collapsed-v1')==='1')document.documentElement.setAttribute('data-sidebar','collapsed')}catch(e){}})()`,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var d=localStorage.getItem('rai-density-v1');if(d==='compact'||d==='comfortable'||d==='spacious')document.documentElement.setAttribute('data-density',d)}catch(e){}})()`,
           }}
         />
       </head>

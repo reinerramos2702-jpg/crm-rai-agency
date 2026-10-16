@@ -4,12 +4,15 @@ import React, { useCallback, useEffect, useRef, useState, type CSSProperties } f
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { Wifi, WifiOff, ShieldCheck, Menu, X, ChevronLeft, Search, PanelLeftClose } from 'lucide-react';
+import { Wifi, WifiOff, ShieldCheck, Menu, X, ChevronLeft, Search, PanelLeftClose, Rows3 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { hasModuleAccess, ROLE_LABELS, type Role } from '@/lib/roles-shared';
 import { apiFetch } from '@/lib/client-api';
 import { prefetchRouteData, warmCommonData } from '@/lib/route-data';
 import { NAV_GROUPS, NAV_ITEMS, findNavItem } from './nav-config';
 import { CommandPalette, type PaletteItem } from './CommandPalette';
+import { DensityToggle, applyDensity, readDensity } from '@/components/ui/DensityToggle';
+import { DENSITY_LABELS, nextDensity } from '@/lib/density';
 
 interface SidebarProps {
   n8nConnected?: boolean;
@@ -166,6 +169,13 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
     setTip({ label, top: r.top + r.height / 2 });
   };
 
+  // Cicla Compacta → Estándar → Espaciosa; el selector del pie se sincroniza por evento.
+  const cycleDensity = () => {
+    const next = nextDensity(readDensity());
+    applyDensity(next);
+    toast(`Densidad de la interfaz: ${DENSITY_LABELS[next]}`);
+  };
+
   const canSee = (href: string) => !role || hasModuleAccess(role, href);
   const groups = NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => canSee(i.href)) })).filter((g) => g.items.length > 0);
   const visibleCount = groups.reduce((n, g) => n + g.items.length, 0);
@@ -186,6 +196,14 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
       icon: PanelLeftClose,
       keywords: 'ocultar mostrar barra lateral sidebar',
       run: () => applyCollapsed(!collapsed),
+    },
+    {
+      id: 'act:density',
+      label: 'Cambiar densidad de la interfaz',
+      group: 'Acciones',
+      icon: Rows3,
+      keywords: 'compacta estándar espaciosa espaciado tamaño filas tablas',
+      run: cycleDensity,
     },
   ];
 
@@ -400,6 +418,9 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
             <span className="sb-label">Rol: {ROLE_LABELS[role]}</span>
           </div>
         )}
+        <div className="sb-density">
+          <DensityToggle />
+        </div>
         <div className="sb-label sb-copy" style={{ marginTop: 8, fontSize: 11, color: 'var(--rai-muted)', opacity: 0.6 }}>
           RAI Agency © 2025
         </div>
