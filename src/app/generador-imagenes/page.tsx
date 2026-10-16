@@ -7,15 +7,18 @@ import toast from 'react-hot-toast';
 import { TopBar } from '@/components/layout/TopBar';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SkeletonCard } from '@/components/ui/Skeleton';
-import { Spinner } from '@/components/ui/Spinner';
 import { useCachedJson } from '@/lib/use-cached-json';
-import { countByStatus, filterGrids, gridsSignature, hasActiveFilters, sortGrids } from '@/lib/grid-filters';
+import { fetchJson, invalidate, prefetchJson } from '@/lib/swr-cache';
+import { countByStatus, filterGrids, gridsSignature, hasActiveFilters, pinnedFirst, sortGrids } from '@/lib/grid-filters';
+import { buildTemplateThemes, templateById, type GridTemplate } from '@/lib/grid-templates';
 import { BrandDocCard } from './BrandDocCard';
 import { GridCard } from './GridCard';
 import { GridFilters } from './GridFilters';
+import { NewGridDialog } from './NewGridDialog';
 import { EMPTY_BRAND_DOC, type BrandDocInfo, type ContentGridSummary } from './types';
 import { getErrorMessage } from './utils';
 import { useGridView } from './useGridView';
+import { usePinnedGrids } from './usePinnedGrids';
 import './generador.css';
 
 /** Duración del pulso `is-syncing` de la cabecera (el anillo dura ~1,1 s). */
@@ -30,10 +33,13 @@ const FLOW_STEPS = [
 export default function GeneradorImagenesPage() {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const { view, setQuery, setStatus, setSort, clearFilters } = useGridView();
+  const { pinned, toggle: togglePin } = usePinnedGrids();
 
   // Datos con caché compartida: al volver al módulo aparecen al instante y se
   // actualizan por detrás (ver src/lib/use-cached-json.ts).
@@ -54,8 +60,8 @@ export default function GeneradorImagenesPage() {
     [grids, view.query],
   );
   const visibleGrids = useMemo(
-    () => (grids ? sortGrids(filterGrids(grids, view), view.sort) : null),
-    [grids, view],
+    () => (grids ? pinnedFirst(sortGrids(filterGrids(grids, view), view.sort), pinned) : null),
+    [grids, view, pinned],
   );
   const filtering = hasActiveFilters(view);
 
@@ -83,16 +89,69 @@ export default function GeneradorImagenesPage() {
     return () => clearTimeout(timer);
   }, [syncing]);
 
-  async function handleCreate() {
+  async function handleCreate(templateId: GridTemplate['id'] | null) {
     setCreating(true);
     try {
-      const res = await fetch('/api/content-grids', { method: 'POST' });
+      const template = templateId ? templateById(templateId) : undefined;
+      const stamp = new Date().toLocaleDateString('es', { day: '2-digit', month: 'short' });
+      const res = await fetch('/api/content-grids', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(template ? { name: `${template.name} · ${stamp}` } : {}),
+      });
       if (!res.ok) throw new Error('No se pudo crear la grilla');
       const data = await res.json();
+      if (template) {
+        // La plantilla ya define los 7 temas: la grilla arranca en el Nodo 2.
+        const patch = await fetch(`/api/content-grids/${data.grid.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ themes: buildTemplateThemes(template.id), currentStep: 2, status: 'in_progress' }),
+        });
+        if (!patch.ok) toast.error('La grilla se creó, pero no se pudieron precargar los temas');
+      }
+      invalidate('/api/content-grids');
       router.push(`/generador-imagenes/${data.grid.id}`);
     } catch (e: unknown) {
       toast.error(getErrorMessage(e, 'Error creando la grilla'));
       setCreating(false);
+    }
+  }
+
+  async function handleDuplicate(grid: ContentGridSummary) {
+    setDuplicatingId(grid.id);
+    try {
+      const source = await fetchJson<{ grid: { themes?: unknown[]; themesTotal?: number; imageProvider?: string; llmProvider?: string | null; llmModel?: string | null } }>(
+        `/api/content-grids/${grid.id}`,
+      );
+      const themes = Array.isArray(source.grid.themes) ? source.grid.themes : [];
+      const hasTitles = themes.some((t) => typeof (t as { title?: unknown })?.title === 'string' && (t as { title: string }).title.trim() !== '');
+      const created = await fetch('/api/content-grids', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: `${grid.name} (copia)`.slice(0, 120), imageProvider: source.grid.imageProvider }),
+      });
+      if (!created.ok) throw new Error('No se pudo duplicar la grilla');
+      const { grid: copy } = await created.json();
+      const patch = await fetch(`/api/content-grids/${copy.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          themes,
+          ...(typeof source.grid.themesTotal === 'number' ? { themesTotal: source.grid.themesTotal } : {}),
+          ...(source.grid.llmProvider ? { llmProvider: source.grid.llmProvider } : {}),
+          ...(source.grid.llmModel ? { llmModel: source.grid.llmModel } : {}),
+          currentStep: hasTitles ? 2 : 1,
+          status: hasTitles ? 'in_progress' : 'draft',
+        }),
+      });
+      if (!patch.ok) throw new Error('La copia se creó, pero no se pudo traer el contenido');
+      await gridsState.refresh();
+      toast.success('Grilla duplicada: se copiaron temas y copys (las imágenes no).');
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Error duplicando la grilla'));
+    } finally {
+      setDuplicatingId(null);
     }
   }
 
@@ -145,8 +204,8 @@ export default function GeneradorImagenesPage() {
         title="Generador Imágenes"
         subtitle="Crea grillas semanales de contenido guiadas paso a paso, desde la ideación hasta el copywriting final."
         actions={
-          <button className="btn-primary" onClick={handleCreate} disabled={creating}>
-            {creating ? <Spinner size="sm" /> : <Plus size={16} />}
+          <button className="btn-primary" onClick={() => setDialogOpen(true)} disabled={creating}>
+            <Plus size={16} />
             Nueva Grilla
           </button>
         }
@@ -188,8 +247,8 @@ export default function GeneradorImagenesPage() {
             text="Una grilla es un proyecto semanal de contenido: 7 temas con sus carruseles, imágenes y copys. El asistente te guía nodo por nodo, validando cada paso contigo."
             steps={FLOW_STEPS}
             action={
-              <button className="btn-primary" onClick={handleCreate} disabled={creating}>
-                {creating ? <Spinner size="sm" /> : <Sparkles size={16} />}
+              <button className="btn-primary" onClick={() => setDialogOpen(true)} disabled={creating}>
+                <Sparkles size={16} />
                 Crear primera grilla
               </button>
             }
@@ -213,18 +272,30 @@ export default function GeneradorImagenesPage() {
                 grid={grid}
                 onOpen={() => router.push(`/generador-imagenes/${grid.id}`)}
                 onDelete={() => handleDelete(grid.id, grid.name)}
+                onDuplicate={() => handleDuplicate(grid)}
+                onTogglePin={() => togglePin(grid.id)}
+                onWarm={() => prefetchJson(`/api/content-grids/${grid.id}`, 8_000)}
+                pinned={pinned.includes(grid.id)}
                 deleting={deletingId === grid.id}
+                duplicating={duplicatingId === grid.id}
               />
             ))}
 
             {/* Tarjeta "Nueva grilla" al final de la cuadrícula */}
-            <button onClick={handleCreate} disabled={creating} className="card gi-new">
-              {creating ? <Spinner size="md" /> : <Plus size={28} />}
+            <button onClick={() => setDialogOpen(true)} disabled={creating} className="card gi-new">
+              <Plus size={28} />
               <span className="gi-new-label">Nueva grilla</span>
             </button>
           </div>
         )}
       </div>
+
+      <NewGridDialog
+        open={dialogOpen}
+        creating={creating}
+        onClose={() => setDialogOpen(false)}
+        onCreate={handleCreate}
+      />
     </>
   );
 }

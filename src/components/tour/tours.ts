@@ -176,7 +176,15 @@ const LAUNCHPAD: ModuleTour = {
       placement: 'right',
       optional: true,
       title: 'Categorías',
-      body: 'Los pasos están agrupados por tema. Cada pastilla indica el avance de su categoría.',
+      body: 'Los pasos están agrupados por tema. El anillo y el porcentaje indican el avance de cada categoría; las completadas se pliegan abajo.',
+    },
+    {
+      id: 'filters',
+      target: () => visible($('.lp-filters')),
+      placement: 'bottom',
+      optional: true,
+      title: 'Pendientes o todos',
+      body: 'Por defecto ves solo lo que falta. Cambia a «Todos» para repasar también lo ya hecho.',
     },
     {
       id: 'items',
@@ -188,7 +196,7 @@ const LAUNCHPAD: ModuleTour = {
       hints: [
         { target: () => visible($('.lp-main .lp-ring')), label: 'Círculo: se llena al completar el paso.' },
         { target: () => visible($('.lp-main .lp-item-end .lp-pct')), label: 'Porcentaje de avance del paso.' },
-        { target: () => visible($('.lp-main .lp-item-end button')), label: 'Flecha: despliega el tutorial.' },
+        { target: () => visible($('.lp-main .lp-item-end button')), label: 'Flecha: despliega el tutorial y «Más tarde» para posponer el paso.' },
       ],
     },
     {
@@ -263,9 +271,10 @@ const SPECS: Array<{ path: string; spec: ModuleSpec }> = [
     spec: {
       id: 'generador-imagenes',
       label: 'Generador de Imágenes',
-      intro: 'Crea imágenes con IA para tus campañas y publicaciones.',
-      mainTitle: 'Tu espacio de creación',
-      mainTip: 'Describe lo que quieres y genera tus imágenes desde aquí.',
+      intro: 'Crea grillas semanales de contenido: 7 temas con imágenes y copys listos para programar.',
+      primaryTip: 'Nueva grilla: empieza en blanco o con una plantilla (educativa, venta, comunidad o lanzamiento).',
+      mainTitle: 'Tus grillas',
+      mainTip: 'Fija las favoritas, duplica una semana que funcionó y ábrela para ver el avance de cada día.',
     },
   },
   {
@@ -420,8 +429,9 @@ export const CAMPAIGN_NEW: ModuleTour = {
       title: 'Define lo básico',
       body: 'Empieza por un nombre que te ayude a reconocer la campaña. Luego elige el formato y las herramientas de IA.',
       hints: [
+        { target: dataTour('cn-start'), label: 'Arranque rápido: plantillas por tipo de negocio, campañas previas y tus preajustes.' },
         { target: dataTour('cn-pipeline'), label: 'Tipo de pipeline: elige una tarjeta (UGC, Avatar Reel, anuncios estáticos o carruseles).' },
-        { target: dataTour('cn-model'), label: 'Modelo de planificación: la IA que conversa contigo y arma el plan.' },
+        { target: dataTour('cn-model'), label: 'Modelo de planificación: la IA que conversa contigo; los chips muestran su costo y velocidad.' },
         { target: dataTour('cn-image'), label: 'Generación de imágenes: el proveedor que creará las imágenes.' },
       ],
     },
@@ -436,6 +446,7 @@ export const CAMPAIGN_NEW: ModuleTour = {
       hints: [
         { target: dataTour('cn-brand'), label: 'Manual de marca: tono, audiencia, productos y temas prohibidos.' },
         { target: dataTour('cn-competitor'), label: 'Competencia: analiza webs o anuncios de Meta para inspirarte.' },
+        { target: dataTour('cn-cost'), label: 'Costo estimado: se actualiza al cambiar pipeline, modelo o tamaño del lote.' },
         { target: dataTour('cn-tip'), label: 'Atajo: automatiza el seguimiento de los contactos que lleguen.' },
       ],
     },
@@ -447,8 +458,9 @@ export const CAMPAIGN_NEW: ModuleTour = {
       title: 'Conversa con la IA',
       body: 'Cuéntale sobre tu marca, tu audiencia y tus objetivos. Ella te hace las preguntas que faltan.',
       hints: [
+        { target: dataTour('cn-insight'), label: 'Preparación (claves, marca, Instagram) y Resumen del plan con el brief editable.' },
         { target: dataTour('cn-chat-log'), label: 'La conversación aparece aquí. También puedes arrastrar archivos.' },
-        { target: dataTour('cn-chat-input'), label: 'Escribe y pulsa Enter, o adjunta archivos con el icono de carpeta.' },
+        { target: dataTour('cn-chat-input'), label: 'Escribe y pulsa Enter o Ctrl/Cmd+Enter, o adjunta archivos con el icono de carpeta.' },
       ],
     },
     {

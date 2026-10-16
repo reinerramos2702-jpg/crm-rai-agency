@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import { CheckCircle2, FileText, Upload } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, FileText, Upload } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
+import { SkeletonLine } from '@/components/ui/Skeleton';
 import type { BrandDocInfo } from './types';
 import { formatDate } from './utils';
 
@@ -44,15 +45,23 @@ export function BrandDocCard({ brandDoc, uploading, onUpload }: BrandDocCardProp
           <div>
             <div className="row" style={{ gap: 8 }}>
               <h3>Sistema Operativo de Contenido</h3>
-              {brandDoc?.hasBrandDoc ? (
+              {brandDoc === null ? (
+                <SkeletonLine width={84} height={20} />
+              ) : brandDoc.hasBrandDoc ? (
                 <span className="badge badge-success">
                   <CheckCircle2 size={11} /> Cargado
                 </span>
               ) : (
-                <span className="badge badge-muted">Sin documento</span>
+                <span className="badge badge-warning">
+                  <AlertTriangle size={11} /> Falta el documento
+                </span>
               )}
             </div>
-            {brandDoc?.hasBrandDoc ? (
+            {brandDoc === null ? (
+              <div style={{ marginTop: 8 }}>
+                <SkeletonLine width="min(420px, 100%)" height={13} />
+              </div>
+            ) : brandDoc.hasBrandDoc ? (
               <p className="muted" style={{ marginTop: 4 }}>
                 {brandDoc.brandDocName}
                 {brandDoc.brandDocUpdatedAt && ` · actualizado ${formatDate(brandDoc.brandDocUpdatedAt)}`}
@@ -60,10 +69,18 @@ export function BrandDocCard({ brandDoc, uploading, onUpload }: BrandDocCardProp
                 {brandDoc.brandDocText?.length.toLocaleString('es')} caracteres
               </p>
             ) : (
-              <p className="muted" style={{ marginTop: 4 }}>
-                Arrastra aquí el documento .docx con las reglas de marca, narrativa y producción
-                de tu agencia. El asistente lo usará como guion para cada nodo del wizard.
-              </p>
+              <div className="gi-brand-guide">
+                <p className="muted">
+                  Sin este documento el asistente usa buenas prácticas generales. Arrastra aquí tu .docx para que
+                  siga tus reglas en cada nodo del wizard. Conviene que incluya:
+                </p>
+                <ul>
+                  <li>Paleta y tipografía</li>
+                  <li>Tono de voz</li>
+                  <li>Estructura de slides</li>
+                  <li>Reglas de copy y hashtags</li>
+                </ul>
+              </div>
             )}
           </div>
         </div>

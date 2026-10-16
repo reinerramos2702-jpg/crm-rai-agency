@@ -228,10 +228,147 @@
 .gi-new-label { font-size: 14px; font-weight: 600; text-transform: none; }
 
 /* Esqueleto de carga: misma altura que una tarjeta real */
-.card.gi-skeleton { min-height: 170px; }
+.card.gi-skeleton { min-height: 262px; }
 
 /* La entrada `fx-rise` (globals.css) usa fill `both`, que dejaba `transform: none`
    fijado y anulaba el levantamiento al pasar el cursor. Con `backwards` solo
    rige durante la entrada. */
 .card.gi-card,
 .card.gi-new { animation-fill-mode: backwards; }
+
+/* ---------- Guía cuando falta el documento de marca ---------- */
+.gi-brand-guide { margin-top: 4px; max-width: 62ch; }
+.gi-brand-guide ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.gi-brand-guide li {
+  padding: 2px 10px;
+  border: 1px solid var(--rai-border);
+  border-radius: 100px;
+  font-size: 12px;
+  color: var(--rai-muted);
+}
+
+/* ---------- Tarjeta: fijar y resumen de avance ---------- */
+.gi-card.is-pinned { border-color: color-mix(in srgb, var(--rai-gold) 45%, var(--rai-border)); }
+
+.gi-pin {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: var(--rai-muted) !important;
+  box-shadow: none !important;
+}
+.gi-pin.is-on { color: var(--rai-gold) !important; }
+.gi-pin:focus-visible { outline: 2px solid var(--rai-gold); outline-offset: 1px; }
+@media (hover: hover) {
+  .gi-pin:hover { color: var(--rai-gold) !important; border-color: color-mix(in srgb, var(--rai-gold) 40%, transparent) !important; }
+}
+
+.gi-card-tally { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--rai-muted); }
+.gi-card-tally strong { color: var(--rai-text); font-weight: 600; }
+
+/* ---------- Diálogo propio (sin desenfoque de fondo) ---------- */
+.gi-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(10, 10, 15, 0.72);
+}
+[data-theme="light"] .gi-dialog-backdrop { background: rgba(26, 26, 46, 0.35); }
+
+.gi-dialog {
+  width: 100%;
+  max-width: 720px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 24px;
+  background: var(--rai-card);
+  border: 1px solid var(--rai-border);
+  border-radius: var(--radius-lg, 14px);
+  box-shadow: var(--fx-elev-3);
+}
+.gi-dialog-head { align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+.gi-dialog-head p { margin-top: 2px; }
+.gi-dialog-foot { justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+
+.gi-templates { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+
+.gi-template {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  padding: 14px !important;
+  text-align: left !important;
+  border: 1px solid var(--rai-border) !important;
+  border-radius: var(--radius-md) !important;
+  background: transparent !important;
+  color: var(--rai-text) !important;
+  box-shadow: none !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+.gi-template[aria-checked="true"] {
+  border-color: color-mix(in srgb, var(--rai-gold) 70%, transparent) !important;
+  background: color-mix(in srgb, var(--rai-gold) 10%, transparent) !important;
+}
+.gi-template:focus-visible { outline: 2px solid var(--rai-gold); outline-offset: 2px; }
+.gi-template-icon { color: var(--rai-gold); }
+.gi-template-name { font-size: 14px; font-weight: 600; }
+.gi-template-text { font-size: 12px; font-weight: 400; line-height: 1.45; color: var(--rai-muted); white-space: normal; }
+@media (hover: hover) {
+  .gi-template[aria-checked="false"]:hover { border-color: color-mix(in srgb, var(--rai-gold) 45%, transparent) !important; }
+}
+
+.gi-template-preview {
+  display: grid;
+  gap: 6px;
+  margin: 16px 0 0;
+  padding: 12px;
+  list-style: none;
+  border: 1px solid var(--rai-border);
+  border-radius: var(--radius-md);
+}
+.gi-template-preview li {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.gi-template-preview li > span:nth-child(2) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gi-template-day { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--rai-muted); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .gi-dialog { animation: gi-dialog-in 0.18s ease-out both; }
+  @keyframes gi-dialog-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+}
+
+@media (max-width: 480px) {
+  .gi-dialog { padding: 16px; }
+  .gi-template-preview li { grid-template-columns: minmax(0, 1fr) auto; }
+  .gi-template-preview .gi-template-day { display: none; }
+}
+
+/* En móvil la tarjeta entera abre la grilla: se oculta «Abrir» para que las acciones quepan en 320 px */
+@media (max-width: 480px) {
+  .gi-card-actions .btn-secondary { display: none !important; }
+}

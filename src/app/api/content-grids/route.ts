@@ -36,7 +36,21 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  return Response.json({ grids });
+  // La lista solo necesita títulos, categoría y si hay copy: no se envía el texto completo
+  // de cada copy (el JSON `themes` puede crecer) para mantener la carga rápida.
+  const slim = grids.map((grid) => ({
+    ...grid,
+    themes: (Array.isArray(grid.themes) ? (grid.themes as unknown[]) : []).map((t) => {
+      const theme = (t && typeof t === 'object' ? t : {}) as Record<string, unknown>;
+      return {
+        title: typeof theme.title === 'string' ? theme.title : '',
+        category: typeof theme.category === 'string' ? theme.category : '',
+        hasCopy: typeof theme.caption === 'string' && theme.caption.trim() !== '',
+      };
+    }),
+  }));
+
+  return Response.json({ grids: slim });
 }
 
 export async function POST(req: NextRequest) {

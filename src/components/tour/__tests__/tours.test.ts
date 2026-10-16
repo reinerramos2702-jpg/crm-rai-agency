@@ -61,8 +61,13 @@ describe('guía de Nueva Campaña', () => {
   });
 
   it('solo apunta a marcadores data-tour que existen en la página', async () => {
-    const { readFileSync } = await import('node:fs');
-    const page = readFileSync('src/app/campaign/new/page.tsx', 'utf8');
+    const { readFileSync, readdirSync } = await import('node:fs');
+    // La página se divide en componentes y hooks: los marcadores pueden vivir en cualquiera de ellos.
+    const dir = 'src/app/campaign/new';
+    const sources = readdirSync(dir, { recursive: true, withFileTypes: false })
+      .map(String)
+      .filter((f) => f.endsWith('.tsx'));
+    const page = sources.map((f) => readFileSync(`${dir}/${f}`, 'utf8')).join('\n');
     const targets = CAMPAIGN_NEW.steps.flatMap((st) => [st.target, ...(st.hints ?? []).map((h) => h.target)]);
     const names = targets
       .filter((t): t is string => typeof t === 'string')

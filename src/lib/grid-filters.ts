@@ -109,3 +109,31 @@ export function parseGridView(raw: string | null): GridView {
     return DEFAULT_GRID_VIEW;
   }
 }
+
+// ---------- Grillas fijadas (favoritas) ----------
+
+const MAX_PINNED = 50;
+
+/** Lee los ids fijados; cualquier dato ausente o corrupto devuelve una lista vacía. */
+export function parsePinned(raw: string | null): string[] {
+  if (!raw) return [];
+  try {
+    const data: unknown = JSON.parse(raw);
+    if (!Array.isArray(data)) return [];
+    return [...new Set(data.filter((id): id is string => typeof id === 'string' && id !== ''))].slice(0, MAX_PINNED);
+  } catch {
+    return [];
+  }
+}
+
+/** Alterna un id fijado sin mutar la lista. */
+export function togglePinned(pinned: readonly string[], id: string): string[] {
+  return pinned.includes(id) ? pinned.filter((p) => p !== id) : [...pinned, id].slice(-MAX_PINNED);
+}
+
+/** Pone primero las grillas fijadas y conserva el orden relativo del resto. No muta la entrada. */
+export function pinnedFirst<T extends { id: string }>(grids: readonly T[], pinned: readonly string[]): T[] {
+  if (pinned.length === 0) return [...grids];
+  const set = new Set(pinned);
+  return [...grids.filter((g) => set.has(g.id)), ...grids.filter((g) => !set.has(g.id))];
+}
