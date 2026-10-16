@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Sidebar } from '@/components/layout/Sidebar';
+import TourHost from '@/components/tour/TourHost';
 import { Toaster } from 'react-hot-toast';
 
 export const metadata: Metadata = {
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Sidebar />
           <main className="app-main">{children}</main>
         </div>
+        <TourHost />
         <Toaster
           position="bottom-right"
           toastOptions={{

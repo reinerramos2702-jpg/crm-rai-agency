@@ -160,3 +160,10 @@
 - Guía de Inicio (`/launchpad`): badge de % unificado (`.lp-pct`, ancho fijo, cifras tabulares), categorías pasan a chips con scroll horizontal ≤900px, filas de pasos sin wrap ≤520px.
 - Evidencia: tsc limpio, 275 tests OK, 20 rutas a 390px sin overflow horizontal; `/launchpad` 0 overflow a 320/390/768/1024/1440.
 - Nota dato: saludo muestra "Rainer" porque el displayName de la cuenta es "Rainer" (no es código).
+
+### Recorrido guiado premium en todo el CRM (16 oct 2026, rama `rai-feat-dashboard-premium`, local)
+- Componente único `src/components/tour/ProductTour.tsx` (el de `pipeline-ig/` ahora reexporta): foco que se desliza entre pasos, pulso, flecha hacia el elemento, barra de progreso, contenido en cascada, marcas numeradas 1-2-3 en cascada sobre sub-elementos (`step.hints`), pasos `optional` (se omiten solos) y `desktopOnly`, teclado (← → Esc, Tab atrapado), hoja inferior en móvil, sin blur, respeta `prefers-reduced-motion`. Estilos en `tour/tour.css` (prefijo `rtour-`; CSS viejo `rai-tour-*` eliminado de globals.css).
+- `TourHost` (montado en `layout.tsx`): botón «?» flotante con menú (Guía de esta pantalla / Recorrido general del CRM / Reactivar guías automáticas), arranque automático una sola vez por módulo (clave `rai-tour-mod-<id>-v1`), opción «No volver a mostrar guías automáticas» (`rai-tour-auto-off-v1`).
+- Registro `tour/tours.ts`: guía propia de Guía de Inicio + 19 módulos + recorrido general del menú. Dashboard y Automatización conservan su recorrido en la página (Dashboard ganó marcas en «Accesos rápidos»).
+- Evidencia: tsc limpio, 281 tests (6 nuevos del registro), verificado en vivo (Guía de Inicio, tour general con marcas en el menú, Dashboard, Automatización, móvil 390px sin overflow).
+- Deuda: textos de módulos sin pantalla revisada son genéricos (revisar con Reiner); botón «Guía de esta pantalla» no existe en `/` y `/automatizacion` (usan su botón «Ver recorrido»).

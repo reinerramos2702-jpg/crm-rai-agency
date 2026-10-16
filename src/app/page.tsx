@@ -204,7 +204,12 @@ export default function DashboardPage() {
 
   const tourSteps: TourStep[] = [
     { id: 'welcome', title: 'Tu panel de control', body: 'En 30 segundos ves qué hay en cada zona. Puedes repetirlo con "Ver recorrido".' },
-    { id: 'actions', target: '[data-tour="dash-actions"]', placement: 'bottom', title: 'Accesos rápidos', body: 'Lo que más usas, a un clic: nueva campaña, Instagram, calendarios y conversaciones.' },
+    { id: 'actions', target: '[data-tour="dash-actions"]', placement: 'bottom', title: 'Accesos rápidos', body: 'Lo que más usas, a un clic. Fíjate en las cuatro:', hints: [
+      { target: '[data-tour="dash-actions"] .dash-action:nth-child(1)', label: 'Crea una campaña nueva con IA.' },
+      { target: '[data-tour="dash-actions"] .dash-action:nth-child(2)', label: 'Programa y publica en Instagram.' },
+      { target: '[data-tour="dash-actions"] .dash-action:nth-child(3)', label: 'Organiza tu agenda y calendarios.' },
+      { target: '[data-tour="dash-actions"] .dash-action:nth-child(4)', label: 'Responde a tus clientes.' },
+    ] },
     { id: 'ig', target: '[data-tour="dash-ig"]', placement: 'bottom', title: 'Instagram, hoy', body: 'Cuántas publicaciones hay programadas y cuándo sale la siguiente. Si algo falla, te avisa aquí.' },
     { id: 'auto', target: '[data-tour="dash-auto"]', placement: 'bottom', title: 'Automatización', body: 'Flujos que trabajan solos: recordatorios, seguimientos, bienvenidas. Se activan desde plantillas.' },
     ...(total > 0
