@@ -340,8 +340,8 @@ export default function LaunchpadPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-        <div style={{ width: 280, flexShrink: 0 }}>
+      <div className="lp-layout">
+        <div className="lp-cats" role="tablist" aria-label="Categorías de la guía">
           {CATEGORIES.map(({ id, label, icon: Icon, items }) => {
             const isActive = id === activeCategory;
             const pct = categoryProgress({ id, label, icon: Icon, items });
@@ -352,26 +352,15 @@ export default function LaunchpadPage() {
                   setActiveCategory(id);
                   setExpanded(null);
                 }}
-                className={isActive ? 'primary' : 'ghost'}
-                style={{
-                  width: '100%',
-                  justifyContent: 'space-between',
-                  marginBottom: 4,
-                  fontSize: 13,
-                  textAlign: 'left',
-                }}
+                role="tab"
+                aria-selected={isActive}
+                className={`lp-cat ${isActive ? 'primary' : 'ghost'}`}
               >
-                <span className="row" style={{ gap: 8 }}>
-                  <Icon size={14} />
-                  {label}
+                <span className="lp-cat-label">
+                  <Icon size={14} aria-hidden="true" />
+                  <span className="lp-cat-text">{label}</span>
                 </span>
-                <span
-                  className="badge"
-                  style={{
-                    background: pct === 100 ? 'rgba(46,196,182,0.15)' : 'rgba(136,136,170,0.15)',
-                    color: pct === 100 ? 'var(--rai-success)' : 'var(--rai-muted)',
-                  }}
-                >
+                <span className={`lp-pct${pct === 100 ? ' done' : ''}`} aria-label={`${pct}% completado`}>
                   {pct}%
                 </span>
               </button>
@@ -379,7 +368,7 @@ export default function LaunchpadPage() {
           })}
         </div>
 
-        <div style={{ flex: 1 }}>
+        <div className="lp-main">
           <div className="card mb-4">
             <div className="row-between mb-2">
               <span className="muted" style={{ fontSize: 12 }}>
@@ -411,12 +400,12 @@ export default function LaunchpadPage() {
                   }}
                 >
                   <div
-                    className="row-between"
+                    className="row-between lp-item"
                     style={{ padding: '14px 16px', gap: 12 }}
                   >
                     <div
                       className="row"
-                      style={{ gap: 12, alignItems: 'flex-start', flex: 1, cursor: 'pointer' }}
+                      style={{ gap: 12, alignItems: 'flex-start', flex: 1, minWidth: 0, cursor: 'pointer' }}
                       onClick={() => setExpanded(isOpen ? null : item.id)}
                     >
                       <div
@@ -475,8 +464,8 @@ export default function LaunchpadPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="row" style={{ gap: 10, flexShrink: 0, alignItems: 'center' }}>
-                      <span className={`lp-ring-pct ${isDone ? 'done' : ''}`}>
+                    <div className="row lp-item-end" style={{ gap: 10, flexShrink: 0, alignItems: 'center' }}>
+                      <span className={`lp-pct ${isDone ? 'done' : ''}`}>
                         {isDone ? 100 : 0}%
                       </span>
                       <button

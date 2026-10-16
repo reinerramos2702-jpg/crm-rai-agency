@@ -153,3 +153,10 @@
 
 ## Recuperar contraseña + fondo galaxia + card premium (11 oct 2026, noche)
 - Detalle y estado en el panel (`recuperar-contrasena`, `login-fondo-full-bleed`) y en `docs/SPEC-recuperar-contrasena.md`. Pendiente de Reiner: migración en staging y proveedor de email/SMS. Propuesta de planes en `docs/SPEC-planes-monetizacion.md` §2b.
+
+### Dashboard premium + Guía de Inicio responsive (15 oct 2026, rama `rai-feat-dashboard-premium`, local)
+- Dashboard (`/`): hero con saludo + 4 acciones rápidas, tarjeta Instagram (lee `/api/content-planner/schedule`; si falla muestra "no disponible"), tarjeta Automatización, stats con barra de proporción, búsqueda + chips de filtro, `ConfirmDialog` (reemplaza `confirm()`), aviso Hotel descartable (`rai-dash-hotel-hint-dismissed`), recorrido `rai-tour-dash-v1`, estado vacío guiado. Badge `processing` → "En proceso".
+- Fix hidratación: caché de localStorage se aplica en `useEffect` (no en `useState`).
+- Guía de Inicio (`/launchpad`): badge de % unificado (`.lp-pct`, ancho fijo, cifras tabulares), categorías pasan a chips con scroll horizontal ≤900px, filas de pasos sin wrap ≤520px.
+- Evidencia: tsc limpio, 275 tests OK, 20 rutas a 390px sin overflow horizontal; `/launchpad` 0 overflow a 320/390/768/1024/1440.
+- Nota dato: saludo muestra "Rainer" porque el displayName de la cuenta es "Rainer" (no es código).

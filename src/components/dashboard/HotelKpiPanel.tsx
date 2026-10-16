@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   BedDouble, LogIn, LogOut, Wallet, AlertCircle, TrendingUp,
-  Users, ChevronRight, Building2, RefreshCw,
+  Users, ChevronRight, Building2, RefreshCw, X,
 } from 'lucide-react';
 import { formatMoney, BookingStatusBadge, PaymentStatusBadge } from '@/components/hotel/StatusBadges';
 import { HelpTip } from '@/components/ui/HelpTip';
@@ -40,17 +40,14 @@ interface Recent {
 }
 
 const CACHE_KEY = 'rai_hotel_kpis_v1';
+const DISMISS_KEY = 'rai-dash-hotel-hint-dismissed';
 
 export function HotelKpiPanel() {
-  const [kpis, setKpis] = useState<Kpis | null>(() => {
-    if (typeof window === 'undefined') return null;
-    try { const raw = localStorage.getItem(CACHE_KEY); return raw ? JSON.parse(raw).kpis : null; } catch { return null; }
-  });
-  const [recent, setRecent] = useState<Recent | null>(() => {
-    if (typeof window === 'undefined') return null;
-    try { const raw = localStorage.getItem(CACHE_KEY); return raw ? JSON.parse(raw).recent : null; } catch { return null; }
-  });
-  const [loading, setLoading] = useState(kpis === null);
+  const [kpis, setKpis] = useState<Kpis | null>(null);
+  const [recent, setRecent] = useState<Recent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [dismissed, setDismissed] = useState(false);
+  useEffect(() => { try { setDismissed(localStorage.getItem(DISMISS_KEY) === '1'); } catch { /* sin storage */ } }, []);
 
   async function load() {
     try {
@@ -67,24 +64,26 @@ export function HotelKpiPanel() {
       // silencioso: el panel es complementario
     } finally { setLoading(false); }
   }
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    // Caché local aplicado tras montar (mismo HTML inicial en servidor y cliente).
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (raw) { const c = JSON.parse(raw); setKpis(c.kpis ?? null); setRecent(c.recent ?? null); if (c.kpis) setLoading(false); }
+    } catch { /* caché corrupto: se ignora */ }
+    load();
+  }, []);
 
-  // Si nunca ha cargado y no hay cache, mostrar empty con CTA
+  // Capa hotelera sin datos: una línea discreta y descartable (no ocupa el dashboard de quien no es hotel).
   if (!loading && kpis && kpis.totalGuests === 0 && kpis.totalSites === 0) {
+    if (dismissed) return null;
     return (
-      <div className="card mb-4" style={{ padding: 24 }}>
-        <div className="row" style={{ gap: 12, alignItems: 'center', marginBottom: 8 }}>
-          <Building2 size={20} color="var(--rai-gold)" />
-          <h2 style={{ margin: 0, fontSize: 16 }}>Capa hotelera lista para usar</h2>
-        </div>
-        <p className="muted" style={{ fontSize: 13, marginBottom: 16 }}>
-          Empieza creando tu primer sitio y agrega habitaciones. Después podrás registrar huéspedes, reservas y pagos.
-        </p>
-        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-          <Link href="/sitios" className="primary" style={{ textDecoration: 'none' }}><Building2 size={14} /> Crear sitio</Link>
-          <Link href="/pasajeros" className="secondary" style={{ textDecoration: 'none' }}><Users size={14} /> Crear huésped</Link>
-          <Link href="/reservas" className="secondary" style={{ textDecoration: 'none' }}><BedDouble size={14} /> Crear reserva</Link>
-        </div>
+      <div className="dash-hotel-hint" data-tour="dash-hotel">
+        <Building2 size={16} color="var(--rai-gold)" />
+        <p><b>Capa hotelera:</b> si gestionas un hotel, crea tu primer sitio y verás aquí llegadas, ocupación e ingresos.</p>
+        <Link href="/sitios" className="dash-link">Crear sitio <ChevronRight size={12} /></Link>
+        <button type="button" className="dash-icon-btn" aria-label="Ocultar este aviso" title="Ocultar" onClick={() => { setDismissed(true); try { localStorage.setItem(DISMISS_KEY, '1'); } catch { /* sin storage */ } }}>
+          <X size={13} />
+        </button>
       </div>
     );
   }

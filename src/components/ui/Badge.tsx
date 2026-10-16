@@ -47,6 +47,7 @@ export function StatusBadge({ status }: { status: string }) {
     ready:    { variant: 'gold', label: 'Listo' },
     queued:   { variant: 'muted', label: 'En cola' },
     running:  { variant: 'purple', label: 'Procesando' },
+    processing: { variant: 'purple', label: 'En proceso' },
     done:     { variant: 'success', label: 'Completado' },
     completed: { variant: 'success', label: 'Completado' },
     paused:   { variant: 'warning', label: 'Pausado' },
