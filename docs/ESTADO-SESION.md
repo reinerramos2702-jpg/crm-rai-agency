@@ -190,3 +190,13 @@ Investigación (UXMatters «CRM UX 2026», SaaSUI «sidebar navigation patterns�
 - Botón «Buscar» en el menú y paleta de comandos (Ctrl/Cmd+K): módulos filtrados por rol, acción de reducir/expandir menú, «Recientes», búsqueda sin tildes y por sinónimos (`command-search.ts`, 8 tests), patrón combobox ARIA, foco devuelto al cerrar, respeta reduced-motion; funciona en móvil desde el cajón.
 - Verificado: 6 grupos/22 enlaces, búsqueda «reputacion» → Reputación → navega y guarda recientes, iconos centrados a 32 px en modo reducido, paleta sin desborde a 320/390/768. Tests 293, lint 0, tsc limpio.
 - Pendiente de esta línea (no hecho): migas de pan, vistas guardadas, estados vacíos con acción, esqueletos de carga unificados, badges de conteo.
+
+## Rendimiento («lags») + micro-efectos + 3 módulos (15 oct 2026)
+Diagnóstico: las páginas renderizan en ~50 ms; el retraso venía de las APIs (cada consulta viaja a Supabase en remoto; `/api/launchpad` hacía 13 conteos en paralelo, 1–3 s) y del primer compilado del modo desarrollo.
+- Caché en cliente tipo «stale-while-revalidate» (`swr-cache.ts`, `use-cached-json.ts`): al volver a un módulo se pinta al instante lo último conocido y se actualiza por detrás; cambios optimistas con `mutate`. Precarga al pasar el mouse/enfocar/tocar un enlace del menú y en reposo (`route-data.ts`; para sumar un módulo basta añadir su ruta y endpoints a `ROUTE_DATA`).
+- Caché de 10 s en servidor para los conteos automáticos del Launchpad (`ttl-cache.ts`, por workspace; los ítems manuales no se cachean).
+- Medido en Chrome (modo desarrollo, tras precarga): Launchpad y Generador muestran su contenido a ~225 ms desde el clic. Para velocidad real: `next build` + `next start` (sin compilado bajo demanda).
+- Efectos de clic/toque (`ClickFx.tsx`, anillo dorado discreto, máx. 4 a la vez, desactivado con reduced-motion), presión `:active`, elevación suave de tarjetas, anillo de foco en campos, rebote del check, llenado de progreso con curva suave. Solo `transform`/`opacity`, sin blur.
+- Launchpad: tarjeta «Siguiente paso recomendado». Generador de imágenes: esqueletos de carga en lugar de spinner, zona de arrastre del documento de marca con estilo por clase, estado vacío con flujo de 3 pasos, tarjetas con elevación.
+- Verificado: tsc 0, tests 304, eslint 0; 0 desborde en 320/390/768/1024/1440 en `/launchpad`, `/generador-imagenes`, `/campaign/new`.
+- Deuda/pendiente: radio-cards del pipeline en Nueva Campaña; migas de pan, vistas guardadas, centro de actividad y badges (propuestas entregadas a Reiner, sin implementar); aplicar el mismo `useCachedJson` a otros módulos con carga lenta.

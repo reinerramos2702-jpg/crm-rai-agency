@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Wifi, WifiOff, ShieldCheck, Menu, X, ChevronLeft, Search, PanelLeftClose } from 'lucide-react';
 import { hasModuleAccess, ROLE_LABELS, type Role } from '@/lib/roles-shared';
 import { apiFetch } from '@/lib/client-api';
+import { prefetchRouteData, warmCommonData } from '@/lib/route-data';
 import { NAV_GROUPS, NAV_ITEMS, findNavItem } from './nav-config';
 import { CommandPalette, type PaletteItem } from './CommandPalette';
 
@@ -55,6 +56,17 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
     root.classList.add('sb-wave');
     if (waveTimer.current) window.clearTimeout(waveTimer.current);
     waveTimer.current = window.setTimeout(() => root.classList.remove('sb-wave'), 1100);
+  }, []);
+
+  // Precarga en reposo: los módulos más usados quedan listos antes del primer clic.
+  useEffect(() => {
+    const w = window as Window & { requestIdleCallback?: (cb: () => void) => number; cancelIdleCallback?: (id: number) => void };
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(warmCommonData);
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const t = window.setTimeout(warmCommonData, 1500);
+    return () => window.clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -308,8 +320,15 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
                     href={href}
                     aria-label={label}
                     aria-current={isActive ? 'page' : undefined}
-                    onMouseEnter={(e) => showTip(label, e.currentTarget)}
-                    onFocus={(e) => showTip(label, e.currentTarget)}
+                    onMouseEnter={(e) => {
+                      showTip(label, e.currentTarget);
+                      prefetchRouteData(href);
+                    }}
+                    onFocus={(e) => {
+                      showTip(label, e.currentTarget);
+                      prefetchRouteData(href);
+                    }}
+                    onTouchStart={() => prefetchRouteData(href)}
                     onMouseLeave={() => setTip(null)}
                     onBlur={() => setTip(null)}
                     style={{

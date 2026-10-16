@@ -3066,3 +3066,66 @@ button.dash-chip.is-on{background:color-mix(in srgb,var(--rai-gold) 15%,transpar
   .cp-panel{animation:cp-rise .24s cubic-bezier(.22,1,.36,1) both}
   .cp-item{animation:cp-in .25s ease-out both;animation-delay:calc(var(--i,0) * 22ms)}
 }
+
+/* ============================================
+   FX — micro-interacciones (clic, toque, hover) y módulos
+   Solo transform/opacity, sin blur; todo bajo "reducir movimiento".
+   ============================================ */
+.lp-next{display:flex;align-items:center;gap:14px;border-color:rgba(201,168,76,.35);background:linear-gradient(90deg,rgba(201,168,76,.09),transparent 70%),var(--rai-card)}
+.lp-next-icon{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;border-radius:10px;color:var(--rai-gold);background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3)}
+.lp-next-body{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.lp-next-kicker{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--rai-gold)}
+.lp-next-title{font-size:14px;line-height:1.35;overflow-wrap:anywhere}
+.lp-next-cta{flex-shrink:0;padding:8px 16px !important}
+@media (max-width:560px){
+  .lp-next{flex-wrap:wrap}
+  .lp-next-cta{width:100%}
+}
+
+.gi-brand{transition:border-color .2s ease,background-color .2s ease}
+.gi-brand.is-over{border-style:dashed;border-color:var(--rai-gold);background:rgba(201,168,76,.06)}
+.gi-skel{display:flex;flex-direction:column;gap:12px;min-height:170px}
+.gi-skel-line{display:block;height:12px;border-radius:6px;background:var(--rai-border);opacity:.6}
+.gi-skel-line.w25{width:25%}.gi-skel-line.w40{width:40%}.gi-skel-line.w70{width:70%}.gi-skel-line.w100{width:100%}
+.gi-empty{text-align:center;padding:48px 24px}
+.gi-empty-icon{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 16px;border-radius:50%;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25)}
+.gi-flow{list-style:none;margin:0 auto 24px;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:760px;text-align:left}
+.gi-flow-step{display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:var(--radius-md);border:1px solid var(--rai-border);background:var(--rai-dark);font-size:13px;line-height:1.4}
+.gi-flow-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;color:var(--rai-gold);background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25)}
+@media (max-width:720px){.gi-flow{grid-template-columns:1fr}}
+
+input:focus-visible,textarea:focus-visible,select:focus-visible{box-shadow:0 0 0 3px rgba(201,168,76,.18)}
+
+@media (prefers-reduced-motion:no-preference){
+  /* Anillo de clic/toque */
+  .fx-ring{position:fixed;z-index:9999;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:2px solid var(--rai-gold);pointer-events:none;opacity:0;animation:fx-ring .5s cubic-bezier(.22,1,.36,1) both}
+  @keyframes fx-ring{from{opacity:.55;transform:scale(.25)}to{opacity:0;transform:scale(1.15)}}
+
+  /* Presión táctil: respuesta inmediata al pulsar */
+  button:active:not(:disabled),.btn:active:not(:disabled){transform:scale(.97)}
+  .sb-link:active,.lp-cat:active,.gi-card:active,.gi-new:active{transform:scale(.98)}
+
+  /* Elevación suave de tarjetas interactivas */
+  .gi-card,.gi-new,.lp-cat{transition:transform .2s cubic-bezier(.22,1,.36,1),border-color .2s ease,box-shadow .2s ease}
+
+  /* Esqueleto: pulso de opacidad, informativo y suave */
+  @keyframes gi-pulse{0%,100%{opacity:.35}50%{opacity:.75}}
+  .gi-skel-line{animation:gi-pulse 1.3s ease-in-out infinite}
+  .gi-skel-line:nth-child(2){animation-delay:.12s}.gi-skel-line:nth-child(3){animation-delay:.24s}.gi-skel-line:nth-child(4){animation-delay:.36s}
+
+  /* Entrada escalonada de listas y tarjetas (corta: 220 ms) */
+  @keyframes fx-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .gi-card,.gi-new,.gi-flow-step,.lp-next{animation:fx-rise .22s ease-out both}
+  .gi-flow-step:nth-child(2){animation-delay:.05s}.gi-flow-step:nth-child(3){animation-delay:.1s}
+
+  /* Progreso: llenado con curva suave */
+  .lp-progress-fill,.progress-fill{transition:width .6s cubic-bezier(.22,1,.36,1)}
+
+  /* Marcar paso: rebote breve del checkbox */
+  @keyframes fx-pop{0%{transform:scale(.8)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+  .lp-checkbox-done{animation:fx-pop .28s ease-out}
+}
+@media (prefers-reduced-motion:no-preference) and (hover:hover){
+  .gi-card:hover,.gi-new:hover{transform:translateY(-3px);border-color:rgba(201,168,76,.45);box-shadow:var(--shadow-card)}
+  .lp-cat:hover{transform:translateX(2px)}
+}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isRoleContext, requireRole } from '@/lib/roles';
 import { prisma } from '@/lib/db';
 import { MANUAL_LAUNCHPAD_ITEM_IDS, isManualLaunchpadItemId } from '@/lib/launchpad-items';
+import { TtlCache } from '@/lib/ttl-cache';
 
 export const runtime = 'nodejs';
 
@@ -23,7 +24,18 @@ export const runtime = 'nodejs';
  * al cambiar de navegador/dispositivo.
  */
 
-async function computeAutoCompleted(workspaceId: string): Promise<string[]> {
+/**
+ * Los 13 conteos automáticos van contra una base remota (cada uno cuesta un viaje de red).
+ * Se guardan 10 s por workspace: abrir la Guía repetidas veces es instantáneo y el
+ * progreso sigue siendo prácticamente en vivo. Los ítems manuales NO se cachean.
+ */
+const autoCache = new TtlCache<string[]>(10_000);
+
+function computeAutoCompleted(workspaceId: string): Promise<string[]> {
+  return autoCache.getOrCompute(workspaceId, () => computeAutoCompletedUncached(workspaceId));
+}
+
+async function computeAutoCompletedUncached(workspaceId: string): Promise<string[]> {
   const [
     contactCount,
     campaignCount,

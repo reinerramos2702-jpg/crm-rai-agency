@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useCachedJson } from '@/lib/use-cached-json';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -243,6 +244,14 @@ const CATEGORIES: Category[] = [
   },
 ];
 
+interface LaunchpadProgress {
+  completed: string[];
+  manualItemIds: string[];
+}
+
+const EMPTY_IDS: string[] = [];
+const EMPTY_MANIFEST: TutorialManifest = {};
+
 interface TutorialManifestEntry {
   version: number;
   slides: number;
@@ -253,51 +262,32 @@ type TutorialManifest = Record<string, TutorialManifestEntry>;
 export default function LaunchpadPage() {
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].id);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [completed, setCompleted] = useState<string[]>([]);
-  const [manualItemIds, setManualItemIds] = useState<string[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [manifest, setManifest] = useState<TutorialManifest>({});
   const [tutorialItem, setTutorialItem] = useState<ChecklistItem | null>(null);
   const [slideIndex, setSlideIndex] = useState(0);
 
-  // Progreso real por workspace (antes vivía solo en localStorage del
-  // navegador, por eso siempre arrancaba en 0/22 · 0% sin importar la
-  // actividad real). Ver src/app/api/launchpad/route.ts.
-  const loadProgress = () => {
-    fetch('/api/launchpad')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data) {
-          setCompleted(data.completed || []);
-          setManualItemIds(data.manualItemIds || []);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoaded(true));
-  };
-
-  useEffect(() => {
-    loadProgress();
-
-    fetch('/tutorials/manifest.json')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data?.items) setManifest(data.items as TutorialManifest);
-      })
-      .catch(() => {});
-  }, []);
+  // Progreso real por workspace (ver src/app/api/launchpad/route.ts). Caché
+  // compartida: al volver al módulo se pinta al instante y se actualiza por detrás.
+  const progress = useCachedJson<LaunchpadProgress>('/api/launchpad', { ttlMs: 15_000 });
+  const manifestState = useCachedJson<{ items?: TutorialManifest }>('/tutorials/manifest.json', {
+    ttlMs: 10 * 60_000,
+  });
+  const completed = progress.data?.completed ?? EMPTY_IDS;
+  const manualItemIds = progress.data?.manualItemIds ?? EMPTY_IDS;
+  const loaded = progress.data !== undefined || progress.error !== null;
+  const manifest: TutorialManifest = manifestState.data?.items ?? EMPTY_MANIFEST;
 
   const category = CATEGORIES.find((c) => c.id === activeCategory) ?? CATEGORIES[0];
 
   const toggleComplete = (id: string) => {
     if (!manualItemIds.includes(id)) return; // ítem automático: no se puede marcar a mano
     const nextDone = !completed.includes(id);
-    setCompleted((prev) => (nextDone ? [...prev, id] : prev.filter((x) => x !== id))); // optimista
+    const next = nextDone ? [...completed, id] : completed.filter((x) => x !== id);
+    progress.mutate({ completed: next, manualItemIds: [...manualItemIds] }); // optimista, sin esperar a la red
     fetch('/api/launchpad', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ itemId: id, done: nextDone }),
-    }).catch(() => loadProgress()); // si falla, recarga el estado real del servidor
+    }).catch(() => void progress.refresh()); // si falla, recarga el estado real del servidor
   };
 
   const categoryProgress = (cat: Category) =>
@@ -309,6 +299,10 @@ export default function LaunchpadPage() {
   const overallProgress = Math.round(
     (allItems.filter((i) => completed.includes(i.id)).length / allItems.length) * 100
   );
+
+  // Siguiente paso sugerido: primer ítem pendiente en el orden de la guía.
+  const nextStep = loaded ? allItems.find((i) => !completed.includes(i.id)) : undefined;
+  const nextStepCategory = nextStep ? CATEGORIES.find((c) => c.items.some((i) => i.id === nextStep.id)) : undefined;
 
   const openTutorial = (item: ChecklistItem) => {
     setTutorialItem(item);
@@ -339,6 +333,28 @@ export default function LaunchpadPage() {
           <div className="lp-progress-fill" style={{ width: `${overallProgress}%` }} />
         </div>
       </div>
+
+      {nextStep && nextStepCategory && (
+        <div className="card mb-6 lp-next" data-tour="lp-next">
+          <span className="lp-next-icon" aria-hidden="true">
+            <nextStep.icon size={18} />
+          </span>
+          <div className="lp-next-body">
+            <span className="lp-next-kicker">Siguiente paso recomendado</span>
+            <strong className="lp-next-title">{nextStep.title}</strong>
+          </div>
+          <button
+            type="button"
+            className="primary lp-next-cta"
+            onClick={() => {
+              setActiveCategory(nextStepCategory.id);
+              setExpanded(nextStep.id);
+            }}
+          >
+            Ver paso
+          </button>
+        </div>
+      )}
 
       <div className="lp-layout">
         <div className="lp-cats" role="tablist" aria-label="Categorías de la guía">

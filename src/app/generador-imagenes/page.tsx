@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Images,
@@ -16,6 +16,7 @@ import {
 import { TopBar } from '@/components/layout/TopBar';
 import { Spinner } from '@/components/ui/Spinner';
 import toast from 'react-hot-toast';
+import { useCachedJson } from '@/lib/use-cached-json';
 
 interface ThemeSummary {
   title?: string;
@@ -57,6 +58,13 @@ const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
   completed: { label: 'Completada', cls: 'badge-success' },
 };
 
+const EMPTY_BRAND_DOC: BrandDocInfo = {
+  brandDocName: null,
+  brandDocText: null,
+  brandDocUpdatedAt: null,
+  hasBrandDoc: false,
+};
+
 function formatDate(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -64,41 +72,24 @@ function formatDate(iso: string): string {
 
 export default function GeneradorImagenesPage() {
   const router = useRouter();
-  const [grids, setGrids] = useState<ContentGridSummary[] | null>(null);
-  const [brandDoc, setBrandDoc] = useState<BrandDocInfo | null>(null);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const loadGrids = useCallback(async () => {
-    try {
-      const res = await fetch('/api/content-grids');
-      if (!res.ok) throw new Error('No se pudieron cargar las grillas');
-      const data = await res.json();
-      setGrids(data.grids || []);
-    } catch (e: any) {
-      toast.error(e.message || 'Error cargando grillas');
-      setGrids([]);
-    }
-  }, []);
-
-  const loadBrandDoc = useCallback(async () => {
-    try {
-      const res = await fetch('/api/workspace/brand-doc');
-      if (!res.ok) throw new Error('No se pudo cargar el doc de marca');
-      const data = await res.json();
-      setBrandDoc(data);
-    } catch {
-      setBrandDoc({ brandDocName: null, brandDocText: null, brandDocUpdatedAt: null, hasBrandDoc: false });
-    }
-  }, []);
+  // Datos con caché compartida: al volver al módulo aparecen al instante y se
+  // actualizan por detrás (ver src/lib/use-cached-json.ts).
+  const gridsState = useCachedJson<{ grids?: ContentGridSummary[] }>('/api/content-grids', { ttlMs: 15_000 });
+  const brandState = useCachedJson<BrandDocInfo>('/api/workspace/brand-doc', { ttlMs: 60_000 });
+  const grids: ContentGridSummary[] | null =
+    gridsState.data !== undefined ? gridsState.data.grids ?? [] : gridsState.error !== null ? [] : null;
+  const brandDoc: BrandDocInfo | null =
+    brandState.data ?? (brandState.error !== null ? EMPTY_BRAND_DOC : null);
 
   useEffect(() => {
-    loadGrids();
-    loadBrandDoc();
-  }, [loadGrids, loadBrandDoc]);
+    if (gridsState.error) toast.error('No se pudieron cargar las grillas', { id: 'grids-error' });
+  }, [gridsState.error]);
 
   async function handleCreate() {
     setCreating(true);
@@ -121,7 +112,7 @@ export default function GeneradorImagenesPage() {
     try {
       const res = await fetch(`/api/content-grids/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('No se pudo eliminar la grilla');
-      setGrids((prev) => (prev || []).filter((g) => g.id !== id));
+      gridsState.mutate({ grids: (grids ?? []).filter((g) => g.id !== id) });
       toast.success('Grilla eliminada');
     } catch (e: any) {
       toast.error(e.message || 'Error eliminando la grilla');
@@ -143,7 +134,7 @@ export default function GeneradorImagenesPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error subiendo el documento');
       toast.success(`Documento de marca cargado: ${data.brandDocName}`);
-      loadBrandDoc();
+      void brandState.refresh();
     } catch (e: any) {
       toast.error(e.message || 'Error subiendo el documento');
     } finally {
@@ -174,13 +165,9 @@ export default function GeneradorImagenesPage() {
       <div className="container">
         {/* ===== Doc de marca (Sistema Operativo de Contenido) ===== */}
         <div
-          className="card"
-          style={{
-            marginBottom: 28,
-            borderStyle: dragOver ? 'dashed' : 'solid',
-            borderColor: dragOver ? 'var(--rai-gold)' : undefined,
-            background: dragOver ? 'rgba(201,168,76,0.06)' : undefined,
-          }}
+          className={`card gi-brand${dragOver ? ' is-over' : ''}`}
+          data-tour="gi-brand"
+          style={{ marginBottom: 28 }}
           onDragOver={(e) => {
             e.preventDefault();
             setDragOver(true);
@@ -263,8 +250,15 @@ export default function GeneradorImagenesPage() {
         </div>
 
         {grids === null ? (
-          <div className="row" style={{ justifyContent: 'center', padding: 60 }}>
-            <Spinner size="lg" />
+          <div className="grid grid-auto" aria-busy="true" aria-label="Cargando grillas">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="card gi-skel" aria-hidden="true">
+                <span className="gi-skel-line w40" />
+                <span className="gi-skel-line w25" />
+                <span className="gi-skel-line w100" />
+                <span className="gi-skel-line w70" />
+              </div>
+            ))}
           </div>
         ) : grids.length === 0 ? (
           <EmptyState onCreate={handleCreate} creating={creating} />
@@ -284,7 +278,7 @@ export default function GeneradorImagenesPage() {
             <button
               onClick={handleCreate}
               disabled={creating}
-              className="card"
+              className="card gi-new"
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -308,29 +302,34 @@ export default function GeneradorImagenesPage() {
   );
 }
 
+const FLOW_STEPS = [
+  { icon: FileText, title: '1 · Sube tu documento de marca', text: 'El .docx con reglas, narrativa y producción de tu agencia.' },
+  { icon: Sparkles, title: '2 · Crea la grilla', text: '7 temas con carruseles; el asistente te guía nodo por nodo.' },
+  { icon: Images, title: '3 · Genera y publica', text: 'Imágenes y copys listos para programar en tu calendario.' },
+];
+
 function EmptyState({ onCreate, creating }: { onCreate: () => void; creating: boolean }) {
   return (
-    <div className="card" style={{ textAlign: 'center', padding: '60px 24px' }}>
-      <div
-        style={{
-          width: 64,
-          height: 64,
-          borderRadius: '50%',
-          background: 'rgba(201,168,76,0.1)',
-          border: '1px solid rgba(201,168,76,0.25)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 16px',
-        }}
-      >
+    <div className="card gi-empty">
+      <div className="gi-empty-icon">
         <Images size={28} color="var(--rai-gold)" />
       </div>
       <h2 style={{ marginBottom: 8 }}>Aún no tienes grillas</h2>
       <p className="muted" style={{ maxWidth: 440, margin: '0 auto 20px' }}>
-        Una "grilla" es un proyecto semanal de contenido: 7 temas con sus carruseles, imágenes
+        Una grilla es un proyecto semanal de contenido: 7 temas con sus carruseles, imágenes
         y copys. El asistente te guía nodo por nodo, validando cada paso contigo.
       </p>
+      <ol className="gi-flow">
+        {FLOW_STEPS.map(({ icon: Icon, title, text }) => (
+          <li key={title} className="gi-flow-step">
+            <span className="gi-flow-icon" aria-hidden="true">
+              <Icon size={16} />
+            </span>
+            <strong>{title}</strong>
+            <span className="muted">{text}</span>
+          </li>
+        ))}
+      </ol>
       <button className="btn-primary" onClick={onCreate} disabled={creating}>
         {creating ? <Spinner size="sm" /> : <Sparkles size={16} />}
         Crear primera grilla
@@ -355,7 +354,7 @@ function GridCard({
   const themeTitles = (grid.themes || []).filter((t) => t?.title).slice(0, 3);
 
   return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12, cursor: 'pointer' }} onClick={onOpen}>
+    <div className="card gi-card" style={{ display: 'flex', flexDirection: 'column', gap: 12, cursor: 'pointer' }} onClick={onOpen}>
       <div className="row-between">
         <div className="row" style={{ gap: 8, minWidth: 0 }}>
           <div
