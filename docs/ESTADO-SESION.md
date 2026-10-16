@@ -214,3 +214,8 @@ Rama local `rai-feat-dashboard-premium` (sin push; commits locales). Lo ya regis
 - **Limitación de verificación**: ClickFx no se vio en vivo porque el Chrome de pruebas tiene `prefers-reduced-motion` activo; revisar en un navegador normal.
 - **Pendientes de Reiner**: confirmar que el SQL de staging (`docs/planning/staging-scheduledpost.sql`) está aplicado para probar «Programar lote»; corregir «Rainer» por «Reiner» solo en staging/UI (no es código); revisar los textos de la guía de módulos; borrado de ramas locales solo con su «sí» explícito.
 - **Bloqueado hasta autorización de Reiner**: push, merge, migraciones remotas, producción, `IG_PUBLISH_MODE=live` y secretos de GitHub.
+
+## Diagnóstico del catálogo GHL (16 oct 2026)
+- Nuevo `docs/planning/CATALOGO-GHL-DIAGNOSTICO.md`: 35 módulos GHL × estado en nuestro CRM, 15 fichas de funciones a adoptar, diseño del agente de voz IA (arquitectura, 4 opciones de proveedor con costos citados o «sin verificar», riesgos legales) y orden en 3 olas. Basado en 41 páginas del centro de ayuda de GHL; las páginas bloqueadas se listan sin esquivarlas.
+- Panel: sección «Catálogo GHL — diagnóstico (16 oct)» con 1 ítem hecho y 13 pendientes (voz IA incluida). `panel-check`: 0 errores, 27 avisos preexistentes; `<div`/`</div>` 706/706 → 778/778.
+- Hallazgos: el agente de voz tiene interfaz y simulador pero ninguna telefonía; Retargeting Fase 1 figura como «construido» en el panel pero no está en este clon (sin evidencia local). Pendiente de Reiner: orden de olas, proveedor y país del número de voz, negocio piloto y revisión legal. Sin cambios en `src/`, sin commit.

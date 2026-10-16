@@ -974,6 +974,130 @@ footer{
   </div>
 </section>
 
+<!-- CATALOGO GHL — DIAGNOSTICO 16 OCT -->
+<section>
+  <div class="section-head">
+    <span class="phase-num">GHL-DX</span>
+    <span class="section-title">Catálogo GHL — diagnóstico (16 oct)</span>
+    <span class="section-note">1 hecho — 13 pendientes; orden en 3 olas, ver el doc</span>
+  </div>
+  <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:680px;">Diagnóstico de qué funciones de HighLevel ya adoptamos, cuáles se eligieron y cuáles faltan, con el agente de voz IA como prioridad. Documento completo: <code>docs/planning/CATALOGO-GHL-DIAGNOSTICO.md</code>. Ya cubiertos por ítems existentes y por eso no se repiten aquí: inbox unificado con WhatsApp (BLOQUE 3), publicación real en Instagram/Facebook (programación IG), modo SaaS y planes (freemium), informes y firma electrónica (C10, E20, N3, N6) y facturación recurrente (E17).</p>
+  <div class="check-list">
+    <div class="check-item done" data-status="done" data-id="ghl-dx-diagnostico">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Diagnóstico del catálogo GHL redactado (35 módulos, 15 fichas, agente de voz, 3 olas)</div>
+        <div class="check-desc">Evidencia: <code>docs/planning/CATALOGO-GHL-DIAGNOSTICO.md</code>; 41 páginas de <code>help.gohighlevel.com</code> leídas y fuentes de precios de Twilio, Retell, Vapi y ElevenLabs citadas, con lo no verificado marcado. Páginas bloqueadas listadas en la sección 7, sin esquivarlas.</div>
+      </div>
+      <span class="tag tag-decided">hecho — documento local sin commit</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-voz-ia">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Agente de voz IA que contesta llamadas con base de conocimiento (GHL «Voice AI»)</div>
+        <div class="check-desc">Hoy: asistente de creación y simulador de texto (sin commit); faltan número/SIP, herramientas, transcripciones, resumen, transferencia y métricas. Propuesta: proveedor gestionado (Retell o Vapi) sobre un número de Twilio, con nuestras herramientas por API; piloto con llamada web primero. Detalle en la sección 4 del doc. Antes de producción: RLS, aviso de IA y de grabación, revisión legal.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 2 (spike en Ola 1); espera decisión de proveedor y país del número</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-conversation-ai-produccion">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Conversation AI en producción: bot sobre conversaciones reales (modo Sugerido primero)</div>
+        <div class="check-desc">Ya existen modos, bot principal y chat de prueba; falta el puente mensaje entrante → agente → respuesta y la red de seguridad (queja fuerza traspaso, límite de respuestas, horario). Ficha 3.2; depende del canal WhatsApp y de la base de conocimiento.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 1</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-kb-rag">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Base de conocimiento con RAG (pgvector), probador de recuperación y lagunas de conocimiento</div>
+        <div class="check-desc">Hoy hay bases y fuentes (faq, texto, tabla, archivo, URL) sin embeddings. Ficha 3.3: verificar pgvector en Supabase, varias bases por agente y bandeja de lagunas compartida entre chat y voz.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 1 (migración requiere aprobación)</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-handover">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Traspaso a humano y seguimiento automático (Ficha #1 del catálogo)</div>
+        <div class="check-desc">Tres disparadores, tarea, etiqueta, pausa del bot y resumen de 3 líneas para el humano; escalamiento reutilizando <code>conversation.sla_overdue</code>. Ficha 3.4; requiere notificaciones al equipo.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 1; bloqueado por el bot real</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-workflows-nativos">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Workflows: acciones nativas de SMS, email y WhatsApp, If/Else con ramas y disparadores nuevos</div>
+        <div class="check-desc">Hoy el envío es <code>send_webhook</code> hacia n8n y hay 6 acciones. Añadir envío nativo, ramas, disparadores (formulario, pago, reseña, llamada, cambio de etapa) y simulación previa «a quién afectaría». Ficha 3.6; el cron de Vercel Hobby corre una vez al día (usar el worker de Render o cron externo).</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 1</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-oportunidades">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Oportunidades y pipelines genéricos con Kanban y plantillas por nicho</div>
+        <div class="check-desc">No existe modelo <code>Opportunity</code>/<code>Pipeline</code>; <code>/clientes-potenciales</code> tiene varios botones «Próximamente». Distinto del kanban de asesores (B8). Ficha 3.7.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 1 (migración requiere aprobación)</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-calendarios-avanzados">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Calendarios avanzados: round robin, servicios, colectivos y sincronización con Google Calendar</div>
+        <div class="check-desc">Hoy hay calendarios, citas, reserva pública y reservas hoteleras; sin evidencia de round robin ni servicios, y calendarios externos figuran «próximamente». Ficha 3.8.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 2</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-reputacion">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Reputación: solicitudes de reseña automáticas, respuestas sugeridas por IA y widget</div>
+        <div class="check-desc">El módulo es un marcador de posición y está en el plan de 49 USD. Sin filtrar solo a clientes satisfechos (revisar políticas de plataformas, sin verificar). Ficha 3.9.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 2</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-formularios">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Formularios y encuestas públicos conectados al CRM (lógica condicional, una pregunta a la vez)</div>
+        <div class="check-desc">No existe modelo de formulario; B5 cubre solo el formulario de asesores. Consentimiento y aviso de privacidad desde el diseño. Ficha 3.10.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 2 (migración requiere aprobación)</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-facturas-enlaces-pago">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Facturas, presupuestos y enlaces de pago con comprobante (disparador <code>payment.paid</code>)</div>
+        <div class="check-desc">Hoy hay pagos con comprobante y aprobación, sin pasarela ni facturas. Depende de P3 de la spec de planes y de decisiones fiscales (sin verificar). Distinto de E17 (facturación recurrente de la agencia). Ficha 3.11.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 2</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-copiloto-agentes-evento">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Copiloto del operador (tareas programadas, MCP) y agentes por evento en versión reducida</div>
+        <div class="check-desc">Fichas #5 y #6 del catálogo: ADOPTAR sin canvas visual; construir una sola vez las «skills» compartidas. Hoy solo existe la paleta Ctrl+K de navegación.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 3</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-pwa">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">PWA instalable (manifest, lectura sin conexión, notificaciones push)</div>
+        <div class="check-desc">Propuesta nueva: no hay manifest en el repo. Aprovecha el trabajo responsive ya verificado de 320 a 1440 px. El artículo de GHL sobre su app móvil no se pudo leer (bloqueado).</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 3, sin spec</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-retargeting-reconciliar">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Reconciliar Retargeting Fase 1: el código descrito como construido no está en este clon</div>
+        <div class="check-desc">Sin evidencia local: no hay modelos <code>SmartList</code>/<code>AdAudience</code>/<code>AdConversionEvent</code>, ni ramas ni commits con «retarget». Localizar la rama (otra máquina o repositorio) antes de seguir con credenciales de Meta y Google.</div>
+      </div>
+      <span class="tag tag-open">pendiente — requiere a Reiner</span>
+    </div>
+  </div>
+</section>
+
 <!-- RETARGETING FASE 1 -->
 <section>
   <div class="section-head">
