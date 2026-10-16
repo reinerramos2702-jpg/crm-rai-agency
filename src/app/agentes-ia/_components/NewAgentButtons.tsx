@@ -1,9 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
-import { Bot, PhoneCall, MessageSquare, BookOpen, ArrowRight } from 'lucide-react';
+import { Bot, PhoneCall, MessageSquare, BookOpen, ArrowRight, Headset } from 'lucide-react';
 
 export const NEW_CHAT_HREF = '/agentes-ia/nuevo/chat';
 export const NEW_VOICE_HREF = '/agentes-ia/nuevo/voz';
+export const VOICE_CENTER_HREF = '/agentes-ia/voz';
 
 /** Dos botones distintos, cada uno con su propio flujo (enlaces: no comparten estado). */
 export function NewAgentButtons() {
@@ -11,6 +12,9 @@ export function NewAgentButtons() {
     <div className="ag-head-actions">
       <Link href="/agentes-ia/base-conocimiento" className="ag-btn ag-btn--ghost">
         <BookOpen size={14} aria-hidden="true" /> Base de conocimiento
+      </Link>
+      <Link href={VOICE_CENTER_HREF} className="ag-btn ag-btn--ghost">
+        <Headset size={14} aria-hidden="true" /> Centro de voz
       </Link>
       <Link href={NEW_VOICE_HREF} className="ag-btn ag-btn--voice">
         <PhoneCall size={14} aria-hidden="true" /> Nuevo agente de voz

@@ -14,7 +14,8 @@ interface Props {
   issues: readonly StepIssue[];
   state: CreateState;
   onCreate: () => void;
-  extraAfter?: React.ReactNode;
+  /** Contenido extra tras crear el agente; si es función recibe el id del agente creado. */
+  extraAfter?: React.ReactNode | ((agentId: string) => React.ReactNode);
 }
 
 /** Último paso: resumen, creación del agente y, una vez creado, prueba en vivo con su base de conocimiento. */
@@ -55,7 +56,7 @@ export function ReviewStep({ variant, rows, issues, state, onCreate, extraAfter 
           </div>
           {state.warning && <p className="ag-issue" data-level="warn" role="status">{state.warning}</p>}
           <TestChatPanel agentId={state.agentId} variant={variant} />
-          {extraAfter}
+          {typeof extraAfter === 'function' ? extraAfter(state.agentId) : extraAfter}
         </div>
       )}
     </div>

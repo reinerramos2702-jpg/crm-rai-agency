@@ -10,7 +10,7 @@ import { STATUS_BADGE, STATUS_LABEL, SUB_TABS, type AgentDetail, type SubTab } f
 import { ConfigTab } from '../_components/ConfigTab';
 import { EntrenamientoTab } from '../_components/EntrenamientoTab';
 import { ObjetivosTab } from '../_components/ObjetivosTab';
-import { VoiceComingSoon, VoiceLocalSummary } from '../_components/VoiceComingSoon';
+import { VoiceLocalSummary, VoiceStatusCard } from '../_components/VoiceStatusCard';
 
 export default function AgentDetailPage() {
   const params = useParams();
@@ -125,7 +125,7 @@ export default function AgentDetailPage() {
       {agent.kind === 'voice' && (
         <div className="mb-6">
           <VoiceLocalSummary agentId={agent.id} />
-          <VoiceComingSoon />
+          <VoiceStatusCard />
         </div>
       )}
 

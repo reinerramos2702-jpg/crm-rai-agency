@@ -10,7 +10,7 @@ import { WizardShell } from './WizardShell';
 import { WizardAside } from './WizardAside';
 import { VoiceStepBody } from './VoiceSteps';
 import { ReviewStep } from './ReviewStep';
-import { VoiceComingSoon } from './VoiceComingSoon';
+import { VoiceActivationPanel } from './VoiceActivationPanel';
 import { useCreateAgent } from './use-create-agent';
 
 const DRAFT_KEY = wizardDraftKey('voice');
@@ -53,7 +53,7 @@ export function VoiceWizard() {
           chips={[voiceLabel(draft.voiceId), languageLabel(draft.language), speedLabel(draft.speed)]}
           bubbleLabel="Así contestará la llamada"
           bubble={draft.greeting}
-          footnote="La telefonía real (número, SIP) se conecta en una fase posterior."
+          footnote="La telefonía real se activa desde el Centro de voz, con su tope de gasto."
         />
       }
     >
@@ -63,7 +63,7 @@ export function VoiceWizard() {
           issues={validateAll('voice', draft)}
           state={state}
           onCreate={onCreate}
-          extraAfter={<VoiceComingSoon />}
+          extraAfter={(agentId) => <VoiceActivationPanel agentId={agentId} draft={draft} />}
           rows={[
             ['Nombre', draft.name],
             ['Empresa', draft.business],
