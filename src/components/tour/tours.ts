@@ -267,16 +267,6 @@ const SPECS: Array<{ path: string; spec: ModuleSpec }> = [
     },
   },
   {
-    path: '/campaign/new',
-    spec: {
-      id: 'campaign-new',
-      label: 'Nueva Campaña',
-      intro: 'Crea una campaña completa de contenido paso a paso.',
-      mainTitle: 'Datos de tu campaña',
-      mainTip: 'Completa el formulario; el CRM prepara el contenido a partir de lo que indiques.',
-    },
-  },
-  {
     path: '/pasajeros',
     spec: {
       id: 'pasajeros',
@@ -398,8 +388,85 @@ const SPECS: Array<{ path: string; spec: ModuleSpec }> = [
   },
 ];
 
+/* ---------- Nueva Campaña: recorrido propio con pistas en cascada ---------- */
+
+const dataTour = (name: string): string => `[data-tour="${name}"]`;
+
+export const CAMPAIGN_NEW: ModuleTour = {
+  id: 'campaign-new',
+  label: 'Nueva Campaña',
+  steps: [
+    {
+      id: 'welcome',
+      kicker: 'Nueva Campaña',
+      title: 'Planifica tu campaña con IA',
+      body: 'Son tres pasos: configuras la campaña, conversas con la IA sobre tu marca y generas el Plan Maestro de hasta 31 días.',
+    },
+    {
+      id: 'progress',
+      target: dataTour('cn-steps'),
+      placement: 'bottom',
+      optional: true,
+      title: 'Tu progreso',
+      body: 'Esta barra se completa sola: el paso 1 al nombrar la campaña y el paso 2 cuando ya conversaste con la IA.',
+    },
+    {
+      id: 'basics',
+      target: dataTour('cn-name'),
+      placement: 'right',
+      optional: true,
+      title: 'Define lo básico',
+      body: 'Empieza por un nombre que te ayude a reconocer la campaña. Luego elige el formato y las herramientas de IA.',
+      hints: [
+        { target: dataTour('cn-pipeline'), label: 'Tipo de pipeline: UGC, Avatar Reel, anuncios estáticos o carruseles.' },
+        { target: dataTour('cn-model'), label: 'Modelo de planificación: la IA que conversa contigo y arma el plan.' },
+        { target: dataTour('cn-image'), label: 'Generación de imágenes: el proveedor que creará las imágenes.' },
+      ],
+    },
+    {
+      id: 'material',
+      target: dataTour('cn-folder'),
+      placement: 'right',
+      optional: true,
+      title: 'Aporta tu material',
+      body: 'Todo esto es opcional, pero mientras más contexto des, mejor sale el plan.',
+      hints: [
+        { target: dataTour('cn-brand'), label: 'Manual de marca: tono, audiencia, productos y temas prohibidos.' },
+        { target: dataTour('cn-competitor'), label: 'Competencia: analiza webs o anuncios de Meta para inspirarte.' },
+        { target: dataTour('cn-tip'), label: 'Atajo: automatiza el seguimiento de los contactos que lleguen.' },
+      ],
+    },
+    {
+      id: 'chat',
+      target: dataTour('cn-chat-head'),
+      placement: 'bottom',
+      optional: true,
+      title: 'Conversa con la IA',
+      body: 'Cuéntale sobre tu marca, tu audiencia y tus objetivos. Ella te hace las preguntas que faltan.',
+      hints: [
+        { target: dataTour('cn-chat-log'), label: 'La conversación aparece aquí. También puedes arrastrar archivos.' },
+        { target: dataTour('cn-chat-input'), label: 'Escribe y pulsa Enter, o adjunta archivos con el icono de carpeta.' },
+      ],
+    },
+    {
+      id: 'generate',
+      target: () => visible($('.cn-chat-head .btn-primary')),
+      placement: 'bottom',
+      optional: true,
+      title: 'Genera el Plan Maestro',
+      body: 'Cuando la conversación esté lista, este botón convierte todo en un plan día por día.',
+    },
+    {
+      id: 'done',
+      title: 'Todo listo',
+      body: 'Ya sabes cómo se arma una campaña. Puedes repetir esta guía cuando quieras desde el botón ? de la esquina inferior derecha.',
+    },
+  ],
+};
+
 const REGISTRY: Array<{ path: string; tour: ModuleTour }> = [
   { path: '/launchpad', tour: LAUNCHPAD },
+  { path: '/campaign/new', tour: CAMPAIGN_NEW },
   ...SPECS.map(({ path, spec }) => ({ path, tour: buildModuleTour(spec) })),
 ];
 

@@ -1667,9 +1667,12 @@ label {
   /* Hide desktop-only elements */
   .desktop-only { display: none !important; }
 
-  /* TopBar sticky below mobile header */
+  /* TopBar sticky below mobile header.
+     `.app-main` ya reserva 56px de padding para la cabecera móvil y el inset
+     sticky se mide desde ese padding: con `top:56px` la barra quedaba 56px más
+     abajo y tapaba el contenido inicial de la página. */
   .top-bar {
-    top: 56px !important;
+    top: 0 !important;
     padding: 12px 12px !important;
     flex-wrap: wrap;
     gap: 8px;
@@ -2878,4 +2881,65 @@ button.dash-chip.is-on{background:color-mix(in srgb,var(--rai-gold) 15%,transpar
   .lp-item > .row:first-child > svg { display: none; }
   .lp-item .lp-ring { margin-top: 0 !important; }
   .lp-item > .row:first-child > div:last-child { margin-top: 0 !important; align-self: center; }
+}
+
+/* ═══════════ Nueva Campaña (cn-*) ═══════════ */
+.cn-steps{list-style:none;margin:0;padding:12px 20px;display:flex;align-items:center;border-bottom:1px solid var(--rai-border);background:var(--rai-dark)}
+.cn-step{display:flex;align-items:center;gap:10px;min-width:0;color:var(--rai-muted);transition:color .3s ease}
+.cn-step + .cn-step{flex:1 1 0}
+.cn-step + .cn-step::before{content:'';flex:1 1 20px;min-width:14px;height:2px;margin:0 12px;border-radius:2px;background:linear-gradient(90deg,var(--rai-gold) 50%,var(--rai-border) 50%) 100% 0/200% 100%;transition:background-position .5s ease}
+.cn-step.is-done + .cn-step::before{background-position:0 0}
+.cn-step-dot{width:26px;height:26px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;border:1.5px solid var(--rai-border);background:var(--rai-card);color:var(--rai-muted);transition:background-color .3s ease,border-color .3s ease,color .3s ease}
+.cn-step-label{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cn-step.is-current{color:var(--rai-text)}
+.cn-step.is-current .cn-step-dot{border-color:var(--rai-gold);color:var(--rai-gold)}
+.cn-step.is-done{color:var(--rai-text)}
+.cn-step.is-done .cn-step-dot{background:var(--rai-gold);border-color:var(--rai-gold);color:#000}
+.cn-step-dot svg path{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:16}
+
+.cn-layout{display:grid;grid-template-columns:340px minmax(0,1fr);min-height:calc(100dvh - 73px - 51px);overflow:auto}
+.cn-side{border-right:1px solid var(--rai-border);background:var(--rai-dark);overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.cn-sec{position:relative;min-width:0}
+.cn-sec::before{content:'';position:absolute;left:-12px;top:2px;bottom:2px;width:2px;border-radius:2px;background:var(--rai-gold);opacity:0;transform:scaleY(.4);transition:opacity .25s ease,transform .25s ease;pointer-events:none}
+.cn-sec:focus-within::before{opacity:1;transform:scaleY(1)}
+.cn-sec .label{transition:color .25s ease}
+.cn-sec:focus-within .label{color:var(--rai-gold)}
+.cn-side input,.cn-side select,.cn-side textarea{max-width:100%}
+.cn-chat{display:flex;flex-direction:column;height:100%;min-width:0;background:var(--rai-black)}
+.cn-chat-head{padding:14px 20px;border-bottom:1px solid var(--rai-border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.cn-chat-log{flex:1;overflow-y:auto;padding:20px 24px;position:relative;min-height:320px}
+.cn-chips{padding:8px 24px;border-top:1px solid var(--rai-border);display:flex;flex-wrap:wrap;gap:6px;background:rgba(123,94,167,.04)}
+.cn-input{padding:16px 24px;display:flex;gap:8px;align-items:flex-end;background:var(--rai-dark)}
+.cn-input textarea{flex:1;min-width:0}
+.cn-foot{padding:10px 24px;background:rgba(201,168,76,.05);border-top:1px solid rgba(201,168,76,.1);display:flex;align-items:center;gap:8px}
+.cn-starters{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.cn-starters button{background:transparent !important;border:1px solid var(--rai-border) !important;color:var(--rai-muted) !important;border-radius:999px !important;padding:5px 11px !important;font-size:12px !important;line-height:1.4;cursor:pointer;text-align:left;transition:color .2s ease,border-color .2s ease}
+@media (hover:hover){.cn-starters button:hover{color:var(--rai-gold) !important;border-color:var(--rai-gold) !important}}
+
+@media (prefers-reduced-motion:no-preference){
+  @keyframes cn-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes cn-draw{from{stroke-dashoffset:16}to{stroke-dashoffset:0}}
+  .cn-side > .cn-sec,.cn-side > .divider{animation:cn-rise .4s ease-out both;animation-delay:calc(var(--i,0) * 45ms)}
+  .cn-chat .chat-bubble{animation:cn-rise .3s ease-out both}
+  .cn-step.is-done .cn-step-dot svg path{animation:cn-draw .45s ease-out both}
+}
+
+@media (max-width:1100px){.cn-layout{grid-template-columns:300px minmax(0,1fr)}}
+@media (max-width:860px){
+  .cn-layout{grid-template-columns:minmax(0,1fr);min-height:0;overflow:visible}
+  .cn-side{border-right:0;border-bottom:1px solid var(--rai-border);overflow:visible}
+  .cn-chat{height:auto;min-height:560px}
+  .cn-chat-log{max-height:60vh}
+}
+@media (max-width:640px){
+  .cn-steps{padding:10px 14px}
+  .cn-step:not(.is-current) .cn-step-label{display:none}
+  .cn-step + .cn-step::before{margin:0 8px}
+  .cn-side{padding:16px 14px;gap:16px}
+  .cn-chat-head,.cn-chips,.cn-foot{padding-left:14px;padding-right:14px}
+  .cn-chat-log{padding:16px 14px}
+  .cn-input{padding:12px 14px}
+  .cn-input textarea,.cn-side input,.cn-side select,.cn-side textarea{font-size:16px !important}
+  .cn-chat .chat-bubble{max-width:94% !important}
+  .cn-chat-head .btn{width:100%}
 }

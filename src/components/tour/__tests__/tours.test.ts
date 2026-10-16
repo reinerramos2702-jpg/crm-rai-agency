@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CRM_TOUR, findModuleTour, tourSeenKey } from '../tours';
+import { CAMPAIGN_NEW, CRM_TOUR, findModuleTour, tourSeenKey } from '../tours';
 
 describe('findModuleTour', () => {
   it('resuelve rutas de módulo, con o sin barra final', () => {
@@ -49,5 +49,26 @@ describe('estructura de los recorridos', () => {
 
   it('la clave de «ya visto» es estable', () => {
     expect(tourSeenKey('contactos')).toBe('rai-tour-mod-contactos-v1');
+  });
+});
+
+describe('guía de Nueva Campaña', () => {
+  it('es la guía propia de la ruta y mantiene pistas en cascada', () => {
+    expect(findModuleTour('/campaign/new')).toBe(CAMPAIGN_NEW);
+    const withHints = CAMPAIGN_NEW.steps.filter((st) => (st.hints?.length ?? 0) > 0);
+    expect(withHints.length).toBeGreaterThanOrEqual(3);
+    for (const st of withHints) expect(st.hints!.length).toBeLessThanOrEqual(4);
+  });
+
+  it('solo apunta a marcadores data-tour que existen en la página', async () => {
+    const { readFileSync } = await import('node:fs');
+    const page = readFileSync('src/app/campaign/new/page.tsx', 'utf8');
+    const targets = CAMPAIGN_NEW.steps.flatMap((st) => [st.target, ...(st.hints ?? []).map((h) => h.target)]);
+    const names = targets
+      .filter((t): t is string => typeof t === 'string')
+      .map((t) => /data-tour="([^"]+)"/.exec(t)?.[1])
+      .filter(Boolean) as string[];
+    expect(names.length).toBeGreaterThan(8);
+    for (const n of names) expect(page, n).toContain(`data-tour="${n}"`);
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -42,6 +42,15 @@ const IMAGE_PROVIDERS = [
   { value: 'openai', label: 'DALL-E 3 / gpt-image-1' },
   { value: 'stabilityai', label: 'Stability AI' },
 ];
+
+const STARTERS = [
+  'Mi marca vende…, mi audiencia es…',
+  'Quiero 30 días de contenido para Instagram',
+  'Tengo fotos y videos que organizar por día',
+];
+
+/** Variables CSS en línea (p. ej. el retardo escalonado `--i`). */
+const cv = (vars: Record<string, string | number>) => vars as CSSProperties;
 
 const COUNTRY_OPTIONS = [
   { value: 'ALL', label: 'Todos los países' },
@@ -567,6 +576,14 @@ export default function NewCampaignPage() {
 
   const currentModels = PROVIDERS.find((p) => p.provider === provider)?.models || [];
 
+  // Progreso informativo: se completa solo según lo que ya hizo la persona.
+  const cnSteps = [
+    { n: 1, label: 'Configura tu campaña', done: name.trim().length > 0 },
+    { n: 2, label: 'Conversa con la IA', done: messages.length >= 2 },
+    { n: 3, label: 'Genera el Plan Maestro', done: finalizing },
+  ];
+  const cnCurrent = cnSteps.findIndex((st) => !st.done);
+
   return (
     <>
       <TopBar title="Nueva Campaña" subtitle="Planifica tu campaña de contenido con IA" />
@@ -586,28 +603,32 @@ export default function NewCampaignPage() {
         }}
       />
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '340px 1fr',
-          minHeight: 'calc(100vh - 73px)',
-          overflow: 'auto',
-        }}
-      >
+      <ol className="cn-steps" data-tour="cn-steps" aria-label="Progreso de la campaña">
+        {cnSteps.map((st, i) => (
+          <li
+            key={st.n}
+            className={`cn-step${st.done ? ' is-done' : ''}${i === cnCurrent ? ' is-current' : ''}`}
+            aria-current={i === cnCurrent ? 'step' : undefined}
+          >
+            <span className="cn-step-dot" aria-hidden="true">
+              {st.done ? (
+                <svg viewBox="0 0 16 16" width="12" height="12" focusable="false">
+                  <path d="M3 8.5l3.2 3.2L13 4.8" />
+                </svg>
+              ) : (
+                st.n
+              )}
+            </span>
+            <span className="cn-step-label">{st.label}</span>
+          </li>
+        ))}
+      </ol>
+
+      <div className="cn-layout">
         {/* ═══════════ PANEL IZQUIERDO ═══════════ */}
-        <div
-          style={{
-            borderRight: '1px solid var(--rai-border)',
-            background: 'var(--rai-dark)',
-            overflowY: 'auto',
-            padding: 20,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 20,
-          }}
-        >
+        <div className="cn-side">
           {/* Nombre */}
-          <div>
+          <div className="cn-sec" data-tour="cn-name" style={cv({ '--i': 0 })}>
             <p className="label" style={{ marginBottom: 6 }}>Nombre de la campaña</p>
             <input
               value={name}
@@ -618,7 +639,7 @@ export default function NewCampaignPage() {
           </div>
 
           {/* Pipeline type */}
-          <div>
+          <div className="cn-sec" data-tour="cn-pipeline" style={cv({ '--i': 1 })}>
             <p className="label" style={{ marginBottom: 6 }}>Tipo de Pipeline</p>
             <select value={pipelineType} onChange={(e) => setPipelineType(e.target.value)} style={{ width: '100%' }}>
               {PIPELINE_TYPES.map((p) => (
@@ -628,7 +649,7 @@ export default function NewCampaignPage() {
           </div>
 
           {/* LLM Selector */}
-          <div>
+          <div className="cn-sec" data-tour="cn-model" style={cv({ '--i': 2 })}>
             <p className="label" style={{ marginBottom: 6 }}>Modelo de Planificación</p>
             <div style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
               <select value={provider} onChange={(e) => setProvider(e.target.value)} style={{ width: '100%' }}>
@@ -645,7 +666,7 @@ export default function NewCampaignPage() {
           </div>
 
           {/* Imagen IA */}
-          <div>
+          <div className="cn-sec" data-tour="cn-image" style={cv({ '--i': 3 })}>
             <p className="label" style={{ marginBottom: 6 }}>Generación de Imágenes</p>
             <select value={imageProvider} onChange={(e) => setImageProvider(e.target.value)} style={{ width: '100%' }}>
               {IMAGE_PROVIDERS.map((p) => (
@@ -657,8 +678,10 @@ export default function NewCampaignPage() {
           {/* CTA Automatización */}
           <Link
             href="/automatizacion"
-            className="card"
+            className="card cn-sec cn-tip"
+            data-tour="cn-tip"
             style={{
+              ...cv({ '--i': 4 }),
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -679,7 +702,7 @@ export default function NewCampaignPage() {
           <div className="divider" />
 
           {/* Inventario */}
-          <div>
+          <div className="cn-sec" data-tour="cn-folder" style={cv({ '--i': 5 })}>
             <p className="label" style={{ marginBottom: 6 }}>
               <FolderSearch size={11} style={{ marginRight: 4, display: 'inline' }} />
               Carpeta de planificación del workspace
@@ -767,7 +790,7 @@ export default function NewCampaignPage() {
           </div>
 
           {/* Manual de Marca */}
-          <div>
+          <div className="cn-sec" data-tour="cn-brand" style={cv({ '--i': 6 })}>
             <p className="label" style={{ marginBottom: 6 }}>Manual de Marca (opcional)</p>
             <textarea
               value={brandInput}
@@ -778,7 +801,7 @@ export default function NewCampaignPage() {
           </div>
 
           {/* ─── Investigar Competencia ─── */}
-          <div>
+          <div className="cn-sec" data-tour="cn-competitor" style={cv({ '--i': 7 })}>
             <p className="label" style={{ marginBottom: 8 }}>
               <Search size={11} style={{ marginRight: 4, display: 'inline' }} />
               Investigar Competencia (opcional)
@@ -826,7 +849,7 @@ export default function NewCampaignPage() {
                 {competitorInsights && (
                   <div style={{ marginTop: 8, padding: '8px 10px', background: 'rgba(46,196,182,0.08)', border: '1px solid rgba(46,196,182,0.2)', borderRadius: 6 }}>
                     <p style={{ fontSize: 11, color: 'var(--rai-success)', fontWeight: 600 }}>
-                      Analisis listo: {competitorInsights.painPoints.length + competitorInsights.opportunities.length} insights
+                      Análisis listo: {competitorInsights.painPoints.length + competitorInsights.opportunities.length} insights
                     </p>
                     <p style={{ fontSize: 11, color: 'var(--rai-muted)', marginTop: 4, lineHeight: 1.5 }}>
                       {competitorInsights.rawSummary.slice(0, 120)}...
@@ -840,7 +863,7 @@ export default function NewCampaignPage() {
             {competitorMode === 'ads-library' && (
               <>
                 <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginBottom: 8, lineHeight: 1.5 }}>
-                  Analiza anuncios activos en Meta Ads Library y genera un reporte HTML con graficos.
+                  Analiza anuncios activos en Meta Ads Library y genera un reporte HTML con gráficos.
                 </p>
                 <input
                   value={adsLibraryBrand}
@@ -873,7 +896,7 @@ export default function NewCampaignPage() {
                   <div style={{ marginTop: 8, padding: '8px 10px', background: 'rgba(46,196,182,0.08)', border: '1px solid rgba(46,196,182,0.2)', borderRadius: 6 }}>
                     <p style={{ fontSize: 11, color: 'var(--rai-success)', fontWeight: 600 }}>
                       {adsLibraryResult.adsFound} anuncios analizados
-                      {!adsLibraryResult.scrapedOk && ' (analisis IA)'}
+                      {!adsLibraryResult.scrapedOk && ' (análisis IA)'}
                     </p>
                     <button
                       onClick={openAdsLibraryReport}
@@ -895,16 +918,16 @@ export default function NewCampaignPage() {
         </div>
 
         {/* PANEL DERECHO - CHAT */}
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--rai-black)' }}>
+        <div className="cn-chat">
           {/* Header del chat */}
-          <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--rai-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="cn-chat-head" data-tour="cn-chat-head">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(123,94,167,0.2)', border: '1px solid rgba(123,94,167,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Bot size={14} color="var(--rai-purple)" />
               </div>
               <div>
                 <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--rai-text)' }}>
-                  IA de Planificacion
+                  IA de Planificación
                 </span>
                 <span style={{ fontSize: 11, color: 'var(--rai-muted)', marginLeft: 8 }}>
                   {provider} / {modelId}
@@ -921,8 +944,8 @@ export default function NewCampaignPage() {
           {/* Chat log - drag and drop zone */}
           <div
             ref={chatLogRef}
-            className="chat-log"
-            style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', position: 'relative' }}
+            className="chat-log cn-chat-log"
+            data-tour="cn-chat-log"
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
             onDragOver={handleDragOver}
@@ -932,7 +955,7 @@ export default function NewCampaignPage() {
               <div style={{ position: 'absolute', inset: 0, background: 'rgba(123,94,167,0.15)', border: '2px dashed rgba(123,94,167,0.6)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, pointerEvents: 'none' }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 32, marginBottom: 8 }}>{"📎"}</div>
-                  <p style={{ color: 'var(--rai-purple)', fontWeight: 600, fontSize: 14 }}>Suelta los archivos aqui</p>
+                  <p style={{ color: 'var(--rai-purple)', fontWeight: 600, fontSize: 14 }}>Suelta los archivos aquí</p>
                 </div>
               </div>
             )}
@@ -945,13 +968,20 @@ export default function NewCampaignPage() {
                     <span style={{ fontSize: 12, color: 'var(--rai-purple)', fontWeight: 600 }}>IA</span>
                   </div>
                   <p style={{ fontSize: 14, lineHeight: 1.7 }}>
-                    Hola, soy tu IA de contenido. Dime sobre tu marca y te ayudo a planificar hasta 31 dias de contenido.
-                    {inventory.length > 0 && ` Tengo ${inventory.filter((d) => d.hasContent).length} dias con assets.`}
-                    {adsLibraryResult && ` Analice ${adsLibraryResult.adsFound} anuncios de ${adsLibraryBrand}.`}
+                    Hola, soy tu IA de contenido. Dime sobre tu marca y te ayudo a planificar hasta 31 días de contenido.
+                    {inventory.length > 0 && ` Tengo ${inventory.filter((d) => d.hasContent).length} días con assets.`}
+                    {adsLibraryResult && ` Analicé ${adsLibraryResult.adsFound} anuncios de ${adsLibraryBrand}.`}
                   </p>
                   <p style={{ fontSize: 11, color: 'var(--rai-muted)', marginTop: 8 }}>
                     Tip: Arrastra archivos al chat o usa el icono de carpeta para adjuntarlos.
                   </p>
+                  <div className="cn-starters" role="group" aria-label="Ideas para empezar">
+                    {STARTERS.map((t) => (
+                      <button key={t} type="button" onClick={() => setInput(t)}>
+                        {t}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -980,7 +1010,7 @@ export default function NewCampaignPage() {
 
           {/* File chips */}
           {uploadedFiles.length > 0 && (
-            <div style={{ padding: '8px 24px', borderTop: '1px solid var(--rai-border)', display: 'flex', flexWrap: 'wrap', gap: 6, background: 'rgba(123,94,167,0.04)' }}>
+            <div className="cn-chips">
               {uploadedFiles.map((f, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(123,94,167,0.12)', border: '1px solid rgba(123,94,167,0.25)', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: 'var(--rai-text)' }}>
                   <span>{fileIcon(f.type, f.name)}</span>
@@ -995,7 +1025,11 @@ export default function NewCampaignPage() {
           )}
 
           {/* Chat input */}
-          <div style={{ padding: '16px 24px', borderTop: uploadedFiles.length > 0 ? 'none' : '1px solid var(--rai-border)', display: 'flex', gap: 8, alignItems: 'flex-end', background: 'var(--rai-dark)' }}>
+          <div
+            className="cn-input"
+            data-tour="cn-chat-input"
+            style={{ borderTop: uploadedFiles.length > 0 ? 'none' : '1px solid var(--rai-border)' }}
+          >
             <button
               onClick={() => fileInputRef.current?.click()}
               title="Adjuntar archivos"
@@ -1025,10 +1059,10 @@ export default function NewCampaignPage() {
           </div>
 
           {messages.length >= 2 && !finalizing && (
-            <div style={{ padding: '10px 24px', background: 'rgba(201,168,76,0.05)', borderTop: '1px solid rgba(201,168,76,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="cn-foot">
               <ChevronDown size={12} color="var(--rai-gold)" />
               <span style={{ fontSize: 12, color: 'var(--rai-muted)' }}>
-                Cuando el plan este listo, haz clic en <strong style={{ color: 'var(--rai-gold)' }}>Generar Plan Maestro</strong>.
+                Cuando el plan esté listo, haz clic en <strong style={{ color: 'var(--rai-gold)' }}>Generar Plan Maestro</strong>.
               </span>
             </div>
           )}

@@ -168,3 +168,11 @@
 - Evidencia: tsc limpio, 281 tests (6 nuevos del registro), verificado en vivo (Guía de Inicio, tour general con marcas en el menú, Dashboard, Automatización, móvil 390px sin overflow).
 - Deuda: textos de módulos sin pantalla revisada son genéricos (revisar con Reiner); botón «Guía de esta pantalla» no existe en `/` y `/automatizacion` (usan su botón «Ver recorrido»).
 - Limpieza (16 oct): eslint de todo el repo en 0 errores (se corrigió una regex insegura de IPv4 en `scheduled-posts.ts`, ahora sin backtracking). Deuda de tamaño documentada: `ContentIGTab.tsx` ~1200 líneas y `automatizacion/page.tsx` ~1000 → dividir por pestaña en un corte aparte (sin cambiar comportamiento, con tests de humo).
+
+
+## Nueva Campaña premium + guía propia (15 oct 2026)
+- `/campaign/new`: barra de progreso de 3 pasos (se completa sola; check con trazo SVG y relleno de color), secciones con entrada escalonada y acento dorado al enfocar, ideas rápidas en el chat vacío, textos con ortografía corregida. Sin blur ni efectos decorativos.
+- Responsive verificado en 320/390/768/1024/1440: 0 desborde horizontal. En móvil el panel de configuración y el chat se apilan.
+- Guía propia `CAMPAIGN_NEW` (7 pasos, pistas numeradas en cascada) en `src/components/tour/tours.ts`; marcadores `data-tour="cn-*"` y test que verifica que existan en la página.
+- Corrección global: en móvil `.top-bar` quedaba 56 px más abajo y tapaba el inicio del contenido (`top:56px` → `top:0`).
+- Zona horaria por defecto `America/Caracas`; la API de programación responde 503 `schema_pending` si falta la tabla `ScheduledPost`.
