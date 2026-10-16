@@ -146,3 +146,130 @@ button.lp-milestone-close:focus-visible { outline: 2px solid var(--rai-gold); ou
     to   { transform: translateX(26px); }
   }
 }
+
+
+/* ============================================================================
+   Guía de Inicio 2.0 — barra por transform, filtros, anillos por categoría,
+   pasos pospuestos, motivo de los pasos automáticos y categorías plegables.
+   Solo transform/opacity animados; hover bajo (hover:hover); tokens --rai-*.
+   ============================================================================ */
+
+/* Barra de progreso: escala en X (sin animar el ancho) */
+.lp-bar { position: relative; width: 100%; height: 6px; border-radius: 3px; overflow: hidden; background: var(--rai-border); }
+.lp-bar > i {
+  position: absolute; inset: 0;
+  transform-origin: left center;
+  transform: scaleX(var(--w, 0));
+  background: linear-gradient(90deg, var(--rai-gold), var(--rai-gold-br));
+}
+.lp-eta { margin: 8px 0 0; min-height: 18px; font-size: 12px; line-height: 18px; color: var(--rai-muted); }
+
+/* Filtros pendientes / todos */
+.lp-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+button.lp-filter {
+  background: transparent !important;
+  border: 1px solid var(--rai-border) !important;
+  color: var(--rai-muted) !important;
+  box-shadow: none !important;
+  border-radius: 999px !important;
+  padding: 4px 12px !important;
+  min-height: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+button.lp-filter.is-on { background: color-mix(in srgb, var(--rai-gold) 16%, transparent) !important; border-color: var(--rai-gold) !important; color: var(--rai-gold) !important; }
+button.lp-filter:focus-visible { outline: 2px solid var(--rai-gold); outline-offset: 2px; }
+@media (hover: hover) {
+  button.lp-filter:not(.is-on):hover { color: var(--rai-text) !important; border-color: color-mix(in srgb, var(--rai-gold) 40%, var(--rai-border)) !important; }
+}
+
+/* Anillo por categoría */
+.lp-mini-ring { position: relative; display: inline-grid; place-items: center; flex: 0 0 auto; }
+.lp-mini-ring svg { display: block; }
+.lp-mini-track { stroke: color-mix(in srgb, currentColor 22%, transparent); }
+.lp-mini-fill { stroke: var(--rai-gold); }
+.lp-mini-ring.is-done .lp-mini-fill { stroke: var(--rai-success); }
+.lp-mini-center { position: absolute; inset: 0; display: grid; place-items: center; color: var(--rai-gold); }
+.lp-mini-ring.is-done .lp-mini-center { color: var(--rai-success); }
+/* Categoría activa (fondo dorado): el anillo hereda el color oscuro del texto */
+.lp-cat.primary .lp-mini-fill { stroke: currentColor; }
+.lp-cat.primary .lp-mini-center, .lp-cat.primary .lp-mini-ring.is-done .lp-mini-center { color: currentColor; }
+.lp-cat.primary .lp-mini-ring.is-done .lp-mini-fill { stroke: currentColor; }
+
+/* Grupo de categorías completadas */
+button.lp-done-toggle {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin: 6px 0 0 !important;
+  padding: 6px 10px !important;
+  min-height: 30px;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--rai-muted) !important;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px !important;
+}
+button.lp-done-toggle svg { flex: 0 0 auto; transform: rotate(-90deg); }
+button.lp-done-toggle svg.is-open { transform: none; }
+button.lp-done-toggle:focus-visible { outline: 2px solid var(--rai-gold); outline-offset: 2px; }
+@media (hover: hover) { button.lp-done-toggle:hover { color: var(--rai-text) !important; } }
+
+/* Fila: pospuesto, tiempo estimado y motivo de los pasos automáticos */
+.lp-row.is-skipped { background: color-mix(in srgb, var(--rai-muted) 6%, transparent); }
+.lp-badge-skip {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.02em; vertical-align: middle;
+  color: var(--rai-muted); background: color-mix(in srgb, var(--rai-muted) 15%, transparent);
+}
+.lp-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 6px; }
+.lp-meta .lp-auto { margin-top: 0; }
+.lp-time { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; line-height: 1.4; color: var(--rai-muted); }
+.lp-why {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 8px;
+  padding: 8px 10px; border-radius: 10px;
+  border: 1px dashed color-mix(in srgb, var(--rai-gold) 40%, var(--rai-border));
+  background: color-mix(in srgb, var(--rai-gold) 5%, transparent);
+  font-size: 12px; line-height: 1.45; color: var(--rai-muted);
+}
+.lp-why > span { flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
+.lp-why .lp-go { flex: 0 0 auto; }
+.lp-open { padding: 0 16px 16px 58px; }
+@media (max-width: 520px) { .lp-open { padding: 0 12px 14px 12px; } }
+
+/* Categoría completa */
+.lp-allset { display: grid; justify-items: center; gap: 6px; padding: 28px 16px; text-align: center; }
+
+/* Siguiente paso: tiempo y acciones */
+.lp-next-meta { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--rai-muted); }
+.lp-next-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; flex-shrink: 0; }
+@media (max-width: 720px) {
+  .lp-next { flex-wrap: wrap; }
+  .lp-next-body { flex: 1 1 200px; }
+  .lp-next-actions { width: 100%; }
+}
+
+/* Categorías en móvil: se envuelven en varias filas (sin scroller horizontal anidado) */
+@media (max-width: 900px) {
+  .lp-layout > .lp-cats { flex-wrap: wrap; overflow: visible; padding-bottom: 0; }
+  .lp-layout > .lp-cats .lp-cat { flex: 1 1 auto; max-width: 100%; }
+  .lp-layout > .lp-cats .lp-cat-text { white-space: normal; }
+  .lp-layout > .lp-cats .lp-done-toggle { flex: 1 1 100%; margin-top: 0 !important; }
+}
+
+/* Movimiento (solo transform / opacity) */
+@media (prefers-reduced-motion: no-preference) {
+  .lp-bar > i { transition: transform 0.25s ease-out; }
+  .lp-mini-center { transition: opacity 0.2s ease-out; }
+  button.lp-done-toggle svg { transition: transform 0.2s ease-out; }
+  .lp-open { animation: lp-open-in 0.2s ease-out both; }
+  @keyframes lp-open-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+}

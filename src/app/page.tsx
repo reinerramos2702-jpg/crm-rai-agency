@@ -1,153 +1,88 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { PlusCircle, Sparkles, Zap, ArrowRight, RefreshCw, Search, HelpCircle, Layers, Instagram, Bot } from 'lucide-react';
-import { CampaignCard } from '@/components/dashboard/CampaignCard';
-import { StatsBar } from '@/components/dashboard/StatsBar';
+import { useRouter } from 'next/navigation';
+import { PlusCircle, RefreshCw, HelpCircle, Bot } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { HotelKpiPanel } from '@/components/dashboard/HotelKpiPanel';
-import { DashboardHero } from '@/components/dashboard/DashboardHero';
-import { InstagramPulse } from '@/components/dashboard/InstagramPulse';
 import { ConfirmDialog } from '@/components/dashboard/ConfirmDialog';
 import ProductTour, { type TourStep } from '@/components/pipeline-ig/ProductTour';
 import { TopBar } from '@/components/layout/TopBar';
-import toast from 'react-hot-toast';
+import { useDashJson } from '@/lib/dashboard-client';
+import { DEFAULT_PERIOD, parsePeriod, todayHeadline, type DashPeriod, type DashboardSummary } from '@/lib/dashboard-summary';
+import { DASH_PINS_KEY, DEFAULT_PINS, canOpen, parsePins } from '@/lib/dashboard-pins';
+import { SHORTCUT_HINTS, isTypingTarget, shortcutFor } from '@/lib/dashboard-shortcuts';
+import { LAUNCHPAD_PREFS_KEY, parseLaunchpadPrefs } from '@/lib/launchpad-prefs';
+import { LAUNCHPAD_STEPS } from '@/lib/launchpad-steps';
+import { Hero } from './_dashboard/Hero';
+import { QuickActions } from './_dashboard/QuickActions';
+import { TodayBlock } from './_dashboard/TodayBlock';
+import { KpiStrip } from './_dashboard/KpiStrip';
+import { NextActionCard } from './_dashboard/NextActionCard';
+import { InstagramCard, AutomationCard } from './_dashboard/ChannelCards';
+import { ActivityFeed } from './_dashboard/ActivityFeed';
+import { CampaignsSection, type DashCampaign } from './_dashboard/CampaignsSection';
+import './_dashboard/dashboard.css';
 
-const CACHE_KEY_CAMPAIGNS = 'rai_dash_campaigns_v1';
-const CACHE_KEY_AUTOMATIONS = 'rai_dash_automations_v1';
-const FETCH_TIMEOUT_MS = 8000;
 const TOUR_KEY = 'rai-tour-dash-v1';
+const PERIOD_KEY = 'rai-dash-period-v1';
+const STEP_IDS = LAUNCHPAD_STEPS.map((s) => s.id);
+// Último periodo elegido en esta sesión: al volver al Dashboard no hay parpadeo de esqueleto.
+// (Vale null en el servidor y en la primera hidratación: el HTML inicial coincide.)
+let lastDays: DashPeriod | null = null;
 
-type Filter = 'all' | 'running' | 'done' | 'failed' | 'planning';
-const FILTERS: Array<{ id: Filter; label: string }> = [
-  { id: 'all', label: 'Todas' },
-  { id: 'running', label: 'En proceso' },
-  { id: 'done', label: 'Completadas' },
-  { id: 'failed', label: 'Con errores' },
-  { id: 'planning', label: 'Planificando' },
-];
-function matchesFilter(status: string, f: Filter): boolean {
-  if (f === 'all') return true;
-  if (f === 'running') return ['processing', 'ready', 'running', 'queued'].includes(status);
-  if (f === 'done') return ['done', 'completed'].includes(status);
-  if (f === 'failed') return status === 'failed';
-  return status === 'planning';
-}
-
-function readCache<T>(key: string): T | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeCache<T>(key: string, value: T) {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // QuotaExceeded u otra: ignorar
-  }
-}
-
-async function fetchWithTimeout(url: string, ms: number): Promise<Response> {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), ms);
-  try {
-    return await fetch(url, { signal: ctrl.signal });
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-interface Campaign {
-  id: string;
-  name: string;
-  pipelineType: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  _count: { executions: number };
-  executions: Array<{
-    id: string;
-    status: string;
-    tasks: Array<{ status: string }>;
-  }>;
-}
-
-interface AutomationWorkflow {
-  id: string;
-  name: string;
-  status: string;
-  _count: { runs: number };
-}
-
-/**
- * Dashboard principal: grilla de campañas con estadísticas y acción rápida.
- */
+/** Dashboard: lo de hoy, indicadores del periodo, siguiente mejor acción y campañas. */
 export default function DashboardPage() {
-  // Estado inicial idéntico en servidor y cliente (evita errores de hidratación);
-  // el caché local se aplica justo después de montar y pinta lo último conocido mientras se refresca.
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hasFetched, setHasFetched] = useState(false);
-  const [workflows, setWorkflows] = useState<AutomationWorkflow[]>([]);
-  const [loadingAutomations, setLoadingAutomations] = useState(true);
-  const [me, setMe] = useState<{ displayName: string | null; workspaceName: string | null } | null>(null);
-  const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<Filter>('all');
-  const [toDelete, setToDelete] = useState<Campaign | null>(null);
+  const router = useRouter();
+  // Todo lo que depende del navegador (hora, localStorage) se resuelve DESPUÉS de montar
+  // para que el primer render coincida con el HTML del servidor.
+  const [now, setNow] = useState<Date | null>(null);
+  const [days, setDays] = useState<DashPeriod | null>(lastDays);
+  const [pins, setPins] = useState<string[]>(DEFAULT_PINS);
+  const [editingPins, setEditingPins] = useState(false);
+  const [skipped, setSkipped] = useState<string[]>([]);
+  const [toDelete, setToDelete] = useState<DashCampaign | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
 
-  async function loadCampaigns(silent = false) {
-    if (!silent) setLoading((prev) => prev && !hasFetched);
-    try {
-      const res = await fetchWithTimeout('/api/campaigns', FETCH_TIMEOUT_MS);
-      if (!res.ok) throw new Error('Error cargando campañas');
-      const data = await res.json();
-      const list: Campaign[] = data.campaigns || [];
-      setCampaigns(list);
-      writeCache(CACHE_KEY_CAMPAIGNS, list);
-    } catch (err) {
-      const aborted = err instanceof DOMException && err.name === 'AbortError';
-      if (!silent) toast.error(aborted ? 'La carga tardó demasiado' : 'No se pudieron cargar las campañas');
-    } finally {
-      setLoading(false);
-      setHasFetched(true);
-    }
-  }
-
-  async function loadAutomations() {
-    try {
-      const res = await fetchWithTimeout('/api/automations', FETCH_TIMEOUT_MS);
-      if (!res.ok) throw new Error('Error cargando automatizaciones');
-      const data = await res.json();
-      const list: AutomationWorkflow[] = data.workflows || [];
-      setWorkflows(list);
-      writeCache(CACHE_KEY_AUTOMATIONS, list);
-    } catch {
-      // Silencioso: el resumen de automatización es complementario.
-    } finally {
-      setLoadingAutomations(false);
-    }
-  }
+  const summary = useDashJson<DashboardSummary>(days ? `/api/dashboard/summary?days=${days}` : null, {
+    ttlMs: 10_000,
+    persistKey: days ? `rai-dash-summary-${days}-v1` : undefined,
+    maxAgeMs: 30 * 60_000,
+  });
+  const campaignsState = useDashJson<{ campaigns: DashCampaign[] }>('/api/campaigns', { ttlMs: 15_000, persistKey: 'rai-dash-campaigns-v2' });
+  const launchpad = useDashJson<{ completed: string[] }>('/api/launchpad', { ttlMs: 15_000, persistKey: 'rai-dash-launchpad-v1' });
 
   useEffect(() => {
-    const cachedCampaigns = readCache<Campaign[]>(CACHE_KEY_CAMPAIGNS);
-    if (cachedCampaigns) { setCampaigns(cachedCampaigns); setLoading(false); }
-    const cachedFlows = readCache<AutomationWorkflow[]>(CACHE_KEY_AUTOMATIONS);
-    if (cachedFlows) { setWorkflows(cachedFlows); setLoadingAutomations(false); }
-    loadCampaigns();
-    loadAutomations();
-    fetchWithTimeout('/api/me', FETCH_TIMEOUT_MS)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d) setMe({ displayName: d.displayName ?? null, workspaceName: d.workspaceName ?? null }); })
-      .catch(() => { /* el saludo funciona sin nombre */ });
+    setNow(new Date());
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    try { lastDays = parsePeriod(window.localStorage.getItem(PERIOD_KEY) ?? DEFAULT_PERIOD); } catch { lastDays = DEFAULT_PERIOD; }
+    setDays(lastDays);
+    try { setPins(parsePins(window.localStorage.getItem(DASH_PINS_KEY))); } catch { /* sin storage: accesos predeterminados */ }
+    try { setSkipped(parseLaunchpadPrefs(window.localStorage.getItem(LAUNCHPAD_PREFS_KEY), STEP_IDS).skipped); } catch { /* sin storage */ }
+    return () => window.clearInterval(timer);
   }, []);
+
+  const changeDays = useCallback((d: DashPeriod) => {
+    lastDays = d;
+    setDays(d);
+    try { window.localStorage.setItem(PERIOD_KEY, String(d)); } catch { /* sin storage */ }
+  }, []);
+
+  const changePins = useCallback((next: string[]) => {
+    setPins(next);
+    try { window.localStorage.setItem(DASH_PINS_KEY, JSON.stringify(next)); } catch { /* sin storage */ }
+  }, []);
+
+  const { refresh: refreshSummary } = summary;
+  const { refresh: refreshCampaigns } = campaignsState;
+  const { refresh: refreshLaunchpad } = launchpad;
+  const refreshAll = useCallback(() => {
+    void refreshSummary(true);
+    void refreshCampaigns();
+    void refreshLaunchpad();
+  }, [refreshSummary, refreshCampaigns, refreshLaunchpad]);
 
   // Recorrido guiado: una sola vez por navegador.
   useEffect(() => {
@@ -163,17 +98,45 @@ export default function DashboardPage() {
     setTourOpen(false);
   };
 
+  const role = summary.data?.me.role ?? null;
+
+  // Atajos de teclado discretos (no actúan al escribir ni con diálogos abiertos).
+  const blocked = toDelete !== null || tourOpen;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const action = shortcutFor(e, { typing: isTypingTarget(document.activeElement as HTMLElement | null), blocked });
+      if (!action) return;
+      if (action === 'new-campaign') {
+        if (!canOpen('/campaign/new', role)) return;
+        e.preventDefault();
+        router.push('/campaign/new');
+      } else if (action === 'focus-search') {
+        const input = document.querySelector<HTMLInputElement>('[data-dash-search]');
+        if (!input) return;
+        e.preventDefault();
+        input.focus();
+      } else if (action === 'refresh') {
+        refreshAll();
+      } else if (action === 'period-7') {
+        changeDays(7);
+      } else if (action === 'period-30') {
+        changeDays(30);
+      } else if (action === 'customize') {
+        setEditingPins((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [blocked, role, router, refreshAll, changeDays]);
+
   async function confirmDelete() {
     if (!toDelete) return;
     setDeleting(true);
     try {
       const res = await fetch(`/api/campaigns/${toDelete.id}`, { method: 'DELETE' });
       if (res.ok) {
-        setCampaigns((prev) => {
-          const next = prev.filter((c) => c.id !== toDelete.id);
-          writeCache(CACHE_KEY_CAMPAIGNS, next);
-          return next;
-        });
+        const current = campaignsState.data?.campaigns ?? [];
+        campaignsState.mutate({ campaigns: current.filter((c) => c.id !== toDelete.id) });
         toast.success('Campaña eliminada');
         setToDelete(null);
       } else {
@@ -186,38 +149,26 @@ export default function DashboardPage() {
     }
   }
 
-  // Estadísticas
-  const total = campaigns.length;
-  const completed = campaigns.filter((c) => ['done', 'completed'].includes(c.status)).length;
-  const processing = campaigns.filter((c) => ['processing', 'ready'].includes(c.status)).length;
-  const failed = campaigns.filter((c) => c.status === 'failed').length;
-
-  const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return [...campaigns]
-      .filter((c) => matchesFilter(c.status, filter) && (!q || c.name.toLowerCase().includes(q)))
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-  }, [campaigns, query, filter]);
-
-  const activeWorkflows = workflows.filter((w) => w.status === 'active').length;
-  const totalRuns = workflows.reduce((acc, w) => acc + (w._count?.runs || 0), 0);
+  const data = summary.data;
+  const periodKpis = data && data.days === days ? data.kpis : undefined;
+  const campaigns = campaignsState.data?.campaigns;
+  const noCampaigns = campaigns !== undefined && campaigns.length === 0;
+  const summaryFailed = summary.error !== null && data === undefined;
 
   const tourSteps: TourStep[] = [
     { id: 'welcome', title: 'Tu panel de control', body: 'En 30 segundos ves qué hay en cada zona. Puedes repetirlo con "Ver recorrido".' },
-    { id: 'actions', target: '[data-tour="dash-actions"]', placement: 'bottom', title: 'Accesos rápidos', body: 'Lo que más usas, a un clic. Fíjate en las cuatro:', hints: [
-      { target: '[data-tour="dash-actions"] .dash-action:nth-child(1)', label: 'Crea una campaña nueva con IA.' },
-      { target: '[data-tour="dash-actions"] .dash-action:nth-child(2)', label: 'Programa y publica en Instagram.' },
-      { target: '[data-tour="dash-actions"] .dash-action:nth-child(3)', label: 'Organiza tu agenda y calendarios.' },
-      { target: '[data-tour="dash-actions"] .dash-action:nth-child(4)', label: 'Responde a tus clientes.' },
+    { id: 'actions', target: '[data-tour="dash-actions"]', placement: 'bottom', title: 'Accesos rápidos', body: 'Lo que más usas, a un clic. Tú decides cuáles quedan aquí:', hints: [
+      { target: '[data-tour="dash-actions"] .dash-action:nth-child(1)', label: 'Pulsa un acceso para abrir ese módulo.' },
+      { target: '[data-tour="dash-customize"]', label: 'Personalizar: fija, quita y reordena (atajo: P).' },
     ] },
-    { id: 'ig', target: '[data-tour="dash-ig"]', placement: 'bottom', title: 'Instagram, hoy', body: 'Cuántas publicaciones hay programadas y cuándo sale la siguiente. Si algo falla, te avisa aquí.' },
-    { id: 'auto', target: '[data-tour="dash-auto"]', placement: 'bottom', title: 'Automatización', body: 'Flujos que trabajan solos: recordatorios, seguimientos, bienvenidas. Se activan desde plantillas.' },
-    ...(total > 0
-      ? [
-          { id: 'stats', target: '[data-tour="dash-stats"]', placement: 'bottom' as const, title: 'Resumen de campañas', body: 'Cuántas están completas, en proceso o con errores. La barrita muestra su peso sobre el total.' },
-          { id: 'list', target: '[data-tour="dash-list"]', placement: 'top' as const, title: 'Tus campañas', body: 'Busca por nombre o filtra por estado. Entra a una para ver sus días y publicarlos.' },
-        ]
-      : [{ id: 'empty', target: '[data-tour="dash-empty"]', placement: 'top' as const, title: 'Empieza aquí', body: 'Crea tu primera campaña: la IA arma hasta 31 días de contenido listo para Instagram.' }]),
+    { id: 'today', target: '[data-tour="dash-today"]', placement: 'bottom', optional: true, title: 'Hoy', body: 'Citas, tareas, conversaciones sin responder, pagos por revisar y publicaciones de Instagram del día. Cada tarjeta lleva a su módulo.' },
+    { id: 'kpis', target: '[data-tour="dash-kpis"]', placement: 'bottom', optional: true, title: 'Rendimiento', body: 'Cambia entre 7 y 30 días (atajos: 7 y 3). La etiqueta compara con el periodo anterior y las dos barras muestran actual y previo.' },
+    { id: 'next', target: '[data-tour="dash-next"]', placement: 'top', optional: true, title: 'Siguiente mejor acción', body: 'El paso de la Guía de Inicio que más conviene hacer ahora, con su tiempo estimado.' },
+    { id: 'ig', target: '[data-tour="dash-ig"]', placement: 'top', optional: true, title: 'Instagram', body: 'Cuántas publicaciones hay programadas y cuándo sale la siguiente. Si algo falla, te avisa aquí.' },
+    { id: 'auto', target: '[data-tour="dash-auto"]', placement: 'top', optional: true, title: 'Automatización', body: 'Flujos que trabajan solos: recordatorios, seguimientos, bienvenidas. Se activan desde plantillas.' },
+    noCampaigns
+      ? { id: 'empty', target: '[data-tour="dash-empty"]', placement: 'top', optional: true, title: 'Empieza aquí', body: 'Crea tu primera campaña: la IA arma hasta 31 días de contenido listo para Instagram.' }
+      : { id: 'list', target: '[data-tour="dash-list"]', placement: 'top', optional: true, title: 'Tus campañas', body: 'Busca por nombre o filtra por estado. Entra a una para ver sus días y publicarlos.' },
     { id: 'done', title: '¡Listo!', body: 'El menú de la izquierda te lleva a cada módulo. Aquí siempre verás lo importante primero.' },
   ];
 
@@ -225,21 +176,14 @@ export default function DashboardPage() {
     <>
       <TopBar
         title="CRM RAI Agency"
-        subtitle="Dashboard de campañas de contenido automatizado"
+        subtitle="Tu día de un vistazo: lo urgente, tus números y tus campañas"
         actions={
           <>
             <button type="button" className="rai-help-btn dash-tour-btn" onClick={() => setTourOpen(true)} title="Ver el recorrido guiado">
               <HelpCircle size={15} /> <span>Ver recorrido</span>
             </button>
-            <button
-              type="button"
-              onClick={() => { loadCampaigns(); loadAutomations(); }}
-              className="btn btn-ghost btn-sm"
-              title="Recargar"
-              aria-label="Recargar datos"
-              disabled={loading}
-            >
-              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            <button type="button" onClick={refreshAll} className="btn btn-ghost btn-sm" title="Actualizar (R)" aria-label="Actualizar datos" disabled={summary.revalidating || campaignsState.revalidating}>
+              <RefreshCw size={14} className={summary.revalidating ? 'animate-spin' : ''} />
             </button>
             <Link href="/campaign/new" className="btn btn-primary" data-tour="dash-new">
               <PlusCircle size={16} />
@@ -249,102 +193,45 @@ export default function DashboardPage() {
         }
       />
 
-      <div className="container rai-page rai-stage dash-page">
-        <DashboardHero displayName={me?.displayName ?? null} workspaceName={me?.workspaceName ?? null} campaigns={total} activeFlows={activeWorkflows} />
+      <div className="container rai-page rai-stage dash-page dsh-page">
+        <Hero displayName={data?.me.displayName ?? null} workspaceName={data?.me.workspaceName ?? null} headline={todayHeadline(data?.today)} now={now} />
 
-        {/* Instagram + Automatización: dos tarjetas lado a lado (una columna en móvil) */}
-        <div className="dash-duo">
-          <InstagramPulse />
-          {!loadingAutomations && (
-            <Link href="/automatizacion" className="dash-auto" data-tour="dash-auto">
-              <div className="dash-auto-head">
-                <span className="dash-pulse-ico"><Zap size={17} /></span>
-                <div>
-                  <h3>Automatización</h3>
-                  <p>{workflows.length === 0 ? 'Sin flujos todavía. Activa el primero desde una plantilla.' : 'Flujos que trabajan por ti'}</p>
-                </div>
-              </div>
-              {workflows.length > 0 && (
-                <div className="dash-pulse-nums">
-                  <div style={{ '--sc': 'var(--rai-gold)' } as React.CSSProperties}><strong>{activeWorkflows}</strong><span>activos</span></div>
-                  <div style={{ '--sc': 'var(--rai-muted)' } as React.CSSProperties}><strong>{workflows.length}</strong><span>en total</span></div>
-                  <div style={{ '--sc': 'var(--rai-purple)' } as React.CSSProperties}><strong>{totalRuns}</strong><span>ejecuciones</span></div>
-                </div>
-              )}
-              <span className="dash-link">{workflows.length === 0 ? 'Configurar automatizaciones' : 'Ver automatizaciones'} <ArrowRight size={13} /></span>
-            </Link>
-          )}
+        <QuickActions pins={pins} role={role} editing={editingPins} onEditingChange={setEditingPins} onPinsChange={changePins} />
+
+        {summaryFailed ? (
+          <p className="dash-noresults">
+            <Bot size={16} /> No se pudo cargar el resumen de hoy.
+            <button type="button" onClick={() => void summary.refresh(true)}><RefreshCw size={12} /> Reintentar</button>
+          </p>
+        ) : (
+          <>
+            <TodayBlock today={data?.today} />
+            <KpiStrip days={days ?? DEFAULT_PERIOD} onDays={changeDays} kpis={periodKpis} revalidating={summary.revalidating} onRefresh={refreshAll} />
+          </>
+        )}
+
+        <div className="dsh-trio">
+          {!(launchpad.error && !launchpad.data) && <NextActionCard completed={launchpad.data?.completed} skipped={skipped} />}
+          <InstagramCard data={data?.instagram} loading={data === undefined && !summaryFailed} />
+          <AutomationCard data={data?.automation} loading={data === undefined && !summaryFailed} />
         </div>
 
-        {/* Panel hotel (solo si hay datos; si no, una línea descartable) */}
+        <ActivityFeed items={summaryFailed ? null : data?.activity} now={now} />
+
         <HotelKpiPanel />
 
-        {!loading && total > 0 && <StatsBar total={total} completed={completed} processing={processing} failed={failed} />}
+        <CampaignsSection
+          campaigns={campaigns}
+          failed={campaignsState.error !== null}
+          onRetry={() => void campaignsState.refresh()}
+          onDelete={setToDelete}
+        />
 
-        {/* Campañas */}
-        {!loading && total > 0 && (
-          <div className="dash-toolbar" data-tour="dash-list">
-            <h2>Campañas <span>{visible.length === total ? total : `${visible.length} de ${total}`}</span></h2>
-            <label className="dash-search">
-              <Search size={14} aria-hidden="true" />
-              <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar campaña…" aria-label="Buscar campaña" />
-            </label>
-            <div className="dash-chips" role="group" aria-label="Filtrar por estado">
-              {FILTERS.map((f) => (
-                <button key={f.id} type="button" className={`dash-chip${filter === f.id ? ' is-on' : ''}`} onClick={() => setFilter(f.id)} aria-pressed={filter === f.id}>
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {loading && (
-          <div className="dash-grid">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="dash-camp" aria-hidden="true">
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <div className="skeleton" style={{ width: 40, height: 40, borderRadius: 12 }} />
-                  <div style={{ flex: 1, display: 'grid', gap: 6 }}>
-                    <div className="skeleton" style={{ height: 12, width: '70%', borderRadius: 4 }} />
-                    <div className="skeleton" style={{ height: 10, width: '40%', borderRadius: 4 }} />
-                  </div>
-                </div>
-                <div className="skeleton" style={{ height: 8, width: '100%', borderRadius: 4 }} />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Estado vacío guiado */}
-        {!loading && total === 0 && (
-          <section className="dash-empty" data-tour="dash-empty">
-            <span className="dash-empty-ico"><Layers size={30} /></span>
-            <h2>Crea tu primera campaña</h2>
-            <p>La IA genera hasta 31 días de contenido listo para publicar en Instagram.</p>
-            <ol className="dash-empty-steps">
-              <li><b>1</b> Cuéntale tu negocio</li>
-              <li><b>2</b> La IA arma el plan</li>
-              <li><b>3</b> Aprueba y programa</li>
-            </ol>
-            <div className="dash-empty-cta">
-              <Link href="/campaign/new" className="btn btn-primary btn-lg"><Sparkles size={18} /> Crear primera campaña</Link>
-              <Link href="/automatizacion" className="dash-link"><Instagram size={13} /> o planear directo en Contenido IG</Link>
-            </div>
-          </section>
-        )}
-
-        {!loading && total > 0 && visible.length === 0 && (
-          <p className="dash-noresults"><Bot size={16} /> Ninguna campaña coincide. <button type="button" onClick={() => { setQuery(''); setFilter('all'); }}>Limpiar filtros</button></p>
-        )}
-
-        {!loading && visible.length > 0 && (
-          <div className="dash-grid">
-            {visible.map((campaign) => (
-              <CampaignCard key={campaign.id} campaign={campaign} onDelete={() => setToDelete(campaign)} />
-            ))}
-          </div>
-        )}
+        <p className="dsh-shortcuts" aria-label="Atajos de teclado">
+          {SHORTCUT_HINTS.map((h) => (
+            <span key={h.keys}><kbd>{h.keys}</kbd> {h.label}</span>
+          ))}
+        </p>
       </div>
 
       <ConfirmDialog

@@ -1,265 +1,52 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Rocket, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { useCachedJson } from '@/lib/use-cached-json';
 import { categoryPercent, computeNextStep, countCompleted, detectMilestone } from '@/lib/launchpad-progress';
+import {
+  LAUNCHPAD_CATEGORIES,
+  LAUNCHPAD_STEPS,
+  LAUNCHPAD_TOTAL,
+  remainingMinutes,
+  type LaunchpadStep,
+} from '@/lib/launchpad-steps';
+import {
+  DEFAULT_LAUNCHPAD_PREFS,
+  LAUNCHPAD_PREFS_KEY,
+  filterItems,
+  parseLaunchpadPrefs,
+  pickInitialCategory,
+  serializeLaunchpadPrefs,
+  stepState,
+  toggleSkipped,
+  type LaunchpadFilter,
+  type LaunchpadPrefs,
+} from '@/lib/launchpad-prefs';
 import { SkeletonLine } from '@/components/ui/Skeleton';
 import { NextStepCard } from './NextStepCard';
 import { MilestoneBanner } from './MilestoneBanner';
+import { CategoryRail } from './CategoryRail';
+import { StepRow } from './StepRow';
+import { TutorialModal } from './TutorialModal';
+import { stepIcon } from './launchpad-icons';
 import './launchpad.css';
-import Link from 'next/link';
-import Image from 'next/image';
-import {
-  Settings,
-  Megaphone,
-  MessageCircle,
-  ShoppingCart,
-  UserPlus,
-  Users,
-  Filter,
-  MessageSquare,
-  Mail,
-  CalendarCheck,
-  Building2,
-  Share2,
-  Target,
-  Inbox,
-  Package,
-  CreditCard,
-  Link2,
-  FileText,
-  ChevronDown,
-  ChevronUp,
-  ChevronLeft,
-  ChevronRight,
-  Rocket,
-  Check,
-  PlayCircle,
-  ArrowRight,
-  X,
-  Zap,
-  ShieldCheck,
-  Bell,
-} from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
-
-interface ChecklistItem {
-  id: string;
-  icon: LucideIcon;
-  title: string;
-  description: string;
-  href: string;
-}
-
-interface Category {
-  id: string;
-  label: string;
-  icon: LucideIcon;
-  items: ChecklistItem[];
-}
-
-const CATEGORIES: Category[] = [
-  {
-    id: 'base',
-    label: 'Configuración de base',
-    icon: Settings,
-    items: [
-      {
-        id: 'crear-contacto',
-        icon: UserPlus,
-        title: 'Crea tu primer contacto',
-        description: 'Agrega tu primer contacto y empieza a construir tu base de clientes.',
-        href: '/conversaciones',
-      },
-      {
-        id: 'importar-contactos',
-        icon: Users,
-        title: 'Importa tus contactos existentes',
-        description: 'Importa contactos desde otras plataformas para reunir toda tu audiencia en un solo lugar.',
-        href: '/conversaciones',
-      },
-      {
-        id: 'embudo-captacion',
-        icon: Filter,
-        title: 'Crea un embudo de captación',
-        description: 'Configura un embudo y un formulario para captar clientes potenciales de forma automática.',
-        href: '/marketing',
-      },
-      {
-        id: 'comunicacion-multicanal',
-        icon: MessageSquare,
-        title: 'Activa la comunicación multicanal',
-        description: 'Conecta correo, SMS y WhatsApp para responder a tus clientes desde un solo lugar.',
-        href: '/conversaciones',
-      },
-      {
-        id: 'primera-campana',
-        icon: Mail,
-        title: 'Lanza tu primera campaña',
-        description: 'Diseña y envía tu primera campaña para impulsar la participación de tus contactos.',
-        href: '/marketing',
-      },
-      {
-        id: 'seguimiento-automatizado',
-        icon: Target,
-        title: 'Configura campañas de seguimiento automático',
-        description: 'Automatiza secuencias de seguimiento para nutrir a tus clientes potenciales con el tiempo.',
-        href: '/marketing',
-      },
-      {
-        id: 'programacion-citas',
-        icon: CalendarCheck,
-        title: 'Activa la programación de citas',
-        description: 'Configura tu calendario para recibir reservas automáticas con recordatorios.',
-        href: '/marketing',
-      },
-      {
-        id: 'pipeline-ventas',
-        icon: Building2,
-        title: 'Optimiza tu proceso de ventas',
-        description: 'Organiza tu pipeline de ventas para hacer seguimiento del progreso de cada oportunidad.',
-        href: '/conversaciones',
-      },
-    ],
-  },
-  {
-    id: 'marketing',
-    label: 'Marketing y generación de leads',
-    icon: Megaphone,
-    items: [
-      {
-        id: 'redes-sociales',
-        icon: Share2,
-        title: 'Gestiona tus redes sociales desde un solo lugar',
-        description: 'Programa y administra publicaciones para Instagram, TikTok, Facebook y más.',
-        href: '/marketing',
-      },
-      {
-        id: 'anuncios-meta',
-        icon: Share2,
-        title: 'Captura leads con anuncios de Facebook e Instagram',
-        description: 'Conecta tus canales de Meta Ads para gestionar campañas de generación de clientes potenciales.',
-        href: '/marketing',
-      },
-      {
-        id: 'campana-sms',
-        icon: MessageSquare,
-        title: 'Lanza tu primera campaña de SMS',
-        description: 'Diseña y envía una campaña de SMS para llegar directamente a tu audiencia.',
-        href: '/marketing',
-      },
-    ],
-  },
-  {
-    id: 'ventas',
-    label: 'Ventas y conversaciones',
-    icon: MessageCircle,
-    items: [
-      {
-        id: 'conversaciones-ventas',
-        icon: Inbox,
-        title: 'Gestiona tus conversaciones de ventas',
-        description: 'Centraliza correo, SMS y WhatsApp para hacer seguimiento de cada conversación.',
-        href: '/conversaciones',
-      },
-      {
-        id: 'chat-en-vivo',
-        icon: MessageCircle,
-        title: 'Activa el chat en vivo en tu sitio web',
-        description: 'Brinda asistencia instantánea a los visitantes de tu sitio en tiempo real.',
-        href: '/conversaciones',
-      },
-      {
-        id: 'messenger',
-        icon: Share2,
-        title: 'Conecta Facebook e Instagram Messenger',
-        description: 'Gestiona todas tus conversaciones de redes sociales desde un solo lugar.',
-        href: '/conversaciones',
-      },
-    ],
-  },
-  {
-    id: 'ecommerce',
-    label: 'Comercio electrónico',
-    icon: ShoppingCart,
-    items: [
-      {
-        id: 'lanzar-producto',
-        icon: Package,
-        title: 'Lanza tu primer producto',
-        description: 'Configura y publica tu producto, servicio o suscripción para empezar a vender.',
-        href: '/facturacion',
-      },
-      {
-        id: 'conectar-pagos',
-        icon: CreditCard,
-        title: 'Conecta un proveedor de pagos',
-        description: 'Vincula PayPal, Stripe o Mercado Pago para habilitar pagos rápidos y seguros.',
-        href: '/facturacion',
-      },
-      {
-        id: 'enlace-pago',
-        icon: Link2,
-        title: 'Crea un enlace de pago personalizado',
-        description: 'Genera enlaces de pago para compartir con tus clientes y cobrar fácilmente.',
-        href: '/facturacion',
-      },
-      {
-        id: 'facturas',
-        icon: FileText,
-        title: 'Genera y envía facturas profesionales',
-        description: 'Gestiona tu facturación enviando facturas personalizadas a tus clientes.',
-        href: '/facturacion',
-      },
-    ],
-  },
-  {
-    id: 'automatizacion',
-    label: 'Automatización',
-    icon: Zap,
-    items: [
-      {
-        id: 'primera-automatizacion',
-        icon: Zap,
-        title: 'Activa tu primera automatización',
-        description: 'Elige una de las 15 plantillas listas (mayoreo, retail o servicios) y actívala con un clic.',
-        href: '/automatizacion',
-      },
-      {
-        id: 'notificaciones-multicanal',
-        icon: Bell,
-        title: 'Configura notificaciones multicanal',
-        description: 'Conecta tu webhook de n8n para que tus flujos avisen por WhatsApp, email o el canal que uses.',
-        href: '/automatizacion',
-      },
-      {
-        id: 'disparadores-eventos',
-        icon: Target,
-        title: 'Conecta disparadores de eventos del sistema',
-        description: 'Activa flujos automáticos cuando entra un contacto, vence una cita o un cliente queda inactivo.',
-        href: '/automatizacion',
-      },
-      {
-        id: 'roles-equipo',
-        icon: ShieldCheck,
-        title: 'Define roles y permisos de tu equipo',
-        description: 'Invita a tu equipo y asigna roles (Gerente, Agente, Viewer) desde Configuración.',
-        href: '/settings',
-      },
-    ],
-  },
-];
-
-const ALL_ITEMS: ChecklistItem[] = CATEGORIES.flatMap((c) => c.items);
-const OVERALL = { id: 'todo', items: ALL_ITEMS };
 
 interface LaunchpadProgress {
   completed: string[];
   manualItemIds: string[];
 }
 
+interface TutorialManifestEntry {
+  version: number;
+  slides: number;
+}
+type TutorialManifest = Record<string, TutorialManifestEntry>;
+
 const EMPTY_IDS: string[] = [];
 const EMPTY_MANIFEST: TutorialManifest = {};
+const EMPTY_SET: ReadonlySet<string> = new Set();
+const STEP_IDS = LAUNCHPAD_STEPS.map((s) => s.id);
 const CELEBRATE_MS = 900;
 const SYNC_PULSE_MS = 1200;
 
@@ -268,32 +55,70 @@ interface Celebration {
   categories: ReadonlySet<string>;
 }
 
-interface TutorialManifestEntry {
-  version: number;
-  slides: number;
-}
-
-type TutorialManifest = Record<string, TutorialManifestEntry>;
+const OVERALL = { id: 'todo', items: LAUNCHPAD_STEPS };
 
 export default function LaunchpadPage() {
-  const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].id);
+  const [activeCategory, setActiveCategory] = useState(LAUNCHPAD_CATEGORIES[0].id);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [tutorialItem, setTutorialItem] = useState<ChecklistItem | null>(null);
+  const [tutorialItem, setTutorialItem] = useState<LaunchpadStep | null>(null);
   const [slideIndex, setSlideIndex] = useState(0);
+  const [prefs, setPrefs] = useState<LaunchpadPrefs>(DEFAULT_LAUNCHPAD_PREFS);
+  const pickedByUser = useRef(false);
+  const pendingScroll = useRef<string | null>(null);
+  // Pasos recién completados a mano: siguen visibles con el filtro «pendientes» hasta cambiar de vista.
+  const [kept, setKept] = useState<ReadonlySet<string>>(EMPTY_SET);
 
-  // Progreso real por workspace (ver src/app/api/launchpad/route.ts). Caché
-  // compartida: al volver al módulo se pinta al instante y se actualiza por detrás.
+  // Progreso real por workspace (ver src/app/api/launchpad/route.ts). Caché compartida:
+  // al volver se pinta al instante y se actualiza por detrás (el Dashboard usa la misma).
   const progress = useCachedJson<LaunchpadProgress>('/api/launchpad', { ttlMs: 15_000 });
-  const manifestState = useCachedJson<{ items?: TutorialManifest }>('/tutorials/manifest.json', {
-    ttlMs: 10 * 60_000,
-  });
+  const manifestState = useCachedJson<{ items?: TutorialManifest }>('/tutorials/manifest.json', { ttlMs: 10 * 60_000 });
   const completed = progress.data?.completed ?? EMPTY_IDS;
   const manualItemIds = progress.data?.manualItemIds ?? EMPTY_IDS;
   const hasData = progress.data !== undefined;
   const loaded = hasData || progress.error !== null;
   const manifest: TutorialManifest = manifestState.data?.items ?? EMPTY_MANIFEST;
 
-  const category = CATEGORIES.find((c) => c.id === activeCategory) ?? CATEGORIES[0];
+  const category = LAUNCHPAD_CATEGORIES.find((c) => c.id === activeCategory) ?? LAUNCHPAD_CATEGORIES[0];
+
+  // Preferencias locales y enlace profundo (?paso=id): solo tras montar (hidratación).
+  useEffect(() => {
+    try {
+      setPrefs(parseLaunchpadPrefs(window.localStorage.getItem(LAUNCHPAD_PREFS_KEY), STEP_IDS));
+    } catch { /* sin storage: valores predeterminados */ }
+    const target = new URLSearchParams(window.location.search).get('paso');
+    const cat = LAUNCHPAD_CATEGORIES.find((c) => c.items.some((i) => i.id === target));
+    if (target && cat) {
+      pickedByUser.current = true;
+      pendingScroll.current = target;
+      setActiveCategory(cat.id);
+      setExpanded(target);
+    }
+  }, []);
+
+  const updatePrefs = useCallback((update: (p: LaunchpadPrefs) => LaunchpadPrefs) => {
+    setPrefs((prev) => {
+      const next = update(prev);
+      try { window.localStorage.setItem(LAUNCHPAD_PREFS_KEY, serializeLaunchpadPrefs(next)); } catch { /* sin storage */ }
+      return next;
+    });
+  }, []);
+
+  // Al llegar el progreso por primera vez, se abre la categoría con el siguiente paso (si la persona no eligió otra).
+  useEffect(() => {
+    if (!hasData || pickedByUser.current) return;
+    const id = pickInitialCategory(LAUNCHPAD_CATEGORIES, completed, prefs.skipped);
+    if (id) setActiveCategory(id);
+    pickedByUser.current = true;
+    // Solo la primera vez que hay datos.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasData]);
+
+  // Desplaza hasta el paso del enlace profundo (un solo scroll: el de la página).
+  useEffect(() => {
+    if (!expanded || pendingScroll.current !== expanded) return;
+    pendingScroll.current = null;
+    document.getElementById(`paso-${expanded}`)?.scrollIntoView({ block: 'center' });
+  }, [expanded, activeCategory]);
 
   // Celebraciones: solo ante una transición real (nunca en la carga inicial).
   const [celebrate, setCelebrate] = useState<Celebration | null>(null);
@@ -304,8 +129,8 @@ export default function LaunchpadPage() {
     if (!hasData) return;
     const prev = prevCompleted.current;
     prevCompleted.current = completed;
-    if (prev === null) return; // primera lectura: es la línea base, no un hito
-    const milestone = detectMilestone(prev, completed, CATEGORIES);
+    if (prev === null) return;
+    const milestone = detectMilestone(prev, completed, LAUNCHPAD_CATEGORIES);
     if (milestone.newlyDone.length === 0) return;
     setCelebrate({ items: new Set(milestone.newlyDone), categories: new Set(milestone.categoriesCompleted) });
     if (milestone.overallCompleted) setMilestoneOpen(true);
@@ -328,7 +153,7 @@ export default function LaunchpadPage() {
     const finished = wasRevalidating.current && !progress.revalidating;
     wasRevalidating.current = progress.revalidating;
     if (syncBaseline.current === null) {
-      syncBaseline.current = signature; // primera carga: sin pulso
+      syncBaseline.current = signature;
       return;
     }
     if (progress.revalidating) return;
@@ -344,31 +169,48 @@ export default function LaunchpadPage() {
   }, [syncing]);
 
   const toggleComplete = (id: string) => {
-    if (!manualItemIds.includes(id)) return; // ítem automático: no se puede marcar a mano
+    if (!manualItemIds.includes(id)) return;
     const nextDone = !completed.includes(id);
+    if (nextDone) setKept((prev) => new Set(prev).add(id));
     const next = nextDone ? [...completed, id] : completed.filter((x) => x !== id);
-    progress.mutate({ completed: next, manualItemIds: [...manualItemIds] }); // optimista, sin esperar a la red
+    progress.mutate({ completed: next, manualItemIds: [...manualItemIds] }); // optimista
     fetch('/api/launchpad', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ itemId: id, done: nextDone }),
-    }).catch(() => void progress.refresh()); // si falla, recarga el estado real del servidor
+    }).catch(() => void progress.refresh());
   };
 
   const completedCount = countCompleted(OVERALL, completed);
   const overallProgress = categoryPercent(OVERALL, completed);
   const categoryProgress = categoryPercent(category, completed);
+  const pendingInCategory = category.items.filter((i) => !completed.includes(i.id)).length;
+  const minutesLeft = remainingMinutes(completed);
 
-  // Siguiente paso sugerido: primer ítem pendiente en el orden de la guía.
-  const nextStep = loaded ? computeNextStep(CATEGORIES, completed) : undefined;
+  // Siguiente paso: primer pendiente que no esté pospuesto; si solo quedan pospuestos, se sugiere retomar uno.
+  const nextStep = useMemo(() => {
+    if (!loaded) return undefined;
+    const fresh = computeNextStep(LAUNCHPAD_CATEGORIES, [...completed, ...prefs.skipped]);
+    if (fresh) return { ...fresh, resumed: false };
+    const resumed = computeNextStep(LAUNCHPAD_CATEGORIES, completed);
+    return resumed ? { ...resumed, resumed: true } : undefined;
+  }, [loaded, completed, prefs.skipped]);
 
-  const openTutorial = (item: ChecklistItem) => {
-    setTutorialItem(item);
-    setSlideIndex(0);
+  const visibleItems = filterItems(category.items, completed, prefs.filter, kept);
+
+  const selectCategory = (id: string) => {
+    pickedByUser.current = true;
+    setKept(EMPTY_SET);
+    setActiveCategory(id);
+    setExpanded(null);
   };
 
-  const tutorialEntry = tutorialItem ? manifest[tutorialItem.id] : undefined;
-  const slideCount = tutorialEntry?.slides ?? 0;
+  const setFilter = (filter: LaunchpadFilter) => {
+    setKept(EMPTY_SET);
+    updatePrefs((p) => ({ ...p, filter }));
+  };
+
+  const tutorialSlides = tutorialItem ? manifest[tutorialItem.id]?.slides ?? 0 : 0;
 
   return (
     <div className="container">
@@ -385,7 +227,7 @@ export default function LaunchpadPage() {
           <span className="muted" style={{ fontSize: 12 }}>Progreso general de la plataforma</span>
           <span className="lp-overall-value" aria-busy={!loaded}>
             {loaded ? (
-              `${completedCount} / ${ALL_ITEMS.length} pasos · ${overallProgress}%`
+              `${completedCount} / ${LAUNCHPAD_TOTAL} pasos · ${overallProgress}%`
             ) : (
               <>
                 <SkeletonLine width={116} height={14} />
@@ -394,57 +236,46 @@ export default function LaunchpadPage() {
             )}
           </span>
         </div>
-        <div className="lp-progress-track">
-          <div className="lp-progress-fill" style={{ width: `${overallProgress}%` }} />
+        <div className="lp-bar" role="progressbar" aria-valuenow={overallProgress} aria-valuemin={0} aria-valuemax={100} aria-label="Progreso general">
+          <i style={{ '--w': overallProgress / 100 } as React.CSSProperties} />
         </div>
+        <p className="lp-eta">
+          {loaded
+            ? minutesLeft > 0 ? `Te faltan unos ${minutesLeft} min para dejar todo listo.` : 'Todo configurado.'
+            : ' '}
+        </p>
       </div>
 
       {milestoneOpen && overallProgress === 100 && (
-        <MilestoneBanner total={ALL_ITEMS.length} onDismiss={() => setMilestoneOpen(false)} />
+        <MilestoneBanner total={LAUNCHPAD_TOTAL} onDismiss={() => setMilestoneOpen(false)} />
       )}
 
       {nextStep && (
         <NextStepCard
-          icon={nextStep.item.icon}
+          icon={stepIcon(nextStep.item.id)}
           title={nextStep.item.title}
+          minutes={nextStep.item.minutes}
+          href={nextStep.item.href}
+          resumed={nextStep.resumed}
           onView={() => {
+            pickedByUser.current = true;
             setActiveCategory(nextStep.category.id);
             setExpanded(nextStep.item.id);
           }}
+          onSnooze={() => updatePrefs((p) => toggleSkipped(p, nextStep.item.id))}
         />
       )}
 
       <div className="lp-layout">
-        <div className="lp-cats" role="tablist" aria-label="Categorías de la guía">
-          {CATEGORIES.map((cat) => {
-            const { id, label, icon: Icon } = cat;
-            const isActive = id === activeCategory;
-            const pct = categoryPercent(cat, completed);
-            return (
-              <button
-                key={id}
-                onClick={() => {
-                  setActiveCategory(id);
-                  setExpanded(null);
-                }}
-                role="tab"
-                aria-selected={isActive}
-                className={`lp-cat ${isActive ? 'primary' : 'ghost'}`}
-              >
-                <span className="lp-cat-label">
-                  <Icon size={14} aria-hidden="true" />
-                  <span className="lp-cat-text">{label}</span>
-                </span>
-                <span
-                  className={`lp-pct${pct === 100 ? ' done' : ''}${celebrate?.categories.has(id) ? ' is-pop' : ''}`}
-                  aria-label={`${pct}% completado`}
-                >
-                  {pct}%
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <CategoryRail
+          categories={LAUNCHPAD_CATEGORIES}
+          completed={completed}
+          activeId={category.id}
+          doneCollapsed={prefs.doneCollapsed}
+          poppingCategories={celebrate?.categories ?? EMPTY_SET}
+          onSelect={selectCategory}
+          onToggleDone={() => updatePrefs((p) => ({ ...p, doneCollapsed: !p.doneCollapsed }))}
+        />
 
         <div className="lp-main">
           <div className="card mb-4">
@@ -452,191 +283,66 @@ export default function LaunchpadPage() {
               <span className="muted" style={{ fontSize: 12 }}>
                 Tu progreso de {category.label.toLowerCase()}
               </span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--rai-gold)' }}>
-                {categoryProgress}%
-              </span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--rai-gold)' }}>{categoryProgress}%</span>
             </div>
-            <div className="lp-progress-track">
-              <div className="lp-progress-fill" style={{ width: `${categoryProgress}%` }} />
+            <div className="lp-bar" role="progressbar" aria-valuenow={categoryProgress} aria-valuemin={0} aria-valuemax={100} aria-label={`Progreso de ${category.label}`}>
+              <i style={{ '--w': categoryProgress / 100 } as React.CSSProperties} />
+            </div>
+            <div className="lp-filters" role="group" aria-label="Filtrar pasos">
+              {(['pending', 'all'] as const).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  className={`lp-filter${prefs.filter === f ? ' is-on' : ''}`}
+                  aria-pressed={prefs.filter === f}
+                  onClick={() => setFilter(f)}
+                >
+                  {f === 'pending' ? `Pendientes (${pendingInCategory})` : `Todos (${category.items.length})`}
+                </button>
+              ))}
             </div>
           </div>
 
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-            {category.items.map((item) => {
-              const isOpen = expanded === item.id;
-              const isDone = completed.includes(item.id);
-              const isManual = manualItemIds.includes(item.id);
-              const Icon = item.icon;
-              const tutorial = manifest[item.id];
-              const isPopping = celebrate?.items.has(item.id) ?? false;
-              return (
-                <div key={item.id} className={`lp-row${isDone ? ' is-done' : ''}`}>
-                  <div
-                    className="row-between lp-item"
-                    style={{ padding: '14px 16px', gap: 12 }}
-                  >
-                    <div
-                      className="row"
-                      style={{ gap: 12, alignItems: 'flex-start', flex: 1, minWidth: 0, cursor: 'pointer' }}
-                      onClick={() => setExpanded(isOpen ? null : item.id)}
-                    >
-                      <div
-                        role={isManual ? 'button' : undefined}
-                        tabIndex={isManual ? 0 : undefined}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (isManual) toggleComplete(item.id);
-                        }}
-                        onKeyDown={(e) => {
-                          if (isManual && (e.key === 'Enter' || e.key === ' ')) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            toggleComplete(item.id);
-                          }
-                        }}
-                        className={`lp-ring${isPopping ? ' is-pop' : ''}`}
-                        aria-label={
-                          isManual
-                            ? isDone
-                              ? 'Marcar como pendiente'
-                              : 'Marcar como completado'
-                            : 'Se completa automáticamente según tu actividad'
-                        }
-                        title={isManual ? undefined : 'Se completa automáticamente según tu actividad'}
-                        style={{ marginTop: 1, cursor: isManual ? 'pointer' : 'default' }}
-                      >
-                        <svg width="32" height="32" viewBox="0 0 32 32">
-                          <circle className="lp-ring-track" cx="16" cy="16" r="13" strokeWidth="3" />
-                          <circle
-                            className={`lp-ring-fill ${isDone ? 'done' : ''}`}
-                            cx="16"
-                            cy="16"
-                            r="13"
-                            strokeWidth="3"
-                            strokeDasharray={2 * Math.PI * 13}
-                            strokeDashoffset={2 * Math.PI * 13 * (1 - (isDone ? 1 : 0))}
-                          />
-                        </svg>
-                        {isDone && <Check size={14} strokeWidth={3} className="lp-ring-check" />}
-                      </div>
-                      <Icon size={16} color="var(--rai-gold)" className="lp-row-icon" style={{ marginTop: 8, flexShrink: 0 }} />
-                      <div style={{ marginTop: 4 }}>
-                        <div className="lp-row-title">{item.title}</div>
-                        <div className="muted mt-2 lp-row-desc" style={{ fontSize: 12, maxWidth: 560 }}>
-                          {item.description}
-                        </div>
-                        {hasData && !isManual && (
-                          <div className="lp-auto">
-                            <span className={`fx-dot ${isDone ? 'fx-dot--ok' : 'fx-dot--warn'}`} aria-hidden="true" />
-                            <span>
-                              {isDone ? 'Completado automáticamente' : 'Se completará solo según tu actividad'}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="row lp-item-end" style={{ gap: 10, flexShrink: 0, alignItems: 'center' }}>
-                      <span className={`lp-pct ${isDone ? 'done' : ''}`}>
-                        {isDone ? 100 : 0}%
-                      </span>
-                      <button
-                        onClick={() => setExpanded(isOpen ? null : item.id)}
-                        className="ghost btn-sm"
-                        style={{ padding: 6 }}
-                      >
-                        {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </button>
-                    </div>
-                  </div>
-                  {isOpen && (
-                    <div style={{ padding: '0 16px 16px 58px' }}>
-                      <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                        <Link href={item.href} className="btn btn-secondary btn-sm">
-                          Ir al módulo
-                          <ArrowRight size={14} />
-                        </Link>
-                        <button onClick={() => openTutorial(item)} className="ghost btn-sm">
-                          <PlayCircle size={14} />
-                          Ver tutorial
-                          {tutorial?.slides ? (
-                            <span className="badge badge-gold" style={{ marginLeft: 4 }}>
-                              {tutorial.slides}
-                            </span>
-                          ) : null}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {visibleItems.length === 0 && (
+              <div className="lp-allset">
+                <CheckCircle2 size={22} color="var(--rai-success)" aria-hidden="true" />
+                <strong>Categoría completa</strong>
+                <span className="muted">Ya hiciste todos los pasos de {category.label.toLowerCase()}.</span>
+                <button type="button" className="ghost btn-sm" onClick={() => setFilter('all')}>
+                  Ver todos los pasos <ChevronDown size={14} />
+                </button>
+              </div>
+            )}
+            {visibleItems.map((item) => (
+              <StepRow
+                key={item.id}
+                step={item}
+                state={stepState(item.id, completed, prefs.skipped)}
+                isManual={manualItemIds.includes(item.id)}
+                hasData={hasData}
+                isOpen={expanded === item.id}
+                isPopping={celebrate?.items.has(item.id) ?? false}
+                tutorialSlides={manifest[item.id]?.slides ?? 0}
+                onToggleOpen={() => setExpanded(expanded === item.id ? null : item.id)}
+                onToggleManual={() => toggleComplete(item.id)}
+                onToggleSkip={() => updatePrefs((p) => toggleSkipped(p, item.id))}
+                onOpenTutorial={() => { setTutorialItem(item); setSlideIndex(0); }}
+              />
+            ))}
           </div>
         </div>
       </div>
 
       {tutorialItem && (
-        <div className="modal-backdrop" onClick={() => setTutorialItem(null)}>
-          <div
-            className="modal"
-            style={{ maxWidth: 720 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="row-between mb-4">
-              <div>
-                <h3>{tutorialItem.title}</h3>
-                <p className="muted" style={{ fontSize: 12 }}>Tutorial paso a paso</p>
-              </div>
-              <button className="ghost btn-sm" onClick={() => setTutorialItem(null)}>
-                <X size={16} />
-              </button>
-            </div>
-
-            {slideCount > 0 ? (
-              <>
-                <div className="lp-slide-frame">
-                  <Image
-                    src={`/tutorials/${tutorialItem.id}/slide-${slideIndex + 1}.svg`}
-                    alt={`${tutorialItem.title} — paso ${slideIndex + 1}`}
-                    width={1280}
-                    height={720}
-                    sizes="(max-width: 720px) calc(100vw - 64px), 672px"
-                    style={{ width: '100%', height: 'auto', borderRadius: 8, display: 'block' }}
-                  />
-                </div>
-                <div className="row-between mt-4">
-                  <button
-                    className="ghost btn-sm"
-                    disabled={slideIndex === 0}
-                    onClick={() => setSlideIndex((s) => Math.max(0, s - 1))}
-                  >
-                    <ChevronLeft size={14} />
-                    Anterior
-                  </button>
-                  <span className="muted" style={{ fontSize: 12 }}>
-                    Paso {slideIndex + 1} de {slideCount}
-                  </span>
-                  <button
-                    className="ghost btn-sm"
-                    disabled={slideIndex >= slideCount - 1}
-                    onClick={() => setSlideIndex((s) => Math.min(slideCount - 1, s + 1))}
-                  >
-                    Siguiente
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="lp-slide-frame lp-slide-empty">
-                <PlayCircle size={32} color="var(--rai-muted)" />
-                <p className="muted mt-2" style={{ fontSize: 13, textAlign: 'center' }}>
-                  El tutorial de este paso está en preparación.
-                  <br />
-                  Pronto encontrarás aquí una guía visual.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+        <TutorialModal
+          stepId={tutorialItem.id}
+          title={tutorialItem.title}
+          slideCount={tutorialSlides}
+          slideIndex={slideIndex}
+          onSlide={setSlideIndex}
+          onClose={() => setTutorialItem(null)}
+        />
       )}
     </div>
   );
