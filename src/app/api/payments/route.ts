@@ -46,7 +46,9 @@ export async function GET(req: NextRequest) {
     ];
   }
 
-  const [payments, byStatus, paidSum, pendingSum, refundedSum] = await Promise.all([
+  // Dos consultas en paralelo (antes eran cinco): la lista y un único groupBy
+  // que trae conteo y sumas por estado; los totales se derivan en memoria.
+  const [payments, byStatus] = await Promise.all([
     prisma.payment.findMany({
       where,
       orderBy: { createdAt: 'desc' },
@@ -61,32 +63,25 @@ export async function GET(req: NextRequest) {
       by: ['status'],
       where: { workspaceId: ctx.workspace.id },
       _count: true,
-    }),
-    prisma.payment.aggregate({
-      where: { workspaceId: ctx.workspace.id, status: 'paid' },
-      _sum: { amountCents: true },
-    }),
-    prisma.payment.aggregate({
-      where: { workspaceId: ctx.workspace.id, status: { in: ['pending', 'under_review'] } },
-      _sum: { amountCents: true },
-    }),
-    prisma.payment.aggregate({
-      where: { workspaceId: ctx.workspace.id, status: 'refunded' },
-      _sum: { refundedAmountCents: true },
+      _sum: { amountCents: true, refundedAmountCents: true },
     }),
   ]);
 
   const statusCounts: Record<string, number> = {};
-  for (const row of byStatus) statusCounts[row.status] = row._count;
+  let paidCents = 0;
+  let pendingCents = 0;
+  let refundedCents = 0;
+  for (const row of byStatus) {
+    statusCounts[row.status] = row._count;
+    const amount = row._sum.amountCents ?? 0;
+    if (row.status === 'paid') paidCents += amount;
+    else if (row.status === 'pending' || row.status === 'under_review') pendingCents += amount;
+    else if (row.status === 'refunded') refundedCents += row._sum.refundedAmountCents ?? 0;
+  }
 
   return NextResponse.json({
     payments,
-    summary: {
-      paidCents: paidSum._sum.amountCents ?? 0,
-      pendingCents: pendingSum._sum.amountCents ?? 0,
-      refundedCents: refundedSum._sum.refundedAmountCents ?? 0,
-      statusCounts,
-    },
+    summary: { paidCents, pendingCents, refundedCents, statusCounts },
   });
 }
 
