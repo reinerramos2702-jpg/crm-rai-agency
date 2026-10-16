@@ -33,8 +33,10 @@ export async function GET(req: NextRequest) {
       automationsEnabled: settings?.automationsEnabled ?? true,
     },
     {
+      // La pantalla ya usa caché SWR en el cliente; el navegador no debe devolver una copia vieja tras activar/pausar/eliminar.
       headers: {
-        'Cache-Control': 'private, max-age=5, stale-while-revalidate=30',
+        'Cache-Control': 'private, no-cache',
+        Vary: 'Cookie',
       },
     }
   );
