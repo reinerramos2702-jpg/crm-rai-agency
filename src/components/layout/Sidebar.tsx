@@ -159,7 +159,8 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
     const a = aside.getBoundingClientRect();
     const l = link.getBoundingClientRect();
     if (l.top < a.top + 90 || l.bottom > a.bottom - 20) {
-      aside.scrollTo({ top: aside.scrollTop + (l.top - a.top) - aside.clientHeight / 2 + l.height / 2, behavior: 'smooth' });
+      // Instantáneo: un desplazamiento suave competía con la rueda del usuario y la cancelaba.
+      aside.scrollTo({ top: aside.scrollTop + (l.top - a.top) - aside.clientHeight / 2 + l.height / 2, behavior: 'auto' });
     }
   }, [pathname, role]);
 

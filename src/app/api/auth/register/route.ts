@@ -5,6 +5,7 @@ import { hashPassword } from '@/lib/password';
 import { isPlatformSuperAdmin } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { normalizePhone } from '@/lib/phone';
+import { invalidateRoleContext } from '@/lib/role-context-cache';
 
 export const runtime = 'nodejs';
 
@@ -129,6 +130,8 @@ export async function POST(req: NextRequest) {
       where: { email: normalizedEmail, status: 'invited' },
       data: { status: 'active', userId: user.id },
     });
+    // Su membresía acaba de activarse: que el próximo request la vea sin esperar al TTL.
+    invalidateRoleContext(user.id);
   }
 
   // 8. Registro abierto: workspace propio (el owner resuelve rol admin por ownerId).

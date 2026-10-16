@@ -34,6 +34,7 @@ import { getAuth, isPlatformSuperAdmin } from '@/lib/auth';
 import { resolveActiveWorkspace, WorkspaceAccessError } from '@/lib/workspace';
 import { prisma } from '@/lib/db';
 import { requireRole, requirePermission, isRoleContext, getRoleContext } from '@/lib/roles';
+import { resetRoleContextCache } from '@/lib/role-context-cache';
 
 const FAKE_AUTH: AuthContext = { userId: 'user-1', email: 'test@rai.local' };
 const FAKE_WORKSPACE = { id: 'ws-1', ownerId: 'owner-1', name: 'Test WS' };
@@ -41,6 +42,7 @@ const FAKE_REQ = {} as any;
 
 describe('roles.ts — requireRole / requirePermission', () => {
   beforeEach(() => {
+    resetRoleContextCache(); // la caché de ≤5 s no debe filtrarse entre pruebas
     vi.mocked(getAuth).mockReset();
     vi.mocked(resolveActiveWorkspace).mockReset();
     vi.mocked(prisma.workspaceMember.findFirst).mockReset();

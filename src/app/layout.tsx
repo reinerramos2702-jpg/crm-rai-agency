@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import '../styles/effects.css';
+import '../styles/select.css';
 import { Sidebar } from '@/components/layout/Sidebar';
 import TourHost from '@/components/tour/TourHost';
 import { ClickFx } from '@/components/ui/ClickFx';
@@ -36,6 +37,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem('rai-theme');if(t)document.documentElement.setAttribute('data-theme',t);if(localStorage.getItem('rai-sidebar-collapsed-v1')==='1')document.documentElement.setAttribute('data-sidebar','collapsed')}catch(e){}})()`,
+          }}
+        />
+        {/* Transición suave SOLO durante el cambio de tema: añade `theme-anim` a <html> 350 ms cuando cambia data-theme (el CSS no tiene transiciones universales permanentes). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var r=document.documentElement,t;new MutationObserver(function(){r.classList.add('theme-anim');clearTimeout(t);t=setTimeout(function(){r.classList.remove('theme-anim')},350)}).observe(r,{attributes:true,attributeFilter:['data-theme']})}catch(e){}})()`,
           }}
         />
         <script

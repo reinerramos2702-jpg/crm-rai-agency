@@ -463,6 +463,8 @@ a:hover {
   flex-direction: column;
   z-index: 100;
   overflow-y: auto;
+  /* El scroll del menú no se «contagia» a la página ni al revés. */
+  overscroll-behavior: contain;
 }
 
 .app-main {
@@ -1736,13 +1738,21 @@ label {
   background: rgba(0,0,0,0.25);
 }
 
-/* Smooth transitions for theme switching */
-html {
-  transition: background-color 0.3s ease, color 0.3s ease;
+/* Transición de tema: SOLO mientras dura el cambio claro/oscuro.
+   La clase `theme-anim` la añade y la quita (a los 350 ms) un observador de
+   `data-theme` definido en src/app/layout.tsx. Nunca debe ser permanente:
+   una transición universal obliga a recalcular estilos de TODOS los elementos
+   en cada cambio de estado (era la causa principal de los «lags»). */
+html.theme-anim,
+html.theme-anim *,
+html.theme-anim *::before,
+html.theme-anim *::after {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
 }
 
-html * {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+/* Sin saltos de maquetación cuando aparece/desaparece la barra de scroll */
+html {
+  scrollbar-gutter: stable;
 }
 
 /* PWA meta - add to head for app-like feel on phone */
@@ -1753,10 +1763,6 @@ html * {
     user-select: none;
   }
 
-  /* Smooth scrolling everywhere */
-  * {
-    -webkit-overflow-scrolling: touch;
-  }
 
   /* Hide scrollbars on mobile for cleaner look */
   ::-webkit-scrollbar {
@@ -1814,11 +1820,7 @@ html * {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: shine 3s linear infinite;
-}
-
-@keyframes shine {
-  to { background-position: 200% center; }
+  /* Sin animación infinita: animar background-position repintaba el logo en cada fotograma. */
 }
 
 /* ============================================
@@ -3028,6 +3030,16 @@ button.dash-chip.is-on{background:color-mix(in srgb,var(--rai-gold) 15%,transpar
   html[data-sidebar="collapsed"] .app-sidebar nav a{padding-left:14px !important}
   html[data-sidebar="collapsed"] .sb-section{padding:0;margin:10px 14px 6px;height:0;border-top:1px solid var(--rai-border)}
   html[data-sidebar="collapsed"] .sb-section[data-first]{margin-top:2px;border-top-color:transparent}
+}
+/* Pantallas bajas: menú más compacto para que haga falta el menor scroll posible
+   (el menú tiene 22 módulos; si no cabe, la rueda sobre él lo desplaza a él y no a la página). */
+@media (min-width:769px) and (max-height:900px){
+  .app-sidebar .sb-brand{padding-top:12px !important;padding-bottom:12px !important}
+  .app-sidebar nav{padding-top:0 !important;padding-bottom:6px !important}
+  .app-sidebar nav a.sb-link{padding-top:6px !important;padding-bottom:6px !important;margin-bottom:1px !important}
+  .sb-section{padding-top:8px;padding-bottom:3px}
+  .sb-searchwrap{padding-top:8px;padding-bottom:0}
+  .app-sidebar .sb-foot{padding-top:8px !important;padding-bottom:8px !important}
 }
 @media (min-width:769px) and (prefers-reduced-motion:no-preference){
   html.sb-anim .sb-section{transition:padding .5s var(--sb-ease),margin .5s var(--sb-ease)}

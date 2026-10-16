@@ -3,8 +3,14 @@ import { prisma } from './db';
 import { getAuth, isPlatformSuperAdmin, AuthContext } from './auth';
 import { resolveActiveWorkspace, WorkspaceAccessError, type ActiveWorkspace } from './workspace';
 import { ROLES, ESCALATION_ROLES, hasPermission, type Role, type Permission } from './roles-shared';
+import {
+  isRoleContextCacheEnabled,
+  loadRoleContext,
+  roleContextKey,
+} from './role-context-cache';
 
 export * from './roles-shared';
+export { invalidateRoleContext } from './role-context-cache';
 
 /**
  * Resuelve el rol efectivo de un usuario dentro de un workspace.
@@ -46,19 +52,28 @@ export interface RoleContext {
  * Mantiene la firma `RoleContext | null` para no romper a los callers existentes.
  */
 export async function getRoleContext(req: NextRequest): Promise<RoleContext | null> {
+  // La identidad se verifica SIEMPRE (JWT firmado y vigente); la caché solo evita
+  // repetir las consultas a la base (workspace + membresía) durante ≤5 s.
   const auth = await getAuth(req);
   if (!auth) return null;
 
-  let workspace: ActiveWorkspace;
-  try {
-    workspace = await resolveActiveWorkspace(req, auth);
-  } catch (e) {
-    if (e instanceof WorkspaceAccessError) return null;
-    throw e;
-  }
+  const resolve = async (): Promise<{ workspace: ActiveWorkspace; role: Role } | null> => {
+    let workspace: ActiveWorkspace;
+    try {
+      workspace = await resolveActiveWorkspace(req, auth);
+    } catch (e) {
+      if (e instanceof WorkspaceAccessError) return null;
+      throw e;
+    }
+    const role = await getRole(auth, workspace);
+    return { workspace, role };
+  };
 
-  const role = await getRole(auth, workspace);
-  return { auth, workspace, role };
+  const resolved = isRoleContextCacheEnabled()
+    ? await loadRoleContext(roleContextKey(auth.userId, auth.email, req.headers?.get?.('x-workspace-id')), resolve)
+    : await resolve();
+
+  return resolved ? { auth, workspace: resolved.workspace, role: resolved.role } : null;
 }
 
 /**

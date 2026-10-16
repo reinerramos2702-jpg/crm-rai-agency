@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { ROLES, INVITABLE_ROLES, isRoleContext, requireRole } from '@/lib/roles';
+import { invalidateRoleContext } from '@/lib/role-context-cache';
 
 export const runtime = 'nodejs';
 
@@ -83,6 +84,10 @@ export async function POST(req: NextRequest) {
       userId: existingUser?.id ?? null,
     },
   });
+
+  // Alta/cambio de membresía: invalida el contexto cacheado del usuario afectado (si ya existe).
+  if (existingUser) invalidateRoleContext(existingUser.id);
+  if (member.userId) invalidateRoleContext(member.userId);
 
   return NextResponse.json({ member });
 }

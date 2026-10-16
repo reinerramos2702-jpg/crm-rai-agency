@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { INVITABLE_ROLES, isRoleContext, requireRole } from '@/lib/roles';
+import { invalidateRoleContext } from '@/lib/role-context-cache';
 
 export const runtime = 'nodejs';
 
@@ -39,6 +40,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const updated = await prisma.workspaceMember.update({ where: { id: member.id }, data });
+  // El rol/estado cambió: el contexto cacheado de ese usuario (≤5 s) ya no vale.
+  if (member.userId) invalidateRoleContext(member.userId);
 
   return NextResponse.json({ member: updated });
 }
@@ -53,6 +56,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   if (!member) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 });
 
   await prisma.workspaceMember.delete({ where: { id: member.id } });
+  if (member.userId) invalidateRoleContext(member.userId);
 
   return NextResponse.json({ ok: true });
 }
