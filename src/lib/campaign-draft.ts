@@ -1,3 +1,4 @@
+import { EMPTY_BRIEF, isCampaignBrief, type CampaignBrief } from './campaign-brief';
 import {
   COMPETITOR_MODES,
   COUNTRY_OPTIONS,
@@ -29,6 +30,8 @@ export interface CampaignDraft {
   competitorUrls: string;
   adsLibraryBrand: string;
   adsLibraryCountry: string;
+  /** Brief del plan. Ausente en borradores anteriores a su existencia: se trata como vacío. */
+  brief?: CampaignBrief;
 }
 
 export const INITIAL_CAMPAIGN_DRAFT: CampaignDraft = {
@@ -43,6 +46,7 @@ export const INITIAL_CAMPAIGN_DRAFT: CampaignDraft = {
   competitorUrls: '',
   adsLibraryBrand: '',
   adsLibraryCountry: 'ALL',
+  brief: EMPTY_BRIEF,
 };
 
 const TEXT_FIELDS = [
@@ -67,6 +71,7 @@ export function isCampaignDraft(value: unknown): value is CampaignDraft {
   if (!IMAGE_PROVIDERS.some((p) => p.value === v.imageProvider)) return false;
   if (!COUNTRY_OPTIONS.some((c) => c.value === v.adsLibraryCountry)) return false;
   if (!COMPETITOR_MODES.includes(v.competitorMode as CompetitorMode)) return false;
+  if (v.brief !== undefined && !isCampaignBrief(v.brief)) return false;
 
   const provider = PROVIDERS.find((p) => p.provider === v.provider);
   return provider !== undefined && provider.models.includes(v.modelId as string);

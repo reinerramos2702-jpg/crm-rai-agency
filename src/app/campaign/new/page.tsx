@@ -1,626 +1,119 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback, useMemo, type CSSProperties } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import {
-  Send,
-  Sparkles,
-  FolderSearch,
-  Search,
-  Bot,
-  ChevronDown,
-  Folder,
-  X,
-  Globe,
-  Megaphone,
-  FileText,
-  Zap,
-  ArrowRight,
-} from 'lucide-react';
-import { TopBar } from '@/components/layout/TopBar';
-import { Spinner } from '@/components/ui/Spinner';
-import { CostEstimate } from '@/components/campaign/CostEstimate';
+import { useCallback, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { PipelineCards } from './PipelineCards';
+import { TopBar } from '@/components/layout/TopBar';
+import { brandFromConfig, hasBrandData } from '@/lib/campaign-brand';
+import { buildContextSuffix } from '@/lib/campaign-context';
+import { PROVIDERS } from '@/lib/campaign-new-options';
+import { ChatPanel } from './ChatPanel';
+import { ConfigPanel } from './ConfigPanel';
 import { DraftBanner } from './DraftBanner';
-import {
-  CAMPAIGN_DRAFT_KEY,
-  INITIAL_CAMPAIGN_DRAFT,
-  isCampaignDraft,
-  type CampaignDraft,
-} from '@/lib/campaign-draft';
-import {
-  COUNTRY_OPTIONS,
-  IMAGE_PROVIDERS,
-  PROVIDERS,
-  type CompetitorMode,
-} from '@/lib/campaign-new-options';
-import { useDraft } from '@/lib/use-draft';
+import { useAttachments } from './hooks/useAttachments';
+import { useCampaignChat } from './hooks/useCampaignChat';
+import { useCampaignForm } from './hooks/useCampaignForm';
+import { useCampaignPresets } from './hooks/useCampaignPresets';
+import { useCampaignSession, type NewCampaignParams } from './hooks/useCampaignSession';
+import { useReadiness, usePlannerConfig } from './hooks/useReadiness';
+import { useResearch } from './hooks/useResearch';
 import './campaign-new.css';
 
-const STARTERS = [
-  'Mi marca vende…, mi audiencia es…',
-  'Quiero 30 días de contenido para Instagram',
-  'Tengo fotos y videos que organizar por día',
-];
-
-/** Variables CSS en línea (p. ej. el retardo escalonado `--i`). */
-const cv = (vars: Record<string, string | number>) => vars as CSSProperties;
-
-interface DayInventory {
-  dayNumber: number;
-  hasContent: boolean;
-  existingAssets: Array<{ name: string; type: string }>;
-}
-
-interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
-interface CompetitorInsights {
-  painPoints: string[];
-  opportunities: string[];
-  toneAnalysis: string;
-  rawSummary: string;
-}
-
-interface UploadedFile {
-  name: string;
-  sizeBytes: number;
-  type: string;
-  content?: string; // text content if readable
-}
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes}B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
-}
-
-function fileIcon(mime: string, name: string): string {
-  if (mime.startsWith('image/')) return '🖼️';
-  if (mime.startsWith('video/')) return '🎬';
-  if (mime.startsWith('audio/')) return '🎵';
-  if (name.endsWith('.zip') || name.endsWith('.rar')) return '📦';
-  if (name.endsWith('.pdf')) return '📄';
-  if (name.endsWith('.txt') || name.endsWith('.md')) return '📝';
-  return '📎';
-}
-
 export default function NewCampaignPage() {
-  const router = useRouter();
-
-  // Form state
-  const [name, setName] = useState(INITIAL_CAMPAIGN_DRAFT.name);
-  const [pipelineType, setPipelineType] = useState(INITIAL_CAMPAIGN_DRAFT.pipelineType);
-  const [provider, setProvider] = useState(INITIAL_CAMPAIGN_DRAFT.provider);
-  const [modelId, setModelId] = useState(INITIAL_CAMPAIGN_DRAFT.modelId);
-  const [imageProvider, setImageProvider] = useState(INITIAL_CAMPAIGN_DRAFT.imageProvider);
-  const [brandInput, setBrandInput] = useState(INITIAL_CAMPAIGN_DRAFT.brandInput);
-  const [campaignId, setCampaignId] = useState<string | null>(null);
-
-  // Inventory
-  const [inventoryPath, setInventoryPath] = useState(INITIAL_CAMPAIGN_DRAFT.inventoryPath);
-  const [inventory, setInventory] = useState<DayInventory[]>([]);
-  const [inventoryWarning, setInventoryWarning] = useState<string | null>(null);
-  const [rootFilesCount, setRootFilesCount] = useState(0);
-  const [scanningInventory, setScanningInventory] = useState(false);
-
-  // Competitor analysis — dual mode
-  const [competitorMode, setCompetitorMode] = useState<CompetitorMode>(INITIAL_CAMPAIGN_DRAFT.competitorMode);
-  const [competitorUrls, setCompetitorUrls] = useState(INITIAL_CAMPAIGN_DRAFT.competitorUrls);
-  const [competitorInsights, setCompetitorInsights] = useState<CompetitorInsights | null>(null);
-  const [analyzingCompetitors, setAnalyzingCompetitors] = useState(false);
-
-  // Ads Library
-  const [adsLibraryBrand, setAdsLibraryBrand] = useState(INITIAL_CAMPAIGN_DRAFT.adsLibraryBrand);
-  const [adsLibraryCountry, setAdsLibraryCountry] = useState(INITIAL_CAMPAIGN_DRAFT.adsLibraryCountry);
-  const [adsLibraryResult, setAdsLibraryResult] = useState<{
-    adsFound: number;
-    scrapedOk: boolean;
-    htmlReport: string;
-  } | null>(null);
-  const [analyzingAdsLibrary, setAnalyzingAdsLibrary] = useState(false);
-
-  // Chat
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [finalizing, setFinalizing] = useState(false);
-  const chatLogRef = useRef<HTMLDivElement>(null);
-
-  // File upload
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
+  // Identidad de la campaña + formulario. El borrador solo se activa en campañas nuevas (tras leer la URL).
+  const newParams = useRef<NewCampaignParams>({ name: '', pipelineType: 'ugc' });
+  const session = useCampaignSession(newParams);
+  const cf = useCampaignForm(session.isNew === true);
+  const { form } = cf;
+  useEffect(() => {
+    newParams.current = { name: form.name, pipelineType: form.pipelineType };
+  }, [form.name, form.pipelineType]);
+  const presets = useCampaignPresets();
+  const attachments = useAttachments();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const planner = usePlannerConfig();
 
-  // Borrador auto-guardado: solo en campañas nuevas (se habilita tras leer la URL, nunca en el render).
-  const [draftEnabled, setDraftEnabled] = useState(false);
-  const draftValue = useMemo<CampaignDraft>(
-    () => ({
-      name,
-      pipelineType,
-      provider,
-      modelId,
-      imageProvider,
-      brandInput,
-      inventoryPath,
-      competitorMode,
-      competitorUrls,
-      adsLibraryBrand,
-      adsLibraryCountry,
-    }),
-    [
-      name,
-      pipelineType,
-      provider,
-      modelId,
-      imageProvider,
-      brandInput,
-      inventoryPath,
-      competitorMode,
-      competitorUrls,
-      adsLibraryBrand,
-      adsLibraryCountry,
-    ],
-  );
-  const { recovered, savedAt, acceptRecovered, discardRecovered, clear: clearDraft } = useDraft(
-    CAMPAIGN_DRAFT_KEY,
-    draftValue,
-    { initial: INITIAL_CAMPAIGN_DRAFT, validate: isCampaignDraft, enabled: draftEnabled },
+  const ensure = session.ensureCampaign;
+
+  const research = useResearch({
+    inventoryPath: form.inventoryPath,
+    competitorUrls: form.competitorUrls,
+    adsLibraryBrand: form.adsLibraryBrand,
+    adsLibraryCountry: form.adsLibraryCountry,
+    ensureCampaign: ensure,
+  });
+
+  const buildContext = useCallback(
+    () =>
+      buildContextSuffix({
+        brandInput: form.brandInput,
+        inventory: research.inventory,
+        inventoryPath: form.inventoryPath,
+        adsLibrary: research.adsLibraryResult,
+        adsLibraryBrand: form.adsLibraryBrand,
+        competitorInsights: research.competitorInsights,
+        imageProvider: form.imageProvider,
+        brief: cf.brief,
+      }),
+    [form, cf.brief, research.inventory, research.adsLibraryResult, research.competitorInsights],
   );
 
-  function restoreDraft() {
-    if (!recovered) return;
-    const d = recovered.data;
-    setName(d.name);
-    setPipelineType(d.pipelineType);
-    setProvider(d.provider);
-    setModelId(d.modelId);
-    setImageProvider(d.imageProvider);
-    setBrandInput(d.brandInput);
-    setInventoryPath(d.inventoryPath);
-    setCompetitorMode(d.competitorMode);
-    setCompetitorUrls(d.competitorUrls);
-    setAdsLibraryBrand(d.adsLibraryBrand);
-    setAdsLibraryCountry(d.adsLibraryCountry);
-    acceptRecovered();
-  }
+  const chat = useCampaignChat({
+    campaignId: session.campaignId,
+    ensureCampaign: ensure,
+    provider: form.provider,
+    modelId: form.modelId,
+    imageProvider: form.imageProvider,
+    pipelineType: form.pipelineType,
+    buildContext,
+    attachments,
+    onFinalized: cf.clearDraft,
+  });
 
-  // Campos opcionales: aparecen al nombrar la campaña y se quedan (no desaparecen si se borra el nombre).
-  const [optionalOpen, setOptionalOpen] = useState(false);
+  // Al reabrir una campaña existente se rellenan formulario, chat e investigación.
+  const { loaded } = session;
+  const { apply } = cf;
+  const { setMessages } = chat;
+  const { setCompetitorInsights } = research;
   useEffect(() => {
-    if (name.trim()) setOptionalOpen(true);
-  }, [name]);
-
-  // Cargar campaña existente
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const existingId = params.get('id');
-    if (!existingId) {
-      setDraftEnabled(true);
-      return;
-    }
-
-    (async () => {
-      try {
-        const res = await fetch(`/api/campaigns/${existingId}`);
-        if (!res.ok) {
-          toast.error('No se pudo cargar la campaña existente.');
-          return;
-        }
-        const data = await res.json();
-        const campaign = data.campaign;
-        if (!campaign) return;
-
-        setCampaignId(campaign.id);
-        setName(campaign.name || '');
-        if (campaign.pipelineType) setPipelineType(campaign.pipelineType);
-        if (campaign.llmProvider) setProvider(campaign.llmProvider);
-        if (campaign.llmModel) setModelId(campaign.llmModel);
-        if (Array.isArray(campaign.chatHistory) && campaign.chatHistory.length > 0) {
-          setMessages(campaign.chatHistory as ChatMessage[]);
-        }
-        const masterJson = campaign.masterJson as Record<string, unknown> | null;
-        if (masterJson?.competitorInsights) {
-          setCompetitorInsights(masterJson.competitorInsights as CompetitorInsights);
-        }
-        toast.success(`Continuando "${campaign.name}"`);
-      } catch {
-        toast.error('Error de red al cargar la campaña.');
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (chatLogRef.current) {
-      chatLogRef.current.scrollTop = chatLogRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  /** Al cambiar de proveedor, el modelo vuelve al primero de su lista. */
-  function changeProvider(next: string) {
-    setProvider(next);
-    const p = PROVIDERS.find((x) => x.provider === next);
-    if (p) setModelId(p.models[0]);
-  }
-
-  async function createCampaign(): Promise<string | null> {
-    if (!name.trim()) {
-      toast.error('Escribe un nombre para la campaña');
-      return null;
-    }
-    const res = await fetch('/api/campaigns', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, pipelineType }),
+    if (!loaded) return;
+    const prov = PROVIDERS.find((p) => p.provider === loaded.llmProvider);
+    apply({
+      name: loaded.name,
+      ...(loaded.pipelineType ? { pipelineType: loaded.pipelineType } : {}),
+      ...(loaded.llmProvider ? { provider: loaded.llmProvider } : {}),
+      ...(loaded.llmModel ? { modelId: loaded.llmModel } : prov ? { modelId: prov.models[0] } : {}),
     });
-    const data = await res.json();
-    const id = data.campaign?.id;
-    if (id) setCampaignId(id);
-    return id;
+    if (loaded.chatHistory.length > 0) setMessages(loaded.chatHistory);
+    if (loaded.competitorInsights) setCompetitorInsights(loaded.competitorInsights);
+  }, [loaded, apply, setMessages, setCompetitorInsights]);
+
+  const readiness = useReadiness({
+    name: form.name,
+    brandInput: form.brandInput,
+    provider: form.provider,
+    imageProvider: form.imageProvider,
+    pipelineType: form.pipelineType,
+  });
+
+  const plannerConfig = planner.data?.config;
+  const canLoadBrand = plannerConfig !== undefined && hasBrandData(plannerConfig);
+
+  const loadBrand = useCallback(() => {
+    if (!plannerConfig || !hasBrandData(plannerConfig)) return;
+    cf.setField('brandInput', brandFromConfig(plannerConfig));
+    toast.success('Marca cargada desde Configuración');
+  }, [plannerConfig, cf]);
+
+  function onReadinessAction(action: 'focus-name' | 'load-brand') {
+    if (action === 'load-brand') loadBrand();
+    else document.getElementById('cn-name-input')?.focus();
   }
-
-  async function scanInventory() {
-    if (!inventoryPath.trim()) return;
-    setScanningInventory(true);
-    setInventoryWarning(null);
-    try {
-      const res = await fetch(`/api/inventory?path=${encodeURIComponent(inventoryPath)}`);
-      if (!res.ok) {
-        const err = await res.json();
-        toast.error(err.error || 'Error escaneando carpeta');
-        return;
-      }
-      const data = await res.json();
-      setInventory(data.days || []);
-
-      if (data.warning) {
-        setInventoryWarning(data.warning);
-        const rf = data.rootFiles?.length || 0;
-        setRootFilesCount(rf);
-        toast(
-          rf > 0
-            ? `⚠️ ${rf} archivos en raíz — carpetas "Día N" no encontradas`
-            : `⚠️ ${data.warning.slice(0, 80)}...`,
-          { icon: '⚠️' }
-        );
-      } else {
-        setRootFilesCount(0);
-        toast.success(`✅ ${data.days?.length || 0} carpetas "Día N" encontradas`);
-      }
-    } catch {
-      toast.error('Error de red al escanear');
-    } finally {
-      setScanningInventory(false);
-    }
-  }
-
-  async function analyzeCompetitors() {
-    const urls = competitorUrls
-      .split('\n')
-      .map((u) => u.trim())
-      .filter((u) => u.startsWith('http'));
-
-    if (!urls.length) {
-      toast.error('Agrega al menos una URL válida (http...)');
-      return;
-    }
-
-    let id = campaignId;
-    if (!id) id = await createCampaign();
-    if (!id) return;
-
-    setAnalyzingCompetitors(true);
-    try {
-      const res = await fetch('/api/research/competitors', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ urls, campaignId: id }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error || 'Error analizando competencia');
-        return;
-      }
-      setCompetitorInsights(data.insights);
-      toast.success(`✅ ${data.urlCount} URLs analizadas con IA`);
-    } catch {
-      toast.error('Error de red');
-    } finally {
-      setAnalyzingCompetitors(false);
-    }
-  }
-
-  async function analyzeAdsLibrary() {
-    if (!adsLibraryBrand.trim()) {
-      toast.error('Escribe el nombre de la marca a analizar');
-      return;
-    }
-
-    setAnalyzingAdsLibrary(true);
-    const toastId = toast.loading('🔍 Analizando Meta Ads Library... (puede tardar 30-60 seg)');
-
-    try {
-      const res = await fetch('/api/research/ads-library', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          brandName: adsLibraryBrand,
-          country: adsLibraryCountry,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error || 'Error analizando Ads Library', { id: toastId });
-        return;
-      }
-
-      setAdsLibraryResult({
-        adsFound: data.adsFound,
-        scrapedOk: data.scrapedOk,
-        htmlReport: data.htmlReport,
-      });
-
-      toast.success(
-        `✅ Reporte generado — ${data.adsFound} anuncios analizados`,
-        { id: toastId }
-      );
-    } catch {
-      toast.error('Error de red al analizar', { id: toastId });
-    } finally {
-      setAnalyzingAdsLibrary(false);
-    }
-  }
-
-  function openAdsLibraryReport() {
-    if (!adsLibraryResult?.htmlReport) return;
-    const blob = new Blob([adsLibraryResult.htmlReport], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-  }
-
-  // ─── File upload ──────────────────────────────────────────────
-  const readFileText = (file: File): Promise<string | undefined> => {
-    const textTypes = ['text/', 'application/json', 'application/xml'];
-    const isText = textTypes.some((t) => file.type.startsWith(t)) ||
-      file.name.endsWith('.txt') || file.name.endsWith('.md') ||
-      file.name.endsWith('.csv') || file.name.endsWith('.json');
-
-    if (!isText || file.size > 50 * 1024) return Promise.resolve(undefined);
-
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target?.result as string);
-      reader.onerror = () => resolve(undefined);
-      reader.readAsText(file);
-    });
-  };
-
-  const addFiles = useCallback(async (fileList: FileList | File[]) => {
-    const files = Array.from(fileList);
-    const newUploads: UploadedFile[] = await Promise.all(
-      files.map(async (f) => ({
-        name: f.name,
-        sizeBytes: f.size,
-        type: f.type || 'application/octet-stream',
-        content: await readFileText(f),
-      }))
-    );
-    setUploadedFiles((prev) => [...prev, ...newUploads]);
-    toast.success(`${files.length} archivo(s) adjunto(s)`);
-  }, []);
-
-  const removeFile = (idx: number) => {
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  // Drag & drop handlers
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!chatLogRef.current?.contains(e.relatedTarget as Node)) {
-      setIsDragging(false);
-    }
-  };
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    const files = e.dataTransfer.files;
-    if (files.length > 0) await addFiles(files);
-  };
-
-  // ─── Chat send ────────────────────────────────────────────────
-  async function sendMessage() {
-    if ((!input.trim() && uploadedFiles.length === 0) || busy) return;
-
-    let id = campaignId;
-    if (!id) {
-      id = await createCampaign();
-      if (!id) return;
-    }
-
-    // Build message content with file info appended
-    let messageContent = input.trim();
-    if (uploadedFiles.length > 0) {
-      const fileLines = uploadedFiles.map((f) => {
-        const base = `${fileIcon(f.type, f.name)} ${f.name} (${formatSize(f.sizeBytes)})`;
-        return f.content ? `${base}\n\`\`\`\n${f.content.slice(0, 2000)}\n\`\`\`` : base;
-      });
-      messageContent += `\n\n[Archivos adjuntos]\n${fileLines.join('\n')}`;
-    }
-
-    const userMsg: ChatMessage = { role: 'user', content: messageContent };
-    const next = [...messages, userMsg];
-    setMessages(next);
-    setInput('');
-    setUploadedFiles([]);
-    setBusy(true);
-
-    const contextSuffix = buildContextSuffix();
-
-    let res: Response;
-    try {
-      res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          campaignId: id,
-          messages: next,
-          provider,
-          modelId,
-          contextSuffix,
-          imageProvider,
-          pipelineType,
-        }),
-      });
-    } catch {
-      toast.error('Error de red al contactar la IA. Verifica tu conexión.');
-      setBusy(false);
-      return;
-    }
-
-    if (!res.ok) {
-      let errMsg = `Error ${res.status} al contactar la IA.`;
-      try {
-        const text = await res.text();
-        try {
-          const parsed = JSON.parse(text);
-          errMsg = parsed.error || parsed.message || text || errMsg;
-        } catch {
-          errMsg = text || errMsg;
-        }
-      } catch {
-        // La respuesta puede no incluir un cuerpo de error legible.
-      }
-
-      if (res.status === 401) {
-        errMsg = 'Sesión expirada. Vuelve a iniciar sesión.';
-      } else if (/no api key/i.test(errMsg)) {
-        errMsg = `No hay API key configurada para "${provider}". Ve a "Claves de IA" y agrega una.`;
-      }
-
-      toast.error(errMsg);
-      setMessages([
-        ...next,
-        { role: 'assistant', content: `⚠️ ${errMsg}` },
-      ]);
-      setBusy(false);
-      return;
-    }
-
-    const reader = res.body!.getReader();
-    const decoder = new TextDecoder();
-    let assistantText = '';
-    let gotAnyText = false;
-    setMessages([...next, { role: 'assistant', content: '' }]);
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const chunk = decoder.decode(value, { stream: true });
-      for (const line of chunk.split('\n')) {
-        if (!line.trim()) continue;
-        // Vercel AI SDK data stream protocol prefixes:
-        // 0: text delta, 3: error, others (f/e/d/...): metadata we ignore
-        if (line.startsWith('0:')) {
-          try {
-            const piece = JSON.parse(line.slice(2));
-            assistantText += piece;
-            gotAnyText = true;
-            setMessages([...next, { role: 'assistant', content: assistantText }]);
-          } catch {
-            // Ignorar frames de texto malformados del stream.
-          }
-        } else if (line.startsWith('3:')) {
-          try {
-            const errPiece = JSON.parse(line.slice(2));
-            const errText = typeof errPiece === 'string' ? errPiece : errPiece?.message || 'Error desconocido del modelo.';
-            toast.error(`Error de la IA: ${errText}`);
-            assistantText = `⚠️ ${errText}`;
-            gotAnyText = true;
-            setMessages([...next, { role: 'assistant', content: assistantText }]);
-          } catch {
-            // Ignorar frames de error malformados del stream.
-          }
-        }
-      }
-    }
-
-    if (!gotAnyText) {
-      const errText = 'La IA no devolvió respuesta. Verifica tu API key en "Claves de IA" e inténtalo de nuevo.';
-      toast.error(errText);
-      setMessages([...next, { role: 'assistant', content: `⚠️ ${errText}` }]);
-    }
-
-    setBusy(false);
-  }
-
-  function buildContextSuffix(): string {
-    let ctx = '';
-    if (brandInput.trim()) {
-      ctx += `\n\n[PERFIL DE MARCA PROPORCIONADO]\n${brandInput}`;
-    }
-    if (inventory.length > 0) {
-      const withContent = inventory.filter((d) => d.hasContent);
-      ctx += `\n\n[INVENTARIO LOCAL]\nCarpeta: ${inventoryPath}\nDías con assets existentes: ${withContent.map((d) => `Día ${d.dayNumber}`).join(', ') || 'ninguno'}\nTotal carpetas: ${inventory.length}`;
-    }
-    if (adsLibraryResult) {
-      ctx += `\n\n[ANÁLISIS META ADS LIBRARY: ${adsLibraryBrand}]\nAnuncios encontrados: ${adsLibraryResult.adsFound}`;
-    }
-    if (competitorInsights) {
-      ctx += `\n\n[ANÁLISIS COMPETENCIA]\nInsights: ${competitorInsights.rawSummary.slice(0, 300)}`;
-    }
-    if (imageProvider !== 'gemini') {
-      ctx += `\n\n[CONFIGURACIÓN]\nProveedor de imágenes: ${imageProvider}`;
-    }
-    return ctx;
-  }
-
-  async function finalizePlan() {
-    if (!campaignId || messages.length < 2) return;
-    setFinalizing(true);
-    try {
-      const res = await fetch('/api/finalize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ campaignId }),
-      });
-      if (res.ok) {
-        clearDraft();
-        toast.success('¡Plan maestro generado!');
-        router.push(`/campaign/${campaignId}`);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Error al finalizar');
-        setFinalizing(false);
-      }
-    } catch {
-      toast.error('Error de red');
-      setFinalizing(false);
-    }
-  }
-
-  const currentModels = PROVIDERS.find((p) => p.provider === provider)?.models || [];
 
   // Progreso informativo: se completa solo según lo que ya hizo la persona.
   const cnSteps = [
-    { n: 1, label: 'Configura tu campaña', done: name.trim().length > 0 },
-    { n: 2, label: 'Conversa con la IA', done: messages.length >= 2 },
-    { n: 3, label: 'Genera el Plan Maestro', done: finalizing },
+    { n: 1, label: 'Configura tu campaña', done: form.name.trim().length > 0 },
+    { n: 2, label: 'Conversa con la IA', done: chat.messages.length >= 2 },
+    { n: 3, label: 'Genera el Plan Maestro', done: chat.finalizing },
   ];
   const cnCurrent = cnSteps.findIndex((st) => !st.done);
 
@@ -628,16 +121,17 @@ export default function NewCampaignPage() {
     <>
       <TopBar title="Nueva Campaña" subtitle="Planifica tu campaña de contenido con IA" />
 
-      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
         multiple
         accept="*/*"
         style={{ display: 'none' }}
+        aria-hidden="true"
+        tabIndex={-1}
         onChange={(e) => {
           if (e.target.files?.length) {
-            addFiles(e.target.files);
+            attachments.addFiles(e.target.files);
             e.target.value = '';
           }
         }}
@@ -664,467 +158,32 @@ export default function NewCampaignPage() {
         ))}
       </ol>
 
-      {recovered && (
-        <DraftBanner savedAt={recovered.savedAt} onRestore={restoreDraft} onDiscard={discardRecovered} />
+      {cf.recovered && (
+        <DraftBanner savedAt={cf.recovered.savedAt} onRestore={cf.restoreDraft} onDiscard={cf.discardRecovered} />
       )}
 
-      <div className="cn-layout">
-        {/* ═══════════ PANEL IZQUIERDO ═══════════ */}
-        <div className="cn-side">
-          {/* Nombre */}
-          <div className="cn-sec" data-tour="cn-name" style={cv({ '--i': 0 })}>
-            <div className="cn-label-row">
-              <p className="label">Nombre de la campaña</p>
-              <span className="cn-draft-status" role="status">
-                {savedAt !== null && (
-                  <>
-                    <span className="fx-dot fx-dot--ok" aria-hidden="true" />
-                    Borrador guardado
-                  </>
-                )}
-              </span>
-            </div>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ej: Sprint 30 días Mayo"
-              style={{ width: '100%' }}
-            />
-          </div>
-
-          {/* Pipeline type */}
-          <div className="cn-sec" data-tour="cn-pipeline" style={cv({ '--i': 1 })}>
-            <p id="cn-pipeline-label" className="label" style={{ marginBottom: 6 }}>Tipo de Pipeline</p>
-            <PipelineCards value={pipelineType} onChange={setPipelineType} labelledBy="cn-pipeline-label" />
-          </div>
-
-          {/* LLM Selector */}
-          <div className="cn-sec" data-tour="cn-model" style={cv({ '--i': 2 })}>
-            <p className="label" style={{ marginBottom: 6 }}>Modelo de Planificación</p>
-            <div style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
-              <select value={provider} onChange={(e) => changeProvider(e.target.value)} style={{ width: '100%' }}>
-                {PROVIDERS.map((p) => (
-                  <option key={p.provider} value={p.provider}>{p.label}</option>
-                ))}
-              </select>
-              <select value={modelId} onChange={(e) => setModelId(e.target.value)} style={{ width: '100%' }}>
-                {currentModels.map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Imagen IA */}
-          <div className="cn-sec" data-tour="cn-image" style={cv({ '--i': 3 })}>
-            <p className="label" style={{ marginBottom: 6 }}>Generación de Imágenes</p>
-            <select value={imageProvider} onChange={(e) => setImageProvider(e.target.value)} style={{ width: '100%' }}>
-              {IMAGE_PROVIDERS.map((p) => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* CTA Automatización */}
-          <Link
-            href="/automatizacion"
-            className="card cn-sec cn-tip"
-            data-tour="cn-tip"
-            style={{
-              ...cv({ '--i': 4 }),
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 8,
-              padding: '10px 12px',
-              textDecoration: 'none',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Zap size={14} color="var(--rai-gold)" />
-              <span style={{ fontSize: 11, color: 'var(--rai-muted)', lineHeight: 1.5 }}>
-                Tip: automatiza el seguimiento de los nuevos contactos que lleguen por esta campaña.
-              </span>
-            </div>
-            <ArrowRight size={12} color="var(--rai-gold)" style={{ flexShrink: 0 }} />
-          </Link>
-
-          {optionalOpen ? (
-            <div className="cn-optional fx-field-in">
-              <div className="divider" />
-
-              {/* Inventario */}
-              <div className="cn-sec" data-tour="cn-folder">
-                <p className="label" style={{ marginBottom: 6 }}>
-                  <FolderSearch size={11} style={{ marginRight: 4, display: 'inline' }} />
-                  Carpeta de planificación del workspace
-                </p>
-                <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginBottom: 6 }}>
-                  Usa una ruta habilitada por el administrador y organízala en subcarpetas &quot;Día 1&quot;, &quot;Día 2&quot;, etc.
-                </p>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <input
-                    value={inventoryPath}
-                    onChange={(e) => setInventoryPath(e.target.value)}
-                    placeholder="Ruta habilitada dentro de tu inventario"
-                    style={{ flex: 1 }}
-                  />
-                  <button
-                    onClick={scanInventory}
-                    disabled={!inventoryPath.trim() || scanningInventory}
-                    className="btn btn-secondary btn-sm"
-                    style={{ whiteSpace: 'nowrap' }}
-                  >
-                    {scanningInventory ? <Spinner size="sm" /> : <Search size={12} />}
-                    Escanear
-                  </button>
-                </div>
-
-                {/* Warning de estructura */}
-                {inventoryWarning && (
-                  <div
-                    style={{
-                      marginTop: 8,
-                      padding: '8px 10px',
-                      background: 'rgba(245,158,11,0.08)',
-                      border: '1px solid rgba(245,158,11,0.2)',
-                      borderRadius: 6,
-                    }}
-                  >
-                    <p style={{ fontSize: 11, color: '#fcd34d', fontWeight: 600 }}>
-                      ⚠️ Estructura no reconocida
-                    </p>
-                    <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginTop: 4, lineHeight: 1.5 }}>
-                      {inventoryWarning}
-                    </p>
-                    {rootFilesCount > 0 && (
-                      <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginTop: 4 }}>
-                        📁 {rootFilesCount} archivos multimedia detectados en la raíz
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Grid de días */}
-                {inventory.length > 0 && (
-                  <div style={{ marginTop: 10 }}>
-                    <p style={{ fontSize: 11, color: 'var(--rai-muted)', marginBottom: 6 }}>
-                      {inventory.filter((d) => d.hasContent).length} de {inventory.length} días con assets
-                    </p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                      {inventory.map((day) => (
-                        <div
-                          key={day.dayNumber}
-                          title={`Día ${day.dayNumber}: ${day.existingAssets.length} archivos`}
-                          style={{
-                            width: 18,
-                            height: 18,
-                            borderRadius: 4,
-                            background: day.hasContent ? 'var(--rai-gold)' : day.existingAssets.length > 0 ? 'var(--rai-muted)' : 'var(--rai-border)',
-                            fontSize: 8,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: day.hasContent ? '#000' : 'var(--rai-muted)',
-                            fontWeight: 700,
-                            cursor: 'default',
-                          }}
-                        >
-                          {day.dayNumber}
-                        </div>
-                      ))}
-                    </div>
-                    <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginTop: 6 }}>
-                      🟡 Con assets &nbsp; ⚫ Vacío
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Manual de Marca */}
-              <div className="cn-sec" data-tour="cn-brand">
-                <p className="label" style={{ marginBottom: 6 }}>Manual de Marca (opcional)</p>
-                <textarea
-                  value={brandInput}
-                  onChange={(e) => setBrandInput(e.target.value)}
-                  placeholder="Pega aquí: nombre, tono, audiencia, productos, hashtags, topics prohibidos..."
-                  style={{ width: '100%', minHeight: 100, fontSize: 12 }}
-                />
-              </div>
-
-              {/* ─── Investigar Competencia ─── */}
-              <div className="cn-sec" data-tour="cn-competitor">
-                <p className="label" style={{ marginBottom: 8 }}>
-                  <Search size={11} style={{ marginRight: 4, display: 'inline' }} />
-                  Investigar Competencia (opcional)
-                </p>
-
-                {/* Mode tabs */}
-                <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
-                  <button
-                    onClick={() => setCompetitorMode('urls')}
-                    className={competitorMode === 'urls' ? 'btn btn-secondary btn-sm' : 'btn btn-ghost btn-sm'}
-                    style={{ flex: 1, gap: 4, fontSize: 11 }}
-                  >
-                    <Globe size={10} /> URLs / Webs
-                  </button>
-                  <button
-                    onClick={() => setCompetitorMode('ads-library')}
-                    className={competitorMode === 'ads-library' ? 'btn btn-secondary btn-sm' : 'btn btn-ghost btn-sm'}
-                    style={{ flex: 1, gap: 4, fontSize: 11 }}
-                  >
-                    <Megaphone size={10} /> Meta Ads
-                  </button>
-                </div>
-
-                {/* URL mode */}
-                {competitorMode === 'urls' && (
-                  <>
-                    <textarea
-                      value={competitorUrls}
-                      onChange={(e) => setCompetitorUrls(e.target.value)}
-                      placeholder={"https://instagram.com/competidor1\nhttps://competidor2.com"}
-                      style={{ width: '100%', minHeight: 60, fontSize: 12 }}
-                    />
-                    <button
-                      onClick={analyzeCompetitors}
-                      disabled={!competitorUrls.trim() || analyzingCompetitors}
-                      className="btn btn-ghost btn-sm"
-                      style={{ width: '100%', marginTop: 6, gap: 6 }}
-                    >
-                      {analyzingCompetitors ? (
-                        <><Spinner size="sm" /> Investigando con IA...</>
-                      ) : (
-                        <>Analizar Competencia</>
-                      )}
-                    </button>
-                    {competitorInsights && (
-                      <div style={{ marginTop: 8, padding: '8px 10px', background: 'rgba(46,196,182,0.08)', border: '1px solid rgba(46,196,182,0.2)', borderRadius: 6 }}>
-                        <p style={{ fontSize: 11, color: 'var(--rai-success)', fontWeight: 600 }}>
-                          Análisis listo: {competitorInsights.painPoints.length + competitorInsights.opportunities.length} insights
-                        </p>
-                        <p style={{ fontSize: 11, color: 'var(--rai-muted)', marginTop: 4, lineHeight: 1.5 }}>
-                          {competitorInsights.rawSummary.slice(0, 120)}...
-                        </p>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Ads Library mode */}
-                {competitorMode === 'ads-library' && (
-                  <>
-                    <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginBottom: 8, lineHeight: 1.5 }}>
-                      Analiza anuncios activos en Meta Ads Library y genera un reporte HTML con gráficos.
-                    </p>
-                    <input
-                      value={adsLibraryBrand}
-                      onChange={(e) => setAdsLibraryBrand(e.target.value)}
-                      placeholder="Nombre de la marca (ej: Nike)"
-                      style={{ width: '100%', marginBottom: 6 }}
-                    />
-                    <select
-                      value={adsLibraryCountry}
-                      onChange={(e) => setAdsLibraryCountry(e.target.value)}
-                      style={{ width: '100%', marginBottom: 8 }}
-                    >
-                      {COUNTRY_OPTIONS.map((c) => (
-                        <option key={c.value} value={c.value}>{c.label}</option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={analyzeAdsLibrary}
-                      disabled={!adsLibraryBrand.trim() || analyzingAdsLibrary}
-                      className="btn btn-ghost btn-sm"
-                      style={{ width: '100%', gap: 6 }}
-                    >
-                      {analyzingAdsLibrary ? (
-                        <><Spinner size="sm" /> Analizando Ads Library...</>
-                      ) : (
-                        <>Analizar Ads Library</>
-                      )}
-                    </button>
-                    {adsLibraryResult && (
-                      <div style={{ marginTop: 8, padding: '8px 10px', background: 'rgba(46,196,182,0.08)', border: '1px solid rgba(46,196,182,0.2)', borderRadius: 6 }}>
-                        <p style={{ fontSize: 11, color: 'var(--rai-success)', fontWeight: 600 }}>
-                          {adsLibraryResult.adsFound} anuncios analizados
-                          {!adsLibraryResult.scrapedOk && ' (análisis IA)'}
-                        </p>
-                        <button
-                          onClick={openAdsLibraryReport}
-                          className="btn btn-ghost btn-sm"
-                          style={{ width: '100%', marginTop: 6, gap: 6, fontSize: 11 }}
-                        >
-                          <FileText size={10} /> Ver Reporte HTML
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          ) : (
-            <p className="cn-more-hint" data-tour="cn-more">
-              Al escribir el nombre de la campaña aparecerán los campos opcionales: carpeta de planificación, manual de marca y competencia.
-            </p>
-          )}
-
-          {/* Estimado de costos */}
-          {messages.length >= 2 && (
-            <CostEstimate items={7} pipelineType={pipelineType} imageProvider={imageProvider} />
-          )}
-        </div>
-
-        {/* PANEL DERECHO - CHAT */}
-        <div className="cn-chat">
-          {/* Header del chat */}
-          <div className="cn-chat-head" data-tour="cn-chat-head">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(123,94,167,0.2)', border: '1px solid rgba(123,94,167,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Bot size={14} color="var(--rai-purple)" />
-              </div>
-              <div>
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--rai-text)' }}>
-                  IA de Planificación
-                </span>
-                <span style={{ fontSize: 11, color: 'var(--rai-muted)', marginLeft: 8 }}>
-                  {provider} / {modelId}
-                </span>
-              </div>
-            </div>
-            {messages.length >= 2 && (
-              <button onClick={finalizePlan} disabled={finalizing} className="btn btn-primary">
-                {finalizing ? <><Spinner size="sm" /> Extrayendo JSON...</> : <><Sparkles size={14} /> Generar Plan Maestro</>}
-              </button>
-            )}
-          </div>
-
-          {/* Chat log - drag and drop zone */}
-          <div
-            ref={chatLogRef}
-            className="chat-log cn-chat-log"
-            data-tour="cn-chat-log"
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-          >
-            {isDragging && (
-              <div style={{ position: 'absolute', inset: 0, background: 'rgba(123,94,167,0.15)', border: '2px dashed rgba(123,94,167,0.6)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, pointerEvents: 'none' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>{"📎"}</div>
-                  <p style={{ color: 'var(--rai-purple)', fontWeight: 600, fontSize: 14 }}>Suelta los archivos aquí</p>
-                </div>
-              </div>
-            )}
-
-            {messages.length === 0 && (
-              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                <div className="chat-bubble assistant" style={{ maxWidth: '80%' }}>
-                  <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                    <Bot size={14} color="var(--rai-purple)" />
-                    <span style={{ fontSize: 12, color: 'var(--rai-purple)', fontWeight: 600 }}>IA</span>
-                  </div>
-                  <p style={{ fontSize: 14, lineHeight: 1.7 }}>
-                    Hola, soy tu IA de contenido. Dime sobre tu marca y te ayudo a planificar hasta 31 días de contenido.
-                    {inventory.length > 0 && ` Tengo ${inventory.filter((d) => d.hasContent).length} días con assets.`}
-                    {adsLibraryResult && ` Analicé ${adsLibraryResult.adsFound} anuncios de ${adsLibraryBrand}.`}
-                  </p>
-                  <p style={{ fontSize: 11, color: 'var(--rai-muted)', marginTop: 8 }}>
-                    Tip: Arrastra archivos al chat o usa el icono de carpeta para adjuntarlos.
-                  </p>
-                  <div className="cn-starters" role="group" aria-label="Ideas para empezar">
-                    {STARTERS.map((t) => (
-                      <button key={t} type="button" onClick={() => setInput(t)}>
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {messages.map((msg, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', marginBottom: 12 }}>
-                <div className={"chat-bubble " + msg.role} style={{ maxWidth: '80%', whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>
-                  {msg.role === 'assistant' && (
-                    <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-                      <Bot size={12} color="var(--rai-purple)" />
-                      <span style={{ fontSize: 11, color: 'var(--rai-purple)', fontWeight: 600 }}>IA</span>
-                    </div>
-                  )}
-                  {msg.content || (busy && i === messages.length - 1 ? '...' : '')}
-                </div>
-              </div>
-            ))}
-
-            {busy && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                <Spinner size="sm" />
-                <span style={{ fontSize: 12, color: 'var(--rai-muted)' }}>Generando respuesta...</span>
-              </div>
-            )}
-          </div>
-
-          {/* File chips */}
-          {uploadedFiles.length > 0 && (
-            <div className="cn-chips">
-              {uploadedFiles.map((f, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(123,94,167,0.12)', border: '1px solid rgba(123,94,167,0.25)', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: 'var(--rai-text)' }}>
-                  <span>{fileIcon(f.type, f.name)}</span>
-                  <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
-                  <span style={{ color: 'var(--rai-muted)' }}>{formatSize(f.sizeBytes)}</span>
-                  <button onClick={() => removeFile(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--rai-muted)', padding: 0, lineHeight: 1 }}>
-                    <X size={10} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Chat input */}
-          <div
-            className="cn-input"
-            data-tour="cn-chat-input"
-            style={{ borderTop: uploadedFiles.length > 0 ? 'none' : '1px solid var(--rai-border)' }}
-          >
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              title="Adjuntar archivos"
-              className="btn btn-ghost"
-              style={{ height: 52, width: 44, padding: 0, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: uploadedFiles.length > 0 ? 'var(--rai-purple)' : 'var(--rai-muted)' }}
-            >
-              <Folder size={18} />
-            </button>
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-              }}
-              placeholder="Describe la marca, audiencia, objetivos... (Enter para enviar)"
-              style={{ flex: 1, minHeight: 52, maxHeight: 160, resize: 'none', fontSize: 14, lineHeight: 1.6 }}
-              rows={2}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={busy || (!input.trim() && uploadedFiles.length === 0)}
-              className="btn btn-primary"
-              style={{ height: 52, padding: '0 18px', flexShrink: 0 }}
-            >
-              {busy ? <Spinner size="sm" /> : <Send size={16} />}
-            </button>
-          </div>
-
-          {messages.length >= 2 && !finalizing && (
-            <div className="cn-foot">
-              <ChevronDown size={12} color="var(--rai-gold)" />
-              <span style={{ fontSize: 12, color: 'var(--rai-muted)' }}>
-                Cuando el plan esté listo, haz clic en <strong style={{ color: 'var(--rai-gold)' }}>Generar Plan Maestro</strong>.
-              </span>
-            </div>
-          )}
-        </div>
+      <div className="cn-layout cn-v2">
+        <ConfigPanel
+          cf={cf}
+          research={research}
+          input={chat.input}
+          setInput={chat.setInput}
+          presets={presets.presets}
+          onSavePreset={presets.save}
+          onRemovePreset={presets.remove}
+          canLoadBrand={canLoadBrand}
+          onLoadBrand={loadBrand}
+          serverCampaignId={loaded?.hasMaster ? session.campaignId : null}
+        />
+        <ChatPanel
+          cf={cf}
+          chat={chat}
+          research={research}
+          attachments={attachments}
+          readiness={readiness}
+          onReadinessAction={onReadinessAction}
+          onAttachClick={() => fileInputRef.current?.click()}
+        />
       </div>
     </>
   );

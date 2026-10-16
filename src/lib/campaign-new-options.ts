@@ -42,3 +42,41 @@ export const COUNTRY_OPTIONS = [
 
 export const COMPETITOR_MODES = ['urls', 'ads-library'] as const;
 export type CompetitorMode = (typeof COMPETITOR_MODES)[number];
+
+/** Precio y velocidad relativos de cada modelo de planificación (orientativos; sirven para comparar). */
+export interface ModelInfo {
+  /** 1 = económico … 4 = premium. */
+  cost: 1 | 2 | 3 | 4;
+  /** 1 = lento … 3 = rápido. */
+  speed: 1 | 2 | 3;
+  blurb: string;
+}
+
+export const MODEL_INFO: Record<string, ModelInfo> = {
+  'deepseek-chat': { cost: 1, speed: 3, blurb: 'La opción más barata y rápida: ideal para planificar y redactar a diario.' },
+  'deepseek-reasoner': { cost: 1, speed: 1, blurb: 'Razona paso a paso: más lento, útil para estrategias con muchas variables.' },
+  'claude-sonnet-4-5': { cost: 3, speed: 2, blurb: 'Redacción cuidada y muy buen seguimiento de instrucciones.' },
+  'claude-opus-4-7': { cost: 4, speed: 1, blurb: 'Máxima calidad; es el más caro y el más lento.' },
+  'gemini-2.5-pro': { cost: 3, speed: 2, blurb: 'Buen equilibrio para planes largos con mucho contexto.' },
+  'gemini-2.5-flash': { cost: 1, speed: 3, blurb: 'Muy rápido y económico; suficiente para la mayoría de planes.' },
+  'gpt-4o': { cost: 3, speed: 2, blurb: 'Versátil y estable; costo medio.' },
+  'gpt-4o-mini': { cost: 1, speed: 3, blurb: 'Rápido y económico para tareas de redacción corta.' },
+};
+
+const FALLBACK_MODEL_INFO: ModelInfo = { cost: 2, speed: 2, blurb: 'Modelo personalizado.' };
+
+export function modelInfo(modelId: string): ModelInfo {
+  return MODEL_INFO[modelId] ?? FALLBACK_MODEL_INFO;
+}
+
+export const COST_TIER_LABELS = ['', 'Económico', 'Moderado', 'Alto', 'Premium'] as const;
+export const SPEED_LABELS = ['', 'Lento', 'Medio', 'Rápido'] as const;
+
+export function providerLabel(provider: string): string {
+  const found = PROVIDERS.find((p) => p.provider === provider);
+  return found ? found.label.replace(/\s*\(.*\)\s*$/, '') : provider;
+}
+
+export function modelsOf(provider: string): string[] {
+  return PROVIDERS.find((p) => p.provider === provider)?.models ?? [];
+}

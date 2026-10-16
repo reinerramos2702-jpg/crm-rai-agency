@@ -56,3 +56,16 @@ describe('constantes del borrador', () => {
     expect(pipelineHasVideo('carousel')).toBe(false);
   });
 });
+
+describe('brief dentro del borrador', () => {
+  it('acepta borradores anteriores sin brief y con brief válido', () => {
+    const { brief: _omit, ...legacy } = INITIAL_CAMPAIGN_DRAFT;
+    expect(isCampaignDraft(legacy)).toBe(true);
+    expect(isCampaignDraft({ ...INITIAL_CAMPAIGN_DRAFT, brief: { ...INITIAL_CAMPAIGN_DRAFT.brief, tone: 'Cercano' } })).toBe(true);
+  });
+
+  it('rechaza un brief con forma inválida', () => {
+    expect(isCampaignDraft({ ...INITIAL_CAMPAIGN_DRAFT, brief: { tone: 1 } })).toBe(false);
+    expect(isCampaignDraft({ ...INITIAL_CAMPAIGN_DRAFT, brief: 'texto' })).toBe(false);
+  });
+});
