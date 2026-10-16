@@ -66,9 +66,15 @@ describe('guía de Nueva Campaña', () => {
     const targets = CAMPAIGN_NEW.steps.flatMap((st) => [st.target, ...(st.hints ?? []).map((h) => h.target)]);
     const names = targets
       .filter((t): t is string => typeof t === 'string')
-      .map((t) => /data-tour="([^"]+)"/.exec(t)?.[1])
-      .filter(Boolean) as string[];
+      .flatMap((t) => Array.from(t.matchAll(/data-tour="([^"]+)"/g), (m) => m[1]));
     expect(names.length).toBeGreaterThan(8);
     for (const n of names) expect(page, n).toContain(`data-tour="${n}"`);
+  });
+
+  it('el paso de material funciona con o sin los campos opcionales visibles', () => {
+    const material = CAMPAIGN_NEW.steps.find((st) => st.id === 'material');
+    expect(material?.optional).toBe(true);
+    expect(material?.target).toContain('data-tour="cn-folder"');
+    expect(material?.target).toContain('data-tour="cn-more"');
   });
 });

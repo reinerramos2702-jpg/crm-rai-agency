@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback, type CSSProperties } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -22,26 +22,22 @@ import { TopBar } from '@/components/layout/TopBar';
 import { Spinner } from '@/components/ui/Spinner';
 import { CostEstimate } from '@/components/campaign/CostEstimate';
 import toast from 'react-hot-toast';
-
-const PROVIDERS = [
-  { provider: 'deepseek', label: 'DeepSeek (Barato)', models: ['deepseek-chat', 'deepseek-reasoner'] },
-  { provider: 'anthropic', label: 'Claude', models: ['claude-sonnet-4-5', 'claude-opus-4-7'] },
-  { provider: 'google', label: 'Gemini', models: ['gemini-2.5-pro', 'gemini-2.5-flash'] },
-  { provider: 'openai', label: 'GPT-4', models: ['gpt-4o', 'gpt-4o-mini'] },
-];
-
-const PIPELINE_TYPES = [
-  { value: 'ugc', label: 'UGC — Videos personaje + producto' },
-  { value: 'avatar_reel', label: 'Avatar Reel — Reacción a noticias' },
-  { value: 'static_ads', label: 'Anuncios Estáticos' },
-  { value: 'carousel', label: 'Carruseles' },
-];
-
-const IMAGE_PROVIDERS = [
-  { value: 'gemini', label: 'Gemini Imagen 3 (defecto)' },
-  { value: 'openai', label: 'DALL-E 3 / gpt-image-1' },
-  { value: 'stabilityai', label: 'Stability AI' },
-];
+import { PipelineCards } from './PipelineCards';
+import { DraftBanner } from './DraftBanner';
+import {
+  CAMPAIGN_DRAFT_KEY,
+  INITIAL_CAMPAIGN_DRAFT,
+  isCampaignDraft,
+  type CampaignDraft,
+} from '@/lib/campaign-draft';
+import {
+  COUNTRY_OPTIONS,
+  IMAGE_PROVIDERS,
+  PROVIDERS,
+  type CompetitorMode,
+} from '@/lib/campaign-new-options';
+import { useDraft } from '@/lib/use-draft';
+import './campaign-new.css';
 
 const STARTERS = [
   'Mi marca vende…, mi audiencia es…',
@@ -51,18 +47,6 @@ const STARTERS = [
 
 /** Variables CSS en línea (p. ej. el retardo escalonado `--i`). */
 const cv = (vars: Record<string, string | number>) => vars as CSSProperties;
-
-const COUNTRY_OPTIONS = [
-  { value: 'ALL', label: 'Todos los países' },
-  { value: 'MX', label: 'México' },
-  { value: 'US', label: 'Estados Unidos' },
-  { value: 'ES', label: 'España' },
-  { value: 'AR', label: 'Argentina' },
-  { value: 'CO', label: 'Colombia' },
-  { value: 'CL', label: 'Chile' },
-  { value: 'PE', label: 'Perú' },
-  { value: 'BR', label: 'Brasil' },
-];
 
 interface DayInventory {
   dayNumber: number;
@@ -109,30 +93,30 @@ export default function NewCampaignPage() {
   const router = useRouter();
 
   // Form state
-  const [name, setName] = useState('');
-  const [pipelineType, setPipelineType] = useState('ugc');
-  const [provider, setProvider] = useState('deepseek');
-  const [modelId, setModelId] = useState('deepseek-chat');
-  const [imageProvider, setImageProvider] = useState('gemini');
-  const [brandInput, setBrandInput] = useState('');
+  const [name, setName] = useState(INITIAL_CAMPAIGN_DRAFT.name);
+  const [pipelineType, setPipelineType] = useState(INITIAL_CAMPAIGN_DRAFT.pipelineType);
+  const [provider, setProvider] = useState(INITIAL_CAMPAIGN_DRAFT.provider);
+  const [modelId, setModelId] = useState(INITIAL_CAMPAIGN_DRAFT.modelId);
+  const [imageProvider, setImageProvider] = useState(INITIAL_CAMPAIGN_DRAFT.imageProvider);
+  const [brandInput, setBrandInput] = useState(INITIAL_CAMPAIGN_DRAFT.brandInput);
   const [campaignId, setCampaignId] = useState<string | null>(null);
 
   // Inventory
-  const [inventoryPath, setInventoryPath] = useState('');
+  const [inventoryPath, setInventoryPath] = useState(INITIAL_CAMPAIGN_DRAFT.inventoryPath);
   const [inventory, setInventory] = useState<DayInventory[]>([]);
   const [inventoryWarning, setInventoryWarning] = useState<string | null>(null);
   const [rootFilesCount, setRootFilesCount] = useState(0);
   const [scanningInventory, setScanningInventory] = useState(false);
 
   // Competitor analysis — dual mode
-  const [competitorMode, setCompetitorMode] = useState<'urls' | 'ads-library'>('urls');
-  const [competitorUrls, setCompetitorUrls] = useState('');
+  const [competitorMode, setCompetitorMode] = useState<CompetitorMode>(INITIAL_CAMPAIGN_DRAFT.competitorMode);
+  const [competitorUrls, setCompetitorUrls] = useState(INITIAL_CAMPAIGN_DRAFT.competitorUrls);
   const [competitorInsights, setCompetitorInsights] = useState<CompetitorInsights | null>(null);
   const [analyzingCompetitors, setAnalyzingCompetitors] = useState(false);
 
   // Ads Library
-  const [adsLibraryBrand, setAdsLibraryBrand] = useState('');
-  const [adsLibraryCountry, setAdsLibraryCountry] = useState('ALL');
+  const [adsLibraryBrand, setAdsLibraryBrand] = useState(INITIAL_CAMPAIGN_DRAFT.adsLibraryBrand);
+  const [adsLibraryCountry, setAdsLibraryCountry] = useState(INITIAL_CAMPAIGN_DRAFT.adsLibraryCountry);
   const [adsLibraryResult, setAdsLibraryResult] = useState<{
     adsFound: number;
     scrapedOk: boolean;
@@ -152,13 +136,73 @@ export default function NewCampaignPage() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Cargar campaña existente
-  const skipModelResetRef = useRef(false);
+  // Borrador auto-guardado: solo en campañas nuevas (se habilita tras leer la URL, nunca en el render).
+  const [draftEnabled, setDraftEnabled] = useState(false);
+  const draftValue = useMemo<CampaignDraft>(
+    () => ({
+      name,
+      pipelineType,
+      provider,
+      modelId,
+      imageProvider,
+      brandInput,
+      inventoryPath,
+      competitorMode,
+      competitorUrls,
+      adsLibraryBrand,
+      adsLibraryCountry,
+    }),
+    [
+      name,
+      pipelineType,
+      provider,
+      modelId,
+      imageProvider,
+      brandInput,
+      inventoryPath,
+      competitorMode,
+      competitorUrls,
+      adsLibraryBrand,
+      adsLibraryCountry,
+    ],
+  );
+  const { recovered, savedAt, acceptRecovered, discardRecovered, clear: clearDraft } = useDraft(
+    CAMPAIGN_DRAFT_KEY,
+    draftValue,
+    { initial: INITIAL_CAMPAIGN_DRAFT, validate: isCampaignDraft, enabled: draftEnabled },
+  );
 
+  function restoreDraft() {
+    if (!recovered) return;
+    const d = recovered.data;
+    setName(d.name);
+    setPipelineType(d.pipelineType);
+    setProvider(d.provider);
+    setModelId(d.modelId);
+    setImageProvider(d.imageProvider);
+    setBrandInput(d.brandInput);
+    setInventoryPath(d.inventoryPath);
+    setCompetitorMode(d.competitorMode);
+    setCompetitorUrls(d.competitorUrls);
+    setAdsLibraryBrand(d.adsLibraryBrand);
+    setAdsLibraryCountry(d.adsLibraryCountry);
+    acceptRecovered();
+  }
+
+  // Campos opcionales: aparecen al nombrar la campaña y se quedan (no desaparecen si se borra el nombre).
+  const [optionalOpen, setOptionalOpen] = useState(false);
+  useEffect(() => {
+    if (name.trim()) setOptionalOpen(true);
+  }, [name]);
+
+  // Cargar campaña existente
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const existingId = params.get('id');
-    if (!existingId) return;
+    if (!existingId) {
+      setDraftEnabled(true);
+      return;
+    }
 
     (async () => {
       try {
@@ -174,10 +218,7 @@ export default function NewCampaignPage() {
         setCampaignId(campaign.id);
         setName(campaign.name || '');
         if (campaign.pipelineType) setPipelineType(campaign.pipelineType);
-        if (campaign.llmProvider) {
-          skipModelResetRef.current = true;
-          setProvider(campaign.llmProvider);
-        }
+        if (campaign.llmProvider) setProvider(campaign.llmProvider);
         if (campaign.llmModel) setModelId(campaign.llmModel);
         if (Array.isArray(campaign.chatHistory) && campaign.chatHistory.length > 0) {
           setMessages(campaign.chatHistory as ChatMessage[]);
@@ -199,14 +240,12 @@ export default function NewCampaignPage() {
     }
   }, [messages]);
 
-  useEffect(() => {
-    if (skipModelResetRef.current) {
-      skipModelResetRef.current = false;
-      return;
-    }
-    const p = PROVIDERS.find((p) => p.provider === provider);
+  /** Al cambiar de proveedor, el modelo vuelve al primero de su lista. */
+  function changeProvider(next: string) {
+    setProvider(next);
+    const p = PROVIDERS.find((x) => x.provider === next);
     if (p) setModelId(p.models[0]);
-  }, [provider]);
+  }
 
   async function createCampaign(): Promise<string | null> {
     if (!name.trim()) {
@@ -561,6 +600,7 @@ export default function NewCampaignPage() {
         body: JSON.stringify({ campaignId }),
       });
       if (res.ok) {
+        clearDraft();
         toast.success('¡Plan maestro generado!');
         router.push(`/campaign/${campaignId}`);
       } else {
@@ -624,12 +664,26 @@ export default function NewCampaignPage() {
         ))}
       </ol>
 
+      {recovered && (
+        <DraftBanner savedAt={recovered.savedAt} onRestore={restoreDraft} onDiscard={discardRecovered} />
+      )}
+
       <div className="cn-layout">
         {/* ═══════════ PANEL IZQUIERDO ═══════════ */}
         <div className="cn-side">
           {/* Nombre */}
           <div className="cn-sec" data-tour="cn-name" style={cv({ '--i': 0 })}>
-            <p className="label" style={{ marginBottom: 6 }}>Nombre de la campaña</p>
+            <div className="cn-label-row">
+              <p className="label">Nombre de la campaña</p>
+              <span className="cn-draft-status" role="status">
+                {savedAt !== null && (
+                  <>
+                    <span className="fx-dot fx-dot--ok" aria-hidden="true" />
+                    Borrador guardado
+                  </>
+                )}
+              </span>
+            </div>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -640,19 +694,15 @@ export default function NewCampaignPage() {
 
           {/* Pipeline type */}
           <div className="cn-sec" data-tour="cn-pipeline" style={cv({ '--i': 1 })}>
-            <p className="label" style={{ marginBottom: 6 }}>Tipo de Pipeline</p>
-            <select value={pipelineType} onChange={(e) => setPipelineType(e.target.value)} style={{ width: '100%' }}>
-              {PIPELINE_TYPES.map((p) => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
-            </select>
+            <p id="cn-pipeline-label" className="label" style={{ marginBottom: 6 }}>Tipo de Pipeline</p>
+            <PipelineCards value={pipelineType} onChange={setPipelineType} labelledBy="cn-pipeline-label" />
           </div>
 
           {/* LLM Selector */}
           <div className="cn-sec" data-tour="cn-model" style={cv({ '--i': 2 })}>
             <p className="label" style={{ marginBottom: 6 }}>Modelo de Planificación</p>
             <div style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
-              <select value={provider} onChange={(e) => setProvider(e.target.value)} style={{ width: '100%' }}>
+              <select value={provider} onChange={(e) => changeProvider(e.target.value)} style={{ width: '100%' }}>
                 {PROVIDERS.map((p) => (
                   <option key={p.provider} value={p.provider}>{p.label}</option>
                 ))}
@@ -699,217 +749,225 @@ export default function NewCampaignPage() {
             <ArrowRight size={12} color="var(--rai-gold)" style={{ flexShrink: 0 }} />
           </Link>
 
-          <div className="divider" />
+          {optionalOpen ? (
+            <div className="cn-optional fx-field-in">
+              <div className="divider" />
 
-          {/* Inventario */}
-          <div className="cn-sec" data-tour="cn-folder" style={cv({ '--i': 5 })}>
-            <p className="label" style={{ marginBottom: 6 }}>
-              <FolderSearch size={11} style={{ marginRight: 4, display: 'inline' }} />
-              Carpeta de planificación del workspace
-            </p>
-            <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginBottom: 6 }}>
-              Usa una ruta habilitada por el administrador y organízala en subcarpetas &quot;Día 1&quot;, &quot;Día 2&quot;, etc.
-            </p>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <input
-                value={inventoryPath}
-                onChange={(e) => setInventoryPath(e.target.value)}
-                placeholder="Ruta habilitada dentro de tu inventario"
-                style={{ flex: 1 }}
-              />
-              <button
-                onClick={scanInventory}
-                disabled={!inventoryPath.trim() || scanningInventory}
-                className="btn btn-secondary btn-sm"
-                style={{ whiteSpace: 'nowrap' }}
-              >
-                {scanningInventory ? <Spinner size="sm" /> : <Search size={12} />}
-                Escanear
-              </button>
-            </div>
-
-            {/* Warning de estructura */}
-            {inventoryWarning && (
-              <div
-                style={{
-                  marginTop: 8,
-                  padding: '8px 10px',
-                  background: 'rgba(245,158,11,0.08)',
-                  border: '1px solid rgba(245,158,11,0.2)',
-                  borderRadius: 6,
-                }}
-              >
-                <p style={{ fontSize: 11, color: '#fcd34d', fontWeight: 600 }}>
-                  ⚠️ Estructura no reconocida
+              {/* Inventario */}
+              <div className="cn-sec" data-tour="cn-folder">
+                <p className="label" style={{ marginBottom: 6 }}>
+                  <FolderSearch size={11} style={{ marginRight: 4, display: 'inline' }} />
+                  Carpeta de planificación del workspace
                 </p>
-                <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginTop: 4, lineHeight: 1.5 }}>
-                  {inventoryWarning}
+                <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginBottom: 6 }}>
+                  Usa una ruta habilitada por el administrador y organízala en subcarpetas &quot;Día 1&quot;, &quot;Día 2&quot;, etc.
                 </p>
-                {rootFilesCount > 0 && (
-                  <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginTop: 4 }}>
-                    📁 {rootFilesCount} archivos multimedia detectados en la raíz
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Grid de días */}
-            {inventory.length > 0 && (
-              <div style={{ marginTop: 10 }}>
-                <p style={{ fontSize: 11, color: 'var(--rai-muted)', marginBottom: 6 }}>
-                  {inventory.filter((d) => d.hasContent).length} de {inventory.length} días con assets
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                  {inventory.map((day) => (
-                    <div
-                      key={day.dayNumber}
-                      title={`Día ${day.dayNumber}: ${day.existingAssets.length} archivos`}
-                      style={{
-                        width: 18,
-                        height: 18,
-                        borderRadius: 4,
-                        background: day.hasContent ? 'var(--rai-gold)' : day.existingAssets.length > 0 ? 'var(--rai-muted)' : 'var(--rai-border)',
-                        fontSize: 8,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: day.hasContent ? '#000' : 'var(--rai-muted)',
-                        fontWeight: 700,
-                        cursor: 'default',
-                      }}
-                    >
-                      {day.dayNumber}
-                    </div>
-                  ))}
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input
+                    value={inventoryPath}
+                    onChange={(e) => setInventoryPath(e.target.value)}
+                    placeholder="Ruta habilitada dentro de tu inventario"
+                    style={{ flex: 1 }}
+                  />
+                  <button
+                    onClick={scanInventory}
+                    disabled={!inventoryPath.trim() || scanningInventory}
+                    className="btn btn-secondary btn-sm"
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    {scanningInventory ? <Spinner size="sm" /> : <Search size={12} />}
+                    Escanear
+                  </button>
                 </div>
-                <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginTop: 6 }}>
-                  🟡 Con assets &nbsp; ⚫ Vacío
-                </p>
+
+                {/* Warning de estructura */}
+                {inventoryWarning && (
+                  <div
+                    style={{
+                      marginTop: 8,
+                      padding: '8px 10px',
+                      background: 'rgba(245,158,11,0.08)',
+                      border: '1px solid rgba(245,158,11,0.2)',
+                      borderRadius: 6,
+                    }}
+                  >
+                    <p style={{ fontSize: 11, color: '#fcd34d', fontWeight: 600 }}>
+                      ⚠️ Estructura no reconocida
+                    </p>
+                    <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginTop: 4, lineHeight: 1.5 }}>
+                      {inventoryWarning}
+                    </p>
+                    {rootFilesCount > 0 && (
+                      <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginTop: 4 }}>
+                        📁 {rootFilesCount} archivos multimedia detectados en la raíz
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Grid de días */}
+                {inventory.length > 0 && (
+                  <div style={{ marginTop: 10 }}>
+                    <p style={{ fontSize: 11, color: 'var(--rai-muted)', marginBottom: 6 }}>
+                      {inventory.filter((d) => d.hasContent).length} de {inventory.length} días con assets
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {inventory.map((day) => (
+                        <div
+                          key={day.dayNumber}
+                          title={`Día ${day.dayNumber}: ${day.existingAssets.length} archivos`}
+                          style={{
+                            width: 18,
+                            height: 18,
+                            borderRadius: 4,
+                            background: day.hasContent ? 'var(--rai-gold)' : day.existingAssets.length > 0 ? 'var(--rai-muted)' : 'var(--rai-border)',
+                            fontSize: 8,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: day.hasContent ? '#000' : 'var(--rai-muted)',
+                            fontWeight: 700,
+                            cursor: 'default',
+                          }}
+                        >
+                          {day.dayNumber}
+                        </div>
+                      ))}
+                    </div>
+                    <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginTop: 6 }}>
+                      🟡 Con assets &nbsp; ⚫ Vacío
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Manual de Marca */}
-          <div className="cn-sec" data-tour="cn-brand" style={cv({ '--i': 6 })}>
-            <p className="label" style={{ marginBottom: 6 }}>Manual de Marca (opcional)</p>
-            <textarea
-              value={brandInput}
-              onChange={(e) => setBrandInput(e.target.value)}
-              placeholder="Pega aquí: nombre, tono, audiencia, productos, hashtags, topics prohibidos..."
-              style={{ width: '100%', minHeight: 100, fontSize: 12 }}
-            />
-          </div>
-
-          {/* ─── Investigar Competencia ─── */}
-          <div className="cn-sec" data-tour="cn-competitor" style={cv({ '--i': 7 })}>
-            <p className="label" style={{ marginBottom: 8 }}>
-              <Search size={11} style={{ marginRight: 4, display: 'inline' }} />
-              Investigar Competencia (opcional)
-            </p>
-
-            {/* Mode tabs */}
-            <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
-              <button
-                onClick={() => setCompetitorMode('urls')}
-                className={competitorMode === 'urls' ? 'btn btn-secondary btn-sm' : 'btn btn-ghost btn-sm'}
-                style={{ flex: 1, gap: 4, fontSize: 11 }}
-              >
-                <Globe size={10} /> URLs / Webs
-              </button>
-              <button
-                onClick={() => setCompetitorMode('ads-library')}
-                className={competitorMode === 'ads-library' ? 'btn btn-secondary btn-sm' : 'btn btn-ghost btn-sm'}
-                style={{ flex: 1, gap: 4, fontSize: 11 }}
-              >
-                <Megaphone size={10} /> Meta Ads
-              </button>
-            </div>
-
-            {/* URL mode */}
-            {competitorMode === 'urls' && (
-              <>
+              {/* Manual de Marca */}
+              <div className="cn-sec" data-tour="cn-brand">
+                <p className="label" style={{ marginBottom: 6 }}>Manual de Marca (opcional)</p>
                 <textarea
-                  value={competitorUrls}
-                  onChange={(e) => setCompetitorUrls(e.target.value)}
-                  placeholder={"https://instagram.com/competidor1\nhttps://competidor2.com"}
-                  style={{ width: '100%', minHeight: 60, fontSize: 12 }}
+                  value={brandInput}
+                  onChange={(e) => setBrandInput(e.target.value)}
+                  placeholder="Pega aquí: nombre, tono, audiencia, productos, hashtags, topics prohibidos..."
+                  style={{ width: '100%', minHeight: 100, fontSize: 12 }}
                 />
-                <button
-                  onClick={analyzeCompetitors}
-                  disabled={!competitorUrls.trim() || analyzingCompetitors}
-                  className="btn btn-ghost btn-sm"
-                  style={{ width: '100%', marginTop: 6, gap: 6 }}
-                >
-                  {analyzingCompetitors ? (
-                    <><Spinner size="sm" /> Investigando con IA...</>
-                  ) : (
-                    <>Analizar Competencia</>
-                  )}
-                </button>
-                {competitorInsights && (
-                  <div style={{ marginTop: 8, padding: '8px 10px', background: 'rgba(46,196,182,0.08)', border: '1px solid rgba(46,196,182,0.2)', borderRadius: 6 }}>
-                    <p style={{ fontSize: 11, color: 'var(--rai-success)', fontWeight: 600 }}>
-                      Análisis listo: {competitorInsights.painPoints.length + competitorInsights.opportunities.length} insights
-                    </p>
-                    <p style={{ fontSize: 11, color: 'var(--rai-muted)', marginTop: 4, lineHeight: 1.5 }}>
-                      {competitorInsights.rawSummary.slice(0, 120)}...
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
+              </div>
 
-            {/* Ads Library mode */}
-            {competitorMode === 'ads-library' && (
-              <>
-                <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginBottom: 8, lineHeight: 1.5 }}>
-                  Analiza anuncios activos en Meta Ads Library y genera un reporte HTML con gráficos.
+              {/* ─── Investigar Competencia ─── */}
+              <div className="cn-sec" data-tour="cn-competitor">
+                <p className="label" style={{ marginBottom: 8 }}>
+                  <Search size={11} style={{ marginRight: 4, display: 'inline' }} />
+                  Investigar Competencia (opcional)
                 </p>
-                <input
-                  value={adsLibraryBrand}
-                  onChange={(e) => setAdsLibraryBrand(e.target.value)}
-                  placeholder="Nombre de la marca (ej: Nike)"
-                  style={{ width: '100%', marginBottom: 6 }}
-                />
-                <select
-                  value={adsLibraryCountry}
-                  onChange={(e) => setAdsLibraryCountry(e.target.value)}
-                  style={{ width: '100%', marginBottom: 8 }}
-                >
-                  {COUNTRY_OPTIONS.map((c) => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
-                  ))}
-                </select>
-                <button
-                  onClick={analyzeAdsLibrary}
-                  disabled={!adsLibraryBrand.trim() || analyzingAdsLibrary}
-                  className="btn btn-ghost btn-sm"
-                  style={{ width: '100%', gap: 6 }}
-                >
-                  {analyzingAdsLibrary ? (
-                    <><Spinner size="sm" /> Analizando Ads Library...</>
-                  ) : (
-                    <>Analizar Ads Library</>
-                  )}
-                </button>
-                {adsLibraryResult && (
-                  <div style={{ marginTop: 8, padding: '8px 10px', background: 'rgba(46,196,182,0.08)', border: '1px solid rgba(46,196,182,0.2)', borderRadius: 6 }}>
-                    <p style={{ fontSize: 11, color: 'var(--rai-success)', fontWeight: 600 }}>
-                      {adsLibraryResult.adsFound} anuncios analizados
-                      {!adsLibraryResult.scrapedOk && ' (análisis IA)'}
-                    </p>
+
+                {/* Mode tabs */}
+                <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
+                  <button
+                    onClick={() => setCompetitorMode('urls')}
+                    className={competitorMode === 'urls' ? 'btn btn-secondary btn-sm' : 'btn btn-ghost btn-sm'}
+                    style={{ flex: 1, gap: 4, fontSize: 11 }}
+                  >
+                    <Globe size={10} /> URLs / Webs
+                  </button>
+                  <button
+                    onClick={() => setCompetitorMode('ads-library')}
+                    className={competitorMode === 'ads-library' ? 'btn btn-secondary btn-sm' : 'btn btn-ghost btn-sm'}
+                    style={{ flex: 1, gap: 4, fontSize: 11 }}
+                  >
+                    <Megaphone size={10} /> Meta Ads
+                  </button>
+                </div>
+
+                {/* URL mode */}
+                {competitorMode === 'urls' && (
+                  <>
+                    <textarea
+                      value={competitorUrls}
+                      onChange={(e) => setCompetitorUrls(e.target.value)}
+                      placeholder={"https://instagram.com/competidor1\nhttps://competidor2.com"}
+                      style={{ width: '100%', minHeight: 60, fontSize: 12 }}
+                    />
                     <button
-                      onClick={openAdsLibraryReport}
+                      onClick={analyzeCompetitors}
+                      disabled={!competitorUrls.trim() || analyzingCompetitors}
                       className="btn btn-ghost btn-sm"
-                      style={{ width: '100%', marginTop: 6, gap: 6, fontSize: 11 }}
+                      style={{ width: '100%', marginTop: 6, gap: 6 }}
                     >
-                      <FileText size={10} /> Ver Reporte HTML
+                      {analyzingCompetitors ? (
+                        <><Spinner size="sm" /> Investigando con IA...</>
+                      ) : (
+                        <>Analizar Competencia</>
+                      )}
                     </button>
-                  </div>
+                    {competitorInsights && (
+                      <div style={{ marginTop: 8, padding: '8px 10px', background: 'rgba(46,196,182,0.08)', border: '1px solid rgba(46,196,182,0.2)', borderRadius: 6 }}>
+                        <p style={{ fontSize: 11, color: 'var(--rai-success)', fontWeight: 600 }}>
+                          Análisis listo: {competitorInsights.painPoints.length + competitorInsights.opportunities.length} insights
+                        </p>
+                        <p style={{ fontSize: 11, color: 'var(--rai-muted)', marginTop: 4, lineHeight: 1.5 }}>
+                          {competitorInsights.rawSummary.slice(0, 120)}...
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
-              </>
-            )}
-          </div>
+
+                {/* Ads Library mode */}
+                {competitorMode === 'ads-library' && (
+                  <>
+                    <p style={{ fontSize: 10, color: 'var(--rai-muted)', marginBottom: 8, lineHeight: 1.5 }}>
+                      Analiza anuncios activos en Meta Ads Library y genera un reporte HTML con gráficos.
+                    </p>
+                    <input
+                      value={adsLibraryBrand}
+                      onChange={(e) => setAdsLibraryBrand(e.target.value)}
+                      placeholder="Nombre de la marca (ej: Nike)"
+                      style={{ width: '100%', marginBottom: 6 }}
+                    />
+                    <select
+                      value={adsLibraryCountry}
+                      onChange={(e) => setAdsLibraryCountry(e.target.value)}
+                      style={{ width: '100%', marginBottom: 8 }}
+                    >
+                      {COUNTRY_OPTIONS.map((c) => (
+                        <option key={c.value} value={c.value}>{c.label}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={analyzeAdsLibrary}
+                      disabled={!adsLibraryBrand.trim() || analyzingAdsLibrary}
+                      className="btn btn-ghost btn-sm"
+                      style={{ width: '100%', gap: 6 }}
+                    >
+                      {analyzingAdsLibrary ? (
+                        <><Spinner size="sm" /> Analizando Ads Library...</>
+                      ) : (
+                        <>Analizar Ads Library</>
+                      )}
+                    </button>
+                    {adsLibraryResult && (
+                      <div style={{ marginTop: 8, padding: '8px 10px', background: 'rgba(46,196,182,0.08)', border: '1px solid rgba(46,196,182,0.2)', borderRadius: 6 }}>
+                        <p style={{ fontSize: 11, color: 'var(--rai-success)', fontWeight: 600 }}>
+                          {adsLibraryResult.adsFound} anuncios analizados
+                          {!adsLibraryResult.scrapedOk && ' (análisis IA)'}
+                        </p>
+                        <button
+                          onClick={openAdsLibraryReport}
+                          className="btn btn-ghost btn-sm"
+                          style={{ width: '100%', marginTop: 6, gap: 6, fontSize: 11 }}
+                        >
+                          <FileText size={10} /> Ver Reporte HTML
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          ) : (
+            <p className="cn-more-hint" data-tour="cn-more">
+              Al escribir el nombre de la campaña aparecerán los campos opcionales: carpeta de planificación, manual de marca y competencia.
+            </p>
+          )}
 
           {/* Estimado de costos */}
           {messages.length >= 2 && (

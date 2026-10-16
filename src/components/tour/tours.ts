@@ -420,18 +420,19 @@ export const CAMPAIGN_NEW: ModuleTour = {
       title: 'Define lo básico',
       body: 'Empieza por un nombre que te ayude a reconocer la campaña. Luego elige el formato y las herramientas de IA.',
       hints: [
-        { target: dataTour('cn-pipeline'), label: 'Tipo de pipeline: UGC, Avatar Reel, anuncios estáticos o carruseles.' },
+        { target: dataTour('cn-pipeline'), label: 'Tipo de pipeline: elige una tarjeta (UGC, Avatar Reel, anuncios estáticos o carruseles).' },
         { target: dataTour('cn-model'), label: 'Modelo de planificación: la IA que conversa contigo y arma el plan.' },
         { target: dataTour('cn-image'), label: 'Generación de imágenes: el proveedor que creará las imágenes.' },
       ],
     },
     {
       id: 'material',
-      target: dataTour('cn-folder'),
+      // Los campos opcionales aparecen al nombrar la campaña; hasta entonces se señala el aviso que los anuncia.
+      target: `${dataTour('cn-folder')}, ${dataTour('cn-more')}`,
       placement: 'right',
       optional: true,
       title: 'Aporta tu material',
-      body: 'Todo esto es opcional, pero mientras más contexto des, mejor sale el plan.',
+      body: 'Estos campos aparecen al nombrar tu campaña. Todo es opcional, pero mientras más contexto des, mejor sale el plan.',
       hints: [
         { target: dataTour('cn-brand'), label: 'Manual de marca: tono, audiencia, productos y temas prohibidos.' },
         { target: dataTour('cn-competitor'), label: 'Competencia: analiza webs o anuncios de Meta para inspirarte.' },
