@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import React, { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -32,8 +32,7 @@ import {
   Store,
   Menu,
   X,
-  PanelLeftClose,
-  ChevronRight,
+  ChevronLeft,
 } from 'lucide-react';
 import { hasModuleAccess, ROLE_LABELS, type Role } from '@/lib/roles-shared';
 import { apiFetch } from '@/lib/client-api';
@@ -82,6 +81,8 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
   const [role, setRole] = useState<Role | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [tip, setTip] = useState<{ label: string; top: number } | null>(null);
+  const waveTimer = useRef<number | null>(null);
 
   // El atributo lo fija un script en <head> (sin parpadeo); aquí solo se sincroniza el estado.
   const applyCollapsed = useCallback((value: boolean) => {
@@ -95,6 +96,11 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
       /* sin almacenamiento: la preferencia solo dura la sesión */
     }
     setCollapsed(value);
+    setTip(null);
+    // Onda de iconos y destello del borde: solo dura lo que la animación.
+    root.classList.add('sb-wave');
+    if (waveTimer.current) window.clearTimeout(waveTimer.current);
+    waveTimer.current = window.setTimeout(() => root.classList.remove('sb-wave'), 1100);
   }, []);
 
   useEffect(() => {
@@ -143,6 +149,12 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
     setMobileOpen(false);
   }, [pathname]);
 
+  const showTip = (label: string, el: HTMLElement) => {
+    if (document.documentElement.getAttribute('data-sidebar') !== 'collapsed') return;
+    const r = el.getBoundingClientRect();
+    setTip({ label, top: r.top + r.height / 2 });
+  };
+
   const visibleItems = NAV_ITEMS.filter((item) => !role || hasModuleAccess(role, item.href));
 
   return (
@@ -177,19 +189,21 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
         onClick={() => setMobileOpen(false)}
       />
 
-      {/* Pestaña para volver a mostrar el menú (solo escritorio, con el menú oculto) */}
+      {/* Botón flotante en el borde del menú: lo reduce a iconos y lo vuelve a expandir (solo escritorio) */}
       <button
         type="button"
-        className="sb-reopen"
-        aria-label="Mostrar menú lateral"
-        title="Mostrar menú (Ctrl+B)"
-        tabIndex={collapsed ? 0 : -1}
-        onClick={() => applyCollapsed(false)}
+        className="sb-toggle"
+        aria-label={collapsed ? 'Expandir menú lateral' : 'Reducir menú lateral'}
+        aria-expanded={!collapsed}
+        title={collapsed ? 'Expandir menú (Ctrl+B)' : 'Reducir menú (Ctrl+B)'}
+        data-tour="sidebar-toggle"
+        onClick={() => applyCollapsed(!collapsed)}
       >
-        <ChevronRight size={16} />
+        <ChevronLeft size={15} strokeWidth={2.6} />
       </button>
+      <span className="sb-sweep" aria-hidden="true" />
 
-      <aside className={`app-sidebar ${mobileOpen ? 'open' : ''}`} aria-hidden={collapsed || undefined}>
+      <aside className={`app-sidebar ${mobileOpen ? 'open' : ''}`}>
       {/* Logo */}
       <div
         className="sb-brand"
@@ -214,7 +228,7 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
               filter: 'drop-shadow(0 0 8px rgba(123, 94, 167, 0.4))',
             }}
           />
-          <div>
+          <div className="sb-label sb-brandtext">
             <div
               className="gradient-text"
               style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}
@@ -225,18 +239,6 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
               Agency CRM
             </div>
           </div>
-          <button
-            type="button"
-            className="sb-toggle"
-            aria-label="Ocultar menú lateral"
-            aria-expanded={!collapsed}
-            title="Ocultar menú (Ctrl+B)"
-            data-tour="sidebar-toggle"
-            tabIndex={collapsed ? -1 : 0}
-            onClick={() => applyCollapsed(true)}
-          >
-            <PanelLeftClose size={16} />
-          </button>
         </div>
       </div>
 
@@ -248,12 +250,15 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
             <Link
               key={href}
               href={href}
-              tabIndex={collapsed ? -1 : undefined}
+              aria-label={label}
+              onMouseEnter={(e) => showTip(label, e.currentTarget)}
+              onFocus={(e) => showTip(label, e.currentTarget)}
+              onMouseLeave={() => setTip(null)}
+              onBlur={() => setTip(null)}
               style={{
                 ...cv({ '--i': idx + 1 }),
                 display: 'flex',
                 alignItems: 'center',
-                gap: 10,
                 padding: '10px 12px',
                 borderRadius: 8,
                 marginBottom: 2,
@@ -266,8 +271,8 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
               }}
               className={isActive ? 'nav-active' : 'nav-item'}
             >
-              <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
-              {label}
+              <Icon size={18} strokeWidth={isActive ? 2.5 : 2} className="sb-ic" />
+              <span className="sb-label">{label}</span>
             </Link>
           );
         })}
@@ -286,20 +291,19 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
             fontSize: 12,
             color: 'var(--rai-muted)',
           }}
         >
           {n8nConnected ? (
             <>
-              <Wifi size={12} color="var(--rai-success)" />
-              <span style={{ color: 'var(--rai-success)' }}>n8n conectado</span>
+              <Wifi size={14} color="var(--rai-success)" />
+              <span className="sb-label" style={{ color: 'var(--rai-success)' }}>n8n conectado</span>
             </>
           ) : (
             <>
-              <WifiOff size={12} />
-              <span>n8n no configurado</span>
+              <WifiOff size={14} />
+              <span className="sb-label">n8n no configurado</span>
             </>
           )}
         </div>
@@ -309,20 +313,24 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
               marginTop: 8,
               display: 'flex',
               alignItems: 'center',
-              gap: 6,
               fontSize: 11,
               color: 'var(--rai-muted)',
             }}
           >
-            <ShieldCheck size={12} color="var(--rai-gold)" />
-            <span>Rol: {ROLE_LABELS[role]}</span>
+            <ShieldCheck size={14} color="var(--rai-gold)" />
+            <span className="sb-label">Rol: {ROLE_LABELS[role]}</span>
           </div>
         )}
-        <div style={{ marginTop: 8, fontSize: 11, color: 'var(--rai-muted)', opacity: 0.6 }}>
+        <div className="sb-label sb-copy" style={{ marginTop: 8, fontSize: 11, color: 'var(--rai-muted)', opacity: 0.6 }}>
           RAI Agency © 2025
         </div>
       </div>
     </aside>
+      {collapsed && tip && (
+        <div key={tip.label} className="sb-tip" role="tooltip" style={{ top: tip.top }}>
+          {tip.label}
+        </div>
+      )}
     </>
   );
 }

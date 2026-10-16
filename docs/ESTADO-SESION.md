@@ -177,7 +177,8 @@
 - Corrección global: en móvil `.top-bar` quedaba 56 px más abajo y tapaba el inicio del contenido (`top:56px` → `top:0`).
 - Zona horaria por defecto `America/Caracas`; la API de programación responde 503 `schema_pending` si falta la tabla `ScheduledPost`.
 
-## Menú lateral ocultable (15 oct 2026)
-- Botón en la cabecera del menú (y atajo Ctrl/Cmd+B) oculta el sidebar en escritorio; una pestaña en el borde izquierdo lo vuelve a mostrar. La preferencia se guarda en `localStorage` (`rai-sidebar-collapsed-v1`) y un script en `<head>` evita el parpadeo al cargar.
-- Animación: el menú se desliza y el contenido gana el espacio (`margin-left`); logo, 22 enlaces y pie entran/salen en cascada (orden inverso al ocultar). Solo `transform`/`opacity` salvo el margen del contenido. Respeta `prefers-reduced-motion`.
-- En móvil no cambia nada (sigue el cajón con botón de hamburguesa). El recorrido general del CRM abre el menú antes de señalarlo y explica el botón.
+## Menú lateral reducible a iconos (15 oct 2026)
+- Botón circular flotante sobre el borde del menú (chevron que gira 180° con resorte) y atajo Ctrl/Cmd+B: el menú pasa de 260 px a una columna de 64 px con solo los iconos (18 px, centrados). Preferencia en `localStorage` (`rai-sidebar-collapsed-v1`); script en `<head>` evita el parpadeo.
+- Efectos (todos con `transform`/`opacity`, salvo el ancho del menú y el margen del contenido): ancho con curva expo-out, etiquetas que se pliegan y deslizan en cascada (orden inverso al reducir), onda de iconos que «saltan» en cascada, vuelta del logo, destello dorado que recorre el borde y tooltip de cada icono al pasar el mouse o enfocar. Respeta `prefers-reduced-motion` (el cambio es instantáneo).
+- Móvil sin cambios (cajón con hamburguesa). El recorrido general del CRM expande el menú antes de señalarlo y explica el botón.
+- Verificado: iconos, logo y estado centrados en la columna de 64 px; 0 desborde horizontal; 133 transiciones y 5 animaciones creadas al alternar.

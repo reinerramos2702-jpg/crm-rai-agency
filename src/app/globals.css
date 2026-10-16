@@ -2944,36 +2944,67 @@ button.dash-chip.is-on{background:color-mix(in srgb,var(--rai-gold) 15%,transpar
   .cn-chat-head .btn{width:100%}
 }
 
-/* ═══════════ Menú lateral ocultable (sb-*) — solo escritorio ═══════════ */
-.sb-toggle,.sb-reopen{display:none}
+/* ═══════════ Menú lateral reducible a iconos (sb-*) — solo escritorio ═══════════ */
+.sb-toggle,.sb-sweep,.sb-tip{display:none}
 .app-sidebar nav a{transition:background-color .2s ease,color .2s ease,border-color .2s ease}
+.sb-label{margin-left:10px;white-space:nowrap}
+.sb-foot .sb-label{margin-left:8px}
+.sb-foot .sb-copy{margin-left:0}
+.sb-brandtext{margin-left:10px}
 
 @media (min-width:769px){
-  .sb-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;margin-left:auto;flex-shrink:0;padding:0 !important;border-radius:10px !important;border:1px solid var(--rai-border) !important;background:transparent !important;color:var(--rai-muted) !important;cursor:pointer;box-shadow:none !important;transition:color .2s ease,border-color .2s ease,background-color .2s ease}
-  .sb-toggle:focus-visible,.sb-reopen:focus-visible{outline:2px solid var(--rai-gold);outline-offset:2px}
-  @media (hover:hover){.sb-toggle:hover{color:var(--rai-gold) !important;border-color:var(--rai-gold) !important;background:rgba(201,168,76,.08) !important}}
+  html[data-sidebar="collapsed"]{--sidebar-width:64px}
+  .app-sidebar{overflow-x:hidden}
+  html[data-sidebar="collapsed"] .app-sidebar{scrollbar-width:none}
+  html[data-sidebar="collapsed"] .app-sidebar::-webkit-scrollbar{display:none}
 
-  .sb-reopen{display:flex;position:fixed;left:0;top:50%;margin-top:-28px;width:22px;height:56px;align-items:center;justify-content:center;padding:0 !important;border:1px solid var(--rai-border) !important;border-left:0 !important;border-radius:0 12px 12px 0 !important;background:var(--rai-card) !important;color:var(--rai-gold) !important;cursor:pointer;box-shadow:none !important;z-index:90;opacity:0;transform:translateX(-100%);pointer-events:none}
-  @media (hover:hover){.sb-reopen:hover{width:30px;background:var(--rai-dark) !important}}
-  html[data-sidebar="collapsed"] .sb-reopen{opacity:1;transform:none;pointer-events:auto}
+  /* Reducido: etiquetas fuera, iconos centrados en la columna de 64 px */
+  .sb-label{display:inline-block;max-width:220px;overflow:hidden;vertical-align:middle}
+  html[data-sidebar="collapsed"] .sb-label{max-width:0;margin-left:0;opacity:0;transform:translateX(-10px)}
+  html[data-sidebar="collapsed"] .app-sidebar nav a{padding-left:15px !important}
+  html[data-sidebar="collapsed"] .sb-brand{padding-left:12px !important;padding-right:0 !important}
+  html[data-sidebar="collapsed"] .sb-foot{padding-left:25px !important;padding-right:0 !important}
+  .sb-foot > div{overflow:hidden}
 
-  html[data-sidebar="collapsed"] .app-sidebar{transform:translateX(-100%);visibility:hidden}
-  html[data-sidebar="collapsed"] .app-main{margin-left:0}
+  /* Botón flotante sobre el borde del menú */
+  .sb-toggle{display:grid;place-items:center;position:fixed;top:68px;left:calc(var(--sidebar-width) - 14px);z-index:110;width:28px;height:28px;padding:0 !important;border-radius:50% !important;border:1px solid var(--rai-border) !important;background:var(--rai-card) !important;color:var(--rai-muted) !important;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35) !important}
+  .sb-toggle svg{display:block}
+  html[data-sidebar="collapsed"] .sb-toggle svg{transform:rotate(180deg)}
+  .sb-toggle:focus-visible{outline:2px solid var(--rai-gold);outline-offset:2px}
+  @media (hover:hover){.sb-toggle:hover{color:#000 !important;background:var(--rai-gold) !important;border-color:var(--rai-gold) !important;box-shadow:0 0 0 4px rgba(201,168,76,.18),0 6px 18px rgba(201,168,76,.28) !important}}
 
-  /* Estado base de los elementos que se escalonan al ocultar/mostrar */
-  .app-sidebar nav a,.sb-brand,.sb-foot{--sb-d:calc(var(--i,0) * 22ms + 140ms)}
-  html[data-sidebar="collapsed"] .app-sidebar nav a,
-  html[data-sidebar="collapsed"] .sb-brand,
-  html[data-sidebar="collapsed"] .sb-foot{opacity:0;transform:translateX(-16px);--sb-d:calc((24 - var(--i,0)) * 9ms)}
+  /* Destello dorado que recorre el borde del menú */
+  .sb-sweep{display:block;position:fixed;top:0;bottom:0;left:calc(var(--sidebar-width) - 2px);width:2px;z-index:105;pointer-events:none;overflow:hidden;opacity:0}
+  .sb-sweep::after{content:'';position:absolute;left:0;right:0;top:0;height:38%;background:linear-gradient(180deg,transparent,var(--rai-gold),transparent);transform:translateY(-100%)}
+
+  /* Tooltip de cada icono cuando el menú está reducido */
+  .sb-tip{display:block;position:fixed;left:72px;z-index:120;transform:translateY(-50%);padding:6px 12px;border-radius:10px;font-size:12px;font-weight:600;color:var(--rai-text);background:var(--rai-card);border:1px solid var(--rai-border);box-shadow:0 8px 22px rgba(0,0,0,.4);white-space:nowrap;pointer-events:none}
 }
 
 @media (min-width:769px) and (prefers-reduced-motion:no-preference){
-  html.sb-anim .app-sidebar{transition:transform .42s cubic-bezier(.22,1,.36,1) .12s,visibility 0s linear .54s}
-  html.sb-anim:not([data-sidebar="collapsed"]) .app-sidebar{transition:transform .42s cubic-bezier(.22,1,.36,1),visibility 0s}
-  html.sb-anim .app-main{transition:margin-left .42s cubic-bezier(.22,1,.36,1) .12s}
-  html.sb-anim:not([data-sidebar="collapsed"]) .app-main{transition:margin-left .42s cubic-bezier(.22,1,.36,1)}
-  html.sb-anim .app-sidebar nav a{transition:background-color .2s ease,color .2s ease,border-color .2s ease,opacity .3s ease var(--sb-d),transform .4s cubic-bezier(.22,1,.36,1) var(--sb-d)}
-  html.sb-anim .sb-brand,html.sb-anim .sb-foot{transition:opacity .3s ease var(--sb-d),transform .4s cubic-bezier(.22,1,.36,1) var(--sb-d)}
-  html.sb-anim .sb-reopen{transition:opacity .3s ease .3s,transform .45s cubic-bezier(.22,1,.36,1) .3s,width .2s ease,background-color .2s ease}
-  html.sb-anim:not([data-sidebar="collapsed"]) .sb-reopen{transition:opacity .15s ease,transform .25s ease}
+  html.sb-anim{--sb-ease:cubic-bezier(.22,1,.36,1);--sb-spring:cubic-bezier(.34,1.56,.64,1)}
+  html.sb-anim .app-sidebar{transition:width .55s var(--sb-ease)}
+  html.sb-anim .app-main{transition:margin-left .55s var(--sb-ease)}
+  html.sb-anim .sb-toggle{transition:left .55s var(--sb-ease),color .2s ease,background-color .2s ease,border-color .2s ease,box-shadow .25s ease}
+  html.sb-anim .sb-toggle svg{transition:transform .6s var(--sb-spring)}
+  html.sb-anim .sb-sweep{transition:left .55s var(--sb-ease)}
+  html.sb-anim .sb-brand,html.sb-anim .sb-foot,html.sb-anim .app-sidebar nav a{transition:padding .5s var(--sb-ease),background-color .2s ease,color .2s ease,border-color .2s ease}
+
+  /* Etiquetas: se deslizan y se pliegan en cascada (al reducir: de abajo hacia arriba; al expandir: de arriba hacia abajo) */
+  html.sb-anim .sb-label{transition:max-width .5s var(--sb-ease) var(--sb-d,0s),margin-left .5s var(--sb-ease) var(--sb-d,0s),opacity .3s ease var(--sb-d,0s),transform .5s var(--sb-ease) var(--sb-d,0s)}
+  .app-sidebar nav a,.sb-brand,.sb-foot{--sb-d:calc(var(--i,0) * 18ms + 60ms)}
+  html[data-sidebar="collapsed"] .app-sidebar nav a,html[data-sidebar="collapsed"] .sb-brand,html[data-sidebar="collapsed"] .sb-foot{--sb-d:calc((24 - var(--i,0)) * 8ms)}
+  .sb-label{--sb-d:inherit}
+
+  /* Onda: los iconos «saltan» en cascada y el logo da una vuelta */
+  @keyframes sb-pop{0%{transform:scale(1)}40%{transform:scale(1.38) rotate(-8deg)}70%{transform:scale(.92)}100%{transform:scale(1)}}
+  @keyframes sb-spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+  @keyframes sb-run{from{transform:translateY(-100%)}to{transform:translateY(300%)}}
+  @keyframes sb-glow{0%,100%{opacity:0}30%{opacity:1}}
+  @keyframes sb-tip-in{from{opacity:0;transform:translate(-8px,-50%)}to{opacity:1;transform:translate(0,-50%)}}
+  html.sb-wave .app-sidebar nav a .sb-ic{animation:sb-pop .6s var(--sb-spring) calc(var(--i,0) * 26ms) both}
+  html.sb-wave .sb-brand img{animation:sb-spin .8s var(--sb-ease) both}
+  html.sb-wave .sb-sweep{animation:sb-glow .9s ease both}
+  html.sb-wave .sb-sweep::after{animation:sb-run .9s var(--sb-ease) both}
+  .sb-tip{animation:sb-tip-in .18s ease-out both}
 }
