@@ -6,13 +6,13 @@ Origen: tres guías de ingeniería que compartió Reiner (15 oct 2026): rendimie
 
 | Práctica | Estado | Dónde / siguiente paso |
 |---|---|---|
-| Stale-while-revalidate (caché local + revalidación) | Hecho | `src/lib/swr-cache.ts`, `use-cached-json.ts`; módulos Launchpad y Generador. Extender a Calendario, Contactos y Conversaciones. |
+| Stale-while-revalidate (caché local + revalidación) | Hecho | `src/lib/swr-cache.ts`, `use-cached-json.ts`; módulos Launchpad, Generador e Inicio (`/api/dashboard/summary` con caché de 10 s en servidor). Extender a Calendario, Contactos y Conversaciones. |
 | Precarga al pasar el mouse/tocar | Hecho | `src/lib/route-data.ts` (`ROUTE_DATA`) |
 | Actualizaciones optimistas | Parcial | Launchpad (marcar paso) y Generador (eliminar). Falta Kanban/pipeline de contactos. |
 | Densidad de interfaz | Hecho | `DensityToggle`, `src/lib/density.ts`, `data-density` |
 | Esqueletos de carga unificados | Hecho | `Skeleton.tsx` (+ `fx-shimmer`) |
 | Animaciones cortas (150–250 ms, curvas ease-out) | Hecho | entradas 220 ms, press 100 ms, anillo de clic 500 ms (única excepción, informativa) |
-| Atajos de teclado | Parcial | Ctrl/Cmd+K (paleta), Ctrl/Cmd+B (menú). Falta: `N` nuevo contacto/campaña, `Esc` unificado en paneles. |
+| Atajos de teclado | Parcial | Ctrl/Cmd+K (paleta), Ctrl/Cmd+B (menú) y, en Inicio, N / R 7 3 P (Ola 3, 16 oct). Falta: `N` nuevo contacto/campaña en los demás módulos y `Esc` unificado en paneles. |
 | Debounce de búsqueda | N/A hoy | el filtro de grillas es local; aplicar 300 ms cuando haya búsqueda contra la API. |
 | Virtualización de tablas | Backlog | solo cuando una lista supere ~500 filas (contactos). Evaluar `@tanstack/react-virtual`. |
 | Paginación por cursor | Backlog | `/api/contacts` y conversaciones al crecer el volumen. |

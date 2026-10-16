@@ -55,3 +55,13 @@ Criterio rector: **efectos profesionales sin saturar**. Un efecto solo entra si 
 - **Pulso de sincronización**: `className="card fx-sync"` y, al llegar datos nuevos, añadir `is-syncing` durante ~1,2 s. Para repetirlo, quitar la clase, forzar un reflujo y volver a añadirla.
 - **Acciones al pasar el cursor**: contenedor `fx-reveal`, grupo de acciones `fx-reveal-actions`.
 - **Densidad**: `comfortable` (por defecto) no cambia nada. `compact` y `spacious` reescriben el padding de `.card`, `td`/`th`, `.lp-item`, el `gap` de `.grid` y el tamaño de letra de `.table` (solo escritorio). La preferencia se guarda en `rai-density-v1` y se fija antes del primer pintado con un script de `<head>`. La transición suave se activa con `html.d-anim`, añadida tras el primer render.
+
+## Registro de la Ola 3 (16 oct 2026)
+
+Sin efectos nuevos de desenfoque: ninguno entró en esta ola y la regla 1 sigue vigente.
+
+- **Nueva Campaña**: se quitó el scroller anidado. El chat ya no tiene scroll propio y el compositor queda fijo (sticky) al pie; la página es la única que se desplaza.
+- **Inicio y Launchpad**: esqueletos de carga con las medidas reales del contenido (sin saltos de diseño), basados en `Skeleton` y `fx-shimmer`.
+- **Anillos de progreso**: por categoría en la Guía de Inicio, sutiles y sin animación llamativa; solo comunican avance.
+- **Generador `[id]`**: wizard sin scrollers anidados (14 archivos).
+- Pendiente de verificar a simple vista: las cuatro pantallas de la ola entre 320 y 1440 px.

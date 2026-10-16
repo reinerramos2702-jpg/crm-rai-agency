@@ -315,7 +315,7 @@ footer{
     <div class="meta-item">REPO: <span>crm-rai-agency</span></div>
     <div class="meta-item">DEPLOY: <span>Vercel — crm-rai-agency.vercel.app</span></div>
     <div class="meta-item">RAMA ACTIVA: <span>security/fase-0 <span style="color:var(--dim)">(publicada en GitHub, seguimiento de origin/security/fase-0)</span></span></div>
-    <div class="meta-item">ÚLTIMA ACTUALIZACIÓN: <span id="updated-date">20 septiembre 2026 (sesión Cowork/OpenCode) — <strong>FASE 00 — Seguridad crítica</strong> en rama <code>security/fase-0</code>: sub-fases 0.1-0.3 <strong>cerradas y commiteadas</strong> + Etapa 4 (diseño RLS) + Etapa 5 (CI+ESLint) <strong>cerradas</strong>. 19 sep: Commit 4 (<code>cb2f057</code>) — <code>super_admin</code>/<code>agency_owner</code> en los 60 guards, <code>gerente</code> fuera de <code>/api/keys</code>; staff operativo hotelero (<code>a7743bb</code>); cron fail-closed + revisión high-value env vars (<code>4533e43</code> arc. <code>pipeline/chat</code> protegido); las 19 rutas con acceso a contenido y claves migradas a scope por <code>workspaceId</code> (<code>8fceff5</code> — <code>userId</code> queda solo como autor, claves BYOK por workspace, migración no-destructiva pendiente de backfill). 20 sep: <strong>PRIORIDAD 0 — auth real cerrada en código</strong> (<code>2ee646f</code>): login/registro por invitación, cookie httpOnly, 173/173 tests, ver item. <strong>Etapa 4 — plan RLS listo</strong> (<code>docs/planning/PLAN-RLS.md</code>, commit docs <code>9d2f280</code>): política por tabla, rol <code>crm_app</code> (sin BYPASSRLS) vs <code>crm_service</code> (BYPASSRLS para cron/worker), inyección vía <code>SET LOCAL</code> dentro de <code>$transaction</code>; hallazgo crítico: <code>DATABASE_URL</code> usa superusuario <code>postgres</code> → RLS nunca aplicaría — ejecución sigue bloqueada hasta Plan Mode con Reiner. <strong>Etapa 5 — CI+ESLint cerrada</strong> (<code>4b2c2d9</code>): workflow GitHub Actions (<code>tsc --noEmit</code> + <code>vitest</code> + <code>npm run lint</code> por push/PR), ESLint con reglas de seguridad, 0 errores/67 warnings de deuda legacy. Pendientes externos que requieren a Reiner: ejecutar RLS (Plan Mode), <code>prisma migrate deploy</code> de migraciones pendientes (incluye backfill de claves BYOK), setear <code>CRON_SECRET</code>/<code>SUPER_ADMIN_EMAILS</code>/<code>JWT_SECRET</code> en Vercel, rotación de Stripe key, decisi&oacute;n del plan Hobby de Vercel (cron). Sin push a remoto. <strong>1 oct 2026:</strong> spec cerrada <code>docs/SPEC-login-registro-ui.md</code> (login/registro premium + auto-registro con workspace propio auto-provisionado, decisión de registro actualizada — ver tarjeta de decisión), rama <code>rai-feat-login-registro-ui</code>; queda en ejecución por OpenCode (orquestador + sub-agentes), loop autónomo sin push/merge/deploy hasta aprobación de Reiner. <strong>5-10 oct 2026 (verificado en repo el 10 oct):</strong> rama <code>rai-feat-login-registro-ui</code> en <code>b9687c7</code> (spec v3 + imágenes + ESTADO-SESION), <strong>sin cambios de código</strong> — la implementación del login/registro <strong>aún no arrancó</strong> (OpenCode sigue pendiente de releer la spec v3 y salir de modo Plan). Hidromáticos Oriente: documento de integración app móvil ↔ CRM versionado aparte en la rama local <code>hidromaticos-docs-integracion-crm</code> (<code>35ba210</code>, base <code>origin/security/fase-0</code>), con 9 preguntas bloqueantes sin responder; <strong>trabajo pausado hasta la reunión de Reiner con el cliente</strong>. Nada publicado en remoto; RLS, migraciones remotas, variables de Vercel, merge y deploy siguen bloqueados. <strong>10 oct 2026 (limpieza, aprobada por Reiner):</strong> eliminados 5 documentos obsoletos de <code>docs/</code>, <code>docs/planning/claude-outputs/</code> (cierre 4 sep y 2 prompts de validación, historia superada) y 2 carpetas vacías <code>Claude outputs</code>. <strong>10 oct 2026 (specs):</strong> <code>docs/SPEC-login-registro-ui.md</code> pasa a <strong>v4</strong> (copy del login, aislamiento de tema, <code>acceptTerms</code>, honeypot, UX/a11y del formulario, e2e, tabla de contraste, deuda diferida); nueva <code>docs/SPEC-sistema-visual-premium.md</code> (efectos <code>fx-*</code> para el resto del CRM, rama <code>rai-feat-visual-premium</code>, precondición: login cerrado). Publicación automática IG+FB y endurecimiento del orquestador quedan como pendientes nuevos (sin spec/implementación aún). Sin cambios de código. <strong>10 oct 2026 (spec IG+FB v2.1):</strong> Reiner confirmó cuenta Instagram Business <code>@raiagency__</code> y dominio oficial <code>raiagency.net</code>; sin Página de Facebook confirmada; nuevo slice 7 y decisión D9 (persistir marca del negocio en DB, hoy solo <code>localStorage</code>); formulario Contenido IG del CRM rellenado provisionalmente por Claude en el navegador 2. <strong>11 oct 2026 (sesión Cowork, local, sin push):</strong> staging modo B (schema <code>staging</code> + rol <code>crm_staging</code>) verificado y la app local funciona contra él (registro/login); arreglo de contraste del botón primario (<code>62de918</code>); spec nueva <code>docs/SPEC-middleware-proteccion-paginas.md</code> (decisión B: proteger páginas en servidor); Página de Facebook <em>RAI Agency</em> creada y enlazada a <code>@raiagency__</code>; app Meta <code>RAI Agency Publisher</code> con permisos <code>instagram_business_*</code>, token generado por Reiner (guardado solo en su gestor de contraseñas) y caso de uso «Administra todo en tu página» agregado; spec de publicación <strong>v2.2</strong> (registro del token, <code>authType</code>); login: toggle «Mantener sesión iniciada» (<code>f4b450a</code>, 30 días, 182/182 tests del área), fondo full-bleed cosmos (<code>81e01b1</code>) y script <code>scripts/reset-password.mjs</code> para staging (<code>65b6782</code>). <strong>11 oct (noche):</strong> registro abierto implementado en local (<code>d387b05</code>, 192/192 tests), fondo «amanecer» aplicado y modelo freemium con planes 34/49/67 USD en borrador (<code>docs/SPEC-planes-monetizacion.md</code>); no desplegar el registro abierto sin gating de planes. Nada enviado a OpenCode; RLS, migraciones remotas, Vercel, merge y deploy siguen bloqueados. <strong>15-16 oct 2026 (local, sin push, rama <code>rai-feat-dashboard-premium</code>):</strong> Corte B de programación IG con Meta simulado, Dashboard premium, Guía de Inicio responsive y recorrido guiado premium con botón «?» en 20 módulos; tsc limpio, lint 0 errores, 281 tests. <strong>15-16 oct 2026 (fase efectos + módulos, local, sin push):</strong> caché SWR con precarga y anillo de clic (<code>7e6cc86</code>); base de efectos sin blur, selector de densidad, <code>Skeleton</code> y <code>EmptyState</code> (<code>d73bb05</code>); Nueva Campaña con tarjetas accesibles y borrador auto-guardado (<code>9153856</code>); Launchpad con hito y pulso (<code>98b76ea</code>); Generador con vista guardada (<code>dddac5b</code>). Verificado: tsc 0 errores, eslint 0, 388 tests, 0 desborde de 320 a 1440 px. Nuevo <code>docs/planning/ROADMAP-ESCALABILIDAD.md</code>. Push, merge y producción siguen bloqueados.</span></div>
+    <div class="meta-item">ÚLTIMA ACTUALIZACIÓN: <span id="updated-date">20 septiembre 2026 (sesión Cowork/OpenCode) — <strong>FASE 00 — Seguridad crítica</strong> en rama <code>security/fase-0</code>: sub-fases 0.1-0.3 <strong>cerradas y commiteadas</strong> + Etapa 4 (diseño RLS) + Etapa 5 (CI+ESLint) <strong>cerradas</strong>. 19 sep: Commit 4 (<code>cb2f057</code>) — <code>super_admin</code>/<code>agency_owner</code> en los 60 guards, <code>gerente</code> fuera de <code>/api/keys</code>; staff operativo hotelero (<code>a7743bb</code>); cron fail-closed + revisión high-value env vars (<code>4533e43</code> arc. <code>pipeline/chat</code> protegido); las 19 rutas con acceso a contenido y claves migradas a scope por <code>workspaceId</code> (<code>8fceff5</code> — <code>userId</code> queda solo como autor, claves BYOK por workspace, migración no-destructiva pendiente de backfill). 20 sep: <strong>PRIORIDAD 0 — auth real cerrada en código</strong> (<code>2ee646f</code>): login/registro por invitación, cookie httpOnly, 173/173 tests, ver item. <strong>Etapa 4 — plan RLS listo</strong> (<code>docs/planning/PLAN-RLS.md</code>, commit docs <code>9d2f280</code>): política por tabla, rol <code>crm_app</code> (sin BYPASSRLS) vs <code>crm_service</code> (BYPASSRLS para cron/worker), inyección vía <code>SET LOCAL</code> dentro de <code>$transaction</code>; hallazgo crítico: <code>DATABASE_URL</code> usa superusuario <code>postgres</code> → RLS nunca aplicaría — ejecución sigue bloqueada hasta Plan Mode con Reiner. <strong>Etapa 5 — CI+ESLint cerrada</strong> (<code>4b2c2d9</code>): workflow GitHub Actions (<code>tsc --noEmit</code> + <code>vitest</code> + <code>npm run lint</code> por push/PR), ESLint con reglas de seguridad, 0 errores/67 warnings de deuda legacy. Pendientes externos que requieren a Reiner: ejecutar RLS (Plan Mode), <code>prisma migrate deploy</code> de migraciones pendientes (incluye backfill de claves BYOK), setear <code>CRON_SECRET</code>/<code>SUPER_ADMIN_EMAILS</code>/<code>JWT_SECRET</code> en Vercel, rotación de Stripe key, decisi&oacute;n del plan Hobby de Vercel (cron). Sin push a remoto. <strong>1 oct 2026:</strong> spec cerrada <code>docs/SPEC-login-registro-ui.md</code> (login/registro premium + auto-registro con workspace propio auto-provisionado, decisión de registro actualizada — ver tarjeta de decisión), rama <code>rai-feat-login-registro-ui</code>; queda en ejecución por OpenCode (orquestador + sub-agentes), loop autónomo sin push/merge/deploy hasta aprobación de Reiner. <strong>5-10 oct 2026 (verificado en repo el 10 oct):</strong> rama <code>rai-feat-login-registro-ui</code> en <code>b9687c7</code> (spec v3 + imágenes + ESTADO-SESION), <strong>sin cambios de código</strong> — la implementación del login/registro <strong>aún no arrancó</strong> (OpenCode sigue pendiente de releer la spec v3 y salir de modo Plan). Hidromáticos Oriente: documento de integración app móvil ↔ CRM versionado aparte en la rama local <code>hidromaticos-docs-integracion-crm</code> (<code>35ba210</code>, base <code>origin/security/fase-0</code>), con 9 preguntas bloqueantes sin responder; <strong>trabajo pausado hasta la reunión de Reiner con el cliente</strong>. Nada publicado en remoto; RLS, migraciones remotas, variables de Vercel, merge y deploy siguen bloqueados. <strong>10 oct 2026 (limpieza, aprobada por Reiner):</strong> eliminados 5 documentos obsoletos de <code>docs/</code>, <code>docs/planning/claude-outputs/</code> (cierre 4 sep y 2 prompts de validación, historia superada) y 2 carpetas vacías <code>Claude outputs</code>. <strong>10 oct 2026 (specs):</strong> <code>docs/SPEC-login-registro-ui.md</code> pasa a <strong>v4</strong> (copy del login, aislamiento de tema, <code>acceptTerms</code>, honeypot, UX/a11y del formulario, e2e, tabla de contraste, deuda diferida); nueva <code>docs/SPEC-sistema-visual-premium.md</code> (efectos <code>fx-*</code> para el resto del CRM, rama <code>rai-feat-visual-premium</code>, precondición: login cerrado). Publicación automática IG+FB y endurecimiento del orquestador quedan como pendientes nuevos (sin spec/implementación aún). Sin cambios de código. <strong>10 oct 2026 (spec IG+FB v2.1):</strong> Reiner confirmó cuenta Instagram Business <code>@raiagency__</code> y dominio oficial <code>raiagency.net</code>; sin Página de Facebook confirmada; nuevo slice 7 y decisión D9 (persistir marca del negocio en DB, hoy solo <code>localStorage</code>); formulario Contenido IG del CRM rellenado provisionalmente por Claude en el navegador 2. <strong>11 oct 2026 (sesión Cowork, local, sin push):</strong> staging modo B (schema <code>staging</code> + rol <code>crm_staging</code>) verificado y la app local funciona contra él (registro/login); arreglo de contraste del botón primario (<code>62de918</code>); spec nueva <code>docs/SPEC-middleware-proteccion-paginas.md</code> (decisión B: proteger páginas en servidor); Página de Facebook <em>RAI Agency</em> creada y enlazada a <code>@raiagency__</code>; app Meta <code>RAI Agency Publisher</code> con permisos <code>instagram_business_*</code>, token generado por Reiner (guardado solo en su gestor de contraseñas) y caso de uso «Administra todo en tu página» agregado; spec de publicación <strong>v2.2</strong> (registro del token, <code>authType</code>); login: toggle «Mantener sesión iniciada» (<code>f4b450a</code>, 30 días, 182/182 tests del área), fondo full-bleed cosmos (<code>81e01b1</code>) y script <code>scripts/reset-password.mjs</code> para staging (<code>65b6782</code>). <strong>11 oct (noche):</strong> registro abierto implementado en local (<code>d387b05</code>, 192/192 tests), fondo «amanecer» aplicado y modelo freemium con planes 34/49/67 USD en borrador (<code>docs/SPEC-planes-monetizacion.md</code>); no desplegar el registro abierto sin gating de planes. Nada enviado a OpenCode; RLS, migraciones remotas, Vercel, merge y deploy siguen bloqueados. <strong>15-16 oct 2026 (local, sin push, rama <code>rai-feat-dashboard-premium</code>):</strong> Corte B de programación IG con Meta simulado, Dashboard premium, Guía de Inicio responsive y recorrido guiado premium con botón «?» en 20 módulos; tsc limpio, lint 0 errores, 281 tests. <strong>15-16 oct 2026 (fase efectos + módulos, local, sin push):</strong> caché SWR con precarga y anillo de clic (<code>7e6cc86</code>); base de efectos sin blur, selector de densidad, <code>Skeleton</code> y <code>EmptyState</code> (<code>d73bb05</code>); Nueva Campaña con tarjetas accesibles y borrador auto-guardado (<code>9153856</code>); Launchpad con hito y pulso (<code>98b76ea</code>); Generador con vista guardada (<code>dddac5b</code>). Verificado: tsc 0 errores, eslint 0, 388 tests, 0 desborde de 320 a 1440 px. Nuevo <code>docs/planning/ROADMAP-ESCALABILIDAD.md</code>. <strong>16 oct 2026 (Ola 3, local, sin push):</strong> voz con Retell en modo simulado (<code>4c49cb8</code>), inicio (<code>5e75580</code>), campaña (<code>11e03e9</code>) y generador (<code>9938a33</code>); tsc 0, eslint 0, 737 tests, build de 72 páginas. Decisión de Reiner: voz real primero, luego Configuración general. Push, merge y producción siguen bloqueados.</span></div>
     <div class="meta-item">ACTUALIZACIÓN OPERATIVA: <span>25 septiembre 2026 — árbol local recuperado en <code>d2989f0</code>; rama <code>security/fase-0</code> publicada y sincronizada con GitHub; protocolo nocturno, mantenimiento continuo, skills internas y evaluación de Jev registrados en la sección OPS. El texto histórico anterior se conserva como cierre de las Etapas 1-5.</span></div>
     <div class="meta-item">TURNO NOCTURNO VALIDADO: <span>25 septiembre 2026 — primera corrida jerárquica completada con orquestador y subagentes backend/frontend/QA en scopes separados; QA revisó después del autor. <code>21b2f5f</code> aisló el inventario por workspace; <code>9e3d3aa</code> eliminó las 67 advertencias de lint; <code>36eaaf3</code> versionó los agentes; <code>c418bef</code> cerró variantes de bypass en guardrails. Validación final: 189/189 tests, <code>tsc --noEmit</code> limpio, ESLint 0 errores/0 warnings y build exitoso de 62 páginas. Rama publicada y sincronizada con <code>origin/security/fase-0</code> hasta <code>c418bef</code>. Único warning no bloqueante: paquete opcional <code>@valkey/valkey-glide</code> de BullMQ. Producción, RLS, migraciones, merge y deploy siguen sin ejecutar.</span></div>
   </div>
@@ -997,7 +997,7 @@ footer{
         <div class="check-title">Agente de voz IA que contesta llamadas con base de conocimiento (GHL «Voice AI»)</div>
         <div class="check-desc">Hoy: asistente de creación y simulador de texto (sin commit); faltan número/SIP, herramientas, transcripciones, resumen, transferencia y métricas. Propuesta: proveedor gestionado (Retell o Vapi) sobre un número de Twilio, con nuestras herramientas por API; piloto con llamada web primero. Detalle en la sección 4 del doc. Antes de producción: RLS, aviso de IA y de grabación, revisión legal.</div>
       </div>
-      <span class="tag tag-open">pendiente — Ola 2 (spike en Ola 1); espera decisión de proveedor y país del número</span>
+      <span class="tag tag-open">pendiente — avance en la sección «Ola 3 — 16 oct» (Retell, modo simulado); la voz real espera a Reiner</span>
     </div>
     <div class="check-item" data-status="pending" data-id="ghl-dx-conversation-ai-produccion">
       <div class="checkbox"></div>
@@ -1094,6 +1094,138 @@ footer{
         <div class="check-desc">Sin evidencia local: no hay modelos <code>SmartList</code>/<code>AdAudience</code>/<code>AdConversionEvent</code>, ni ramas ni commits con «retarget». Localizar la rama (otra máquina o repositorio) antes de seguir con credenciales de Meta y Google.</div>
       </div>
       <span class="tag tag-open">pendiente — requiere a Reiner</span>
+    </div>
+  </div>
+</section>
+
+<!-- OLA 3 — 16 OCT -->
+<section>
+  <div class="section-head">
+    <span class="phase-num">OLA-3</span>
+    <span class="section-title">Ola 3 — 16 oct (voz, inicio, campaña y generador)</span>
+    <span class="section-note">6 hechos — 8 pendientes; decisión: voz real primero, luego Configuración general</span>
+  </div>
+  <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:680px;">Registro de la tercera ola de trabajo de la sesión del 16 oct (no confundir con la «Ola 3» del orden de funciones GHL de la sección anterior). Cuatro commits locales sin push: voz <code>4c49cb8</code>, inicio <code>5e75580</code>, campaña <code>11e03e9</code> y generador <code>9938a33</code>. Decisión de Reiner: primero la voz real con Retell y un número de Venezuela; después, Configuración general.</p>
+  <div class="check-list">
+    <div class="check-item done" data-status="done" data-id="ola3-voz-retell" data-commit="4c49cb8">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Agente de voz entrante con Retell (modo simulado por defecto)</div>
+        <div class="check-desc">Evidencia: commit <code>4c49cb8</code>. <code>src/lib/voice/*</code>, rutas <code>/api/voice/{webhook,kb-search,status,calls,agents}</code> y centro <code>/agentes-ia/voz</code>. Cada llamada es una <code>Conversation</code> de canal <code>voice</code>; webhook firmado e idempotente. <code>VOICE_MODE=simulated</code> por defecto (cero gasto). Documentos: <code>docs/planning/VOZ-RETELL-PLAN.md</code> y <code>docs/planning/VOZ-VENEZUELA-LEGAL.md</code>. Verificado con tsc, eslint, 737 tests y <code>next build</code>.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push) — modo simulado</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola3-inicio" data-commit="5e75580">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Inicio: Hoy, KPIs con periodo y delta, accesos fijables y Guía de Inicio con anillos</div>
+        <div class="check-desc">Evidencia: commit <code>5e75580</code>. <code>/api/dashboard/summary</code> (caché de 10 s y 60 s para KPIs; <code>fresh=1</code>), <code>launchpad-steps.ts</code> como fuente única de pasos, «Más tarde», filtro, <code>?paso=</code>, atajos N / R 7 3 P. GHL adoptado: widgets de citas, conversaciones y tareas, y rango de fechas; descartado: constructor de widgets, plantillas de dashboard y clonación. Verificado: tsc, eslint, vitest y build.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola3-campana" data-commit="11e03e9">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Nueva Campaña: página dividida en 11 componentes, plantillas, costo en vivo y checklist</div>
+        <div class="check-desc">Evidencia: commit <code>11e03e9</code>. <code>/campaign/new</code> pasa de 1131 a 191 líneas (11 componentes, 7 hooks, 10 módulos <code>campaign-*.ts</code>); 8 plantillas por negocio, reutilizar campañas previas, costo en vivo, resumen del plan editable, compositor fijo y chat sin scroll propio. GHL adoptado: checklist del Social Planner, plantillas y duplicar; descartado: A/B, mejor hora y CSV masivo. Verificado: tsc, eslint, vitest y build.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola3-generador" data-commit="9938a33">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Generador de imágenes: plantillas de grilla, duplicar, semana con progreso, calidad de copy y exportación</div>
+        <div class="check-desc">Evidencia: commit <code>9938a33</code>. 4 plantillas de grilla, favoritas, copy por día con puntaje de calidad, exportar .txt/.csv/.json e imágenes, enviar a Contenido IG (<code>campaignRef</code> <code>generador-&lt;id&gt;</code>) y wizard <code>[id]</code> sin scrollers anidados. Corregido el import de <code>wizard.css</code>. Verificado: tsc, eslint, vitest y build.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola3-verificacion" data-commit="9938a33">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Verificación automática de la Ola 3: tsc 0, eslint 0, 737 tests, build de 72 páginas</div>
+        <div class="check-desc">Verificado el 16 oct con <code>tsc --noEmit</code> (0 errores), ESLint (0), Vitest (737 tests) y <code>next build</code> (72 páginas). Cuatro commits locales sin push: <code>4c49cb8</code>, <code>5e75580</code>, <code>11e03e9</code> y <code>9938a33</code>.</div>
+      </div>
+      <span class="tag tag-decided">hecho</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola3-incidente-build-dev" data-commit="9938a33">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Regla: no ejecutar <code>next build</code> con <code>next dev</code> abierto sobre la misma carpeta <code>.next</code></div>
+        <div class="check-desc">Evidencia del incidente: el CSS de localhost se rompió al mezclar ambos. Procedimiento: detener el servidor de desarrollo, borrar <code>.next</code> y reiniciar; para probar producción, usar otro puerto y otra terminal sin mezclar. Verificado después de aplicarlo.</div>
+      </div>
+      <span class="tag tag-decided">hecho — regla documentada</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-decision-voz-primero">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Decisión de Reiner: voz real primero (Retell, número de Venezuela); después, Configuración general</div>
+        <div class="check-desc">Orden acordado el 16 oct. Pasos manuales de Reiner: crear la cuenta de Retell y cargar solo el tope; poner las variables <code>VOICE_PUBLIC_URL</code>, <code>RETELL_API_KEY</code>, <code>VOICE_KB_SECRET</code>, <code>RETELL_VOICE_ID</code>, <code>VOICE_MONTHLY_CAP_USD</code> y <code>VOICE_WEBHOOK_SECRET</code> en Vercel o el entorno; tramitar el número; cambiar a <code>VOICE_MODE=live</code> y pulsar «Activar con Retell». Piloto: tope recomendado de US$ 100 en 2 semanas (aviso a US$ 80; ≈ US$ 91 estimado con ~525 min a 0,14 USD/min, US$ 12 del número y pruebas).</div>
+      </div>
+      <span class="tag tag-open">pendiente — requiere a Reiner</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-voz-numero-ve">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Número venezolano para la voz: local VE en Telnyx por SIP hacia Retell</div>
+        <div class="check-desc">Requiere registro mercantil y comprobante de dirección en Venezuela (~72 h). Mientras tanto, probar con un número de EE. UU. Sin confirmar: tarifas entrantes de Venezuela en Telnyx y desvíos desde CANTV, Movistar y Digitel.</div>
+      </div>
+      <span class="tag tag-open">pendiente — requiere a Reiner; datos sin verificar</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-voz-legal">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Revisión legal de la voz (grabación, aviso de IA, datos personales)</div>
+        <div class="check-desc">Todo lo legal requiere abogado; los documentos no son asesoría. Detalle en <code>docs/planning/VOZ-VENEZUELA-LEGAL.md</code>.</div>
+      </div>
+      <span class="tag tag-open">pendiente — requiere abogado</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-voz-deuda">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Deuda de la voz: ajustes en localStorage, metadatos de llamada en un Message, SDK de llamada web y corte al tope</div>
+        <div class="check-desc">Los ajustes de voz viven en localStorage; los metadatos de la llamada van dentro de un <code>Message</code>; la llamada de prueba web requiere la dependencia <code>retell-client-js-sdk</code>; no hay corte automático al tope (el corte duro es el crédito prepago de Retell).</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-configuracion-general">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Configuración general (<code>/settings</code>) con los ajustes que pide la voz</div>
+        <div class="check-desc">Incluye horario, número de transferencia, grabación, tope mensual e idioma. Siguiente en el orden, después de la voz real (decisión de Reiner).</div>
+      </div>
+      <span class="tag tag-open">pendiente — siguiente tras la voz real</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-rainer-staging">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Corregir el nombre «Rainer» por «Reiner» en los datos de staging</div>
+        <div class="check-desc">El nombre viene de la base de datos de staging, no del código; se corrige solo en los datos.</div>
+      </div>
+      <span class="tag tag-open">pendiente — requiere a Reiner</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-scrollers-anidados">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Quitar los scrollers anidados restantes: conversaciones, contactos, clientes-potenciales, ContentIGTab y .terminal de settings</div>
+        <div class="check-desc">Ya resueltos en Nueva Campaña y en el wizard del Generador. Deuda menor: los contadores «N+» tienen tope, el aviso sin campañas cambia de altura, el brief no se autollena desde el chat y las clases <code>.cn-chips</code>, <code>.cn-input</code> y <code>.cn-starters</code> quedaron sin uso en <code>globals.css</code>.</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-verificacion-visual">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Verificación visual de Inicio, Campaña, Generador y Voz, más Automatización (320 a 1440 px)</div>
+        <div class="check-desc">Falta la pasada visual de las cuatro pantallas nuevas y de Automatización, que no se verificó visualmente. Deuda del Generador: variantes lado a lado (la API reemplaza la imagen).</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
+    </div>
+    <div class="check-item blocked" data-status="blocked" data-id="ola3-bloqueos">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Push, merge, migraciones remotas, producción y <code>IG_PUBLISH_MODE=live</code> siguen bloqueados</div>
+        <div class="check-desc">Los cuatro commits de la Ola 3 son locales. Se necesita autorización explícita de Reiner para cualquiera de estos pasos.</div>
+      </div>
+      <span class="tag tag-blocked">bloqueado — espera a Reiner</span>
     </div>
   </div>
 </section>
