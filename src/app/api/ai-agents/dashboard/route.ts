@@ -18,7 +18,15 @@ export const dynamic = 'force-dynamic';
  *  - chart: serie diaria de contactos únicos atendidos
  *  - conversations: tabla de conversaciones recientes atendidas por IA
  *  - agents: lista de agentes para el selector de filtro
+ *
+ * Rendimiento: antes se traían hasta 200 conversaciones con TODOS sus mensajes y se
+ * filtraba en memoria. Ahora la base filtra las conversaciones con respuestas de la IA
+ * en el rango y solo se leen (en paralelo) las marcas de tiempo de esos mensajes, los
+ * conteos agregados y el último mensaje de cada conversación.
  */
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const TABLE_ROWS = 50;
 
 export async function GET(req: NextRequest) {
   const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'viewer']);
@@ -28,100 +36,113 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const agentId = searchParams.get('agentId');
   const days = Math.min(Math.max(parseInt(searchParams.get('days') || '30', 10) || 30, 1), 365);
-  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const since = new Date(Date.now() - days * DAY_MS);
 
-  const agents = await prisma.aIAgent.findMany({
-    where: { workspaceId: ws.id },
-    orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }],
-    select: { id: true, name: true, kind: true, status: true, isPrimary: true, avgSecondsPerMessage: true },
-  });
+  const agentWhere = agentId && agentId !== 'all' ? { agentId } : { agentId: { not: null } as unknown as string };
 
-  const agentWhere =
-    agentId && agentId !== 'all'
-      ? { agentId }
-      : { agentId: { not: null } as unknown as string };
+  const [agents, conversations] = await Promise.all([
+    prisma.aIAgent.findMany({
+      where: { workspaceId: ws.id },
+      orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }],
+      select: { id: true, name: true, kind: true, status: true, isPrimary: true, avgSecondsPerMessage: true },
+    }),
+    prisma.conversation.findMany({
+      where: {
+        ...agentWhere,
+        contact: { workspaceId: ws.id },
+        messages: { some: { sender: 'ai', createdAt: { gte: since } } },
+      },
+      select: {
+        id: true,
+        contactId: true,
+        channel: true,
+        status: true,
+        lastMessageAt: true,
+        contact: { select: { id: true, name: true, email: true, phone: true, avatarUrl: true } },
+        agent: { select: { id: true, name: true, kind: true, avgSecondsPerMessage: true } },
+        messages: { orderBy: { createdAt: 'desc' }, take: 1, select: { body: true } },
+      },
+      orderBy: { lastMessageAt: 'desc' },
+      take: 200,
+    }),
+  ]);
 
-  const conversations = await prisma.conversation.findMany({
-    where: {
-      ...agentWhere,
-      contact: { workspaceId: ws.id },
-    },
-    include: {
-      contact: { select: { id: true, name: true, email: true, phone: true, avatarUrl: true } },
-      agent: { select: { id: true, name: true, kind: true, avgSecondsPerMessage: true } },
-      messages: { orderBy: { createdAt: 'asc' } },
-    },
-    orderBy: { lastMessageAt: 'desc' },
-    take: 200,
-  });
+  const ids = conversations.map((c) => c.id);
+  const contactIds = Array.from(new Set(conversations.map((c) => c.contactId)));
 
-  const contactIds = new Set<string>();
+  const [aiInRange, counts, totalAppointments] = ids.length
+    ? await Promise.all([
+        prisma.message.findMany({
+          where: { conversationId: { in: ids }, sender: 'ai', createdAt: { gte: since } },
+          select: { conversationId: true, createdAt: true },
+        }),
+        prisma.message.groupBy({
+          by: ['conversationId', 'sender'],
+          where: { conversationId: { in: ids.slice(0, TABLE_ROWS) } },
+          _count: { _all: true },
+        }),
+        prisma.appointment.count({
+          where: { workspaceId: ws.id, createdAt: { gte: since }, contactId: { in: contactIds } },
+        }),
+      ])
+    : [[], [], 0];
+
+  const convById = new Map(conversations.map((c) => [c.id, c]));
+  const dayBuckets = new Map<string, Set<string>>();
   let totalAiMessages = 0;
   let timeSavedSeconds = 0;
-  const dayBuckets = new Map<string, Set<string>>();
 
-  for (const conv of conversations) {
-    const aiMessages = conv.messages.filter((m) => m.sender === 'ai' && m.createdAt >= since);
-    if (aiMessages.length === 0) continue;
-
-    contactIds.add(conv.contactId);
-    totalAiMessages += aiMessages.length;
-    const perMessage = conv.agent?.avgSecondsPerMessage ?? 8;
-    timeSavedSeconds += aiMessages.length * perMessage;
-
-    for (const msg of aiMessages) {
-      const day = msg.createdAt.toISOString().slice(0, 10);
-      if (!dayBuckets.has(day)) dayBuckets.set(day, new Set());
-      dayBuckets.get(day)!.add(conv.contactId);
-    }
+  for (const msg of aiInRange) {
+    const conv = convById.get(msg.conversationId);
+    if (!conv) continue;
+    totalAiMessages += 1;
+    timeSavedSeconds += conv.agent?.avgSecondsPerMessage ?? 8;
+    const day = msg.createdAt.toISOString().slice(0, 10);
+    let set = dayBuckets.get(day);
+    if (!set) dayBuckets.set(day, (set = new Set()));
+    set.add(conv.contactId);
   }
 
   // Serie diaria continua para los últimos `days` días (incluye días sin actividad).
   const chart: { date: string; contacts: number }[] = [];
   for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-    const key = d.toISOString().slice(0, 10);
+    const key = new Date(Date.now() - i * DAY_MS).toISOString().slice(0, 10);
     chart.push({ date: key, contacts: dayBuckets.get(key)?.size || 0 });
   }
 
-  const totalAppointments = contactIds.size
-    ? await prisma.appointment.count({
-        where: {
-          workspaceId: ws.id,
-          createdAt: { gte: since },
-          contactId: { in: Array.from(contactIds) },
-        },
-      })
-    : 0;
+  const totals = new Map<string, { all: number; ai: number }>();
+  for (const row of counts) {
+    const t = totals.get(row.conversationId) ?? { all: 0, ai: 0 };
+    t.all += row._count._all;
+    if (row.sender === 'ai') t.ai += row._count._all;
+    totals.set(row.conversationId, t);
+  }
 
-  const conversationsTable = conversations
-    .filter((c) => c.messages.some((m) => m.sender === 'ai' && m.createdAt >= since))
-    .slice(0, 50)
-    .map((c) => {
-      const last = c.messages[c.messages.length - 1];
-      const aiCount = c.messages.filter((m) => m.sender === 'ai').length;
-      return {
-        id: c.id,
-        contact: c.contact,
-        channel: c.channel,
-        status: c.status,
-        agent: c.agent ? { id: c.agent.id, name: c.agent.name, kind: c.agent.kind } : null,
-        lastMessageAt: c.lastMessageAt,
-        lastMessagePreview: last ? last.body.slice(0, 140) : null,
-        messageCount: c.messages.length,
-        aiMessageCount: aiCount,
-      };
-    });
+  const conversationsTable = conversations.slice(0, TABLE_ROWS).map((c) => {
+    const t = totals.get(c.id) ?? { all: 0, ai: 0 };
+    const last = c.messages[0];
+    return {
+      id: c.id,
+      contact: c.contact,
+      channel: c.channel,
+      status: c.status,
+      agent: c.agent ? { id: c.agent.id, name: c.agent.name, kind: c.agent.kind } : null,
+      lastMessageAt: c.lastMessageAt,
+      lastMessagePreview: last ? last.body.slice(0, 140) : null,
+      messageCount: t.all,
+      aiMessageCount: t.ai,
+    };
+  });
 
   return NextResponse.json({
     range: { since: since.toISOString(), days },
     metrics: {
-      totalContacts: contactIds.size,
+      totalContacts: contactIds.length,
       totalActions: totalAiMessages,
       totalMessages: totalAiMessages,
       totalAppointments,
       timeSavedMinutes: Math.round((timeSavedSeconds / 60) * 10) / 10,
-      avgMessagesPerContact: contactIds.size ? Math.round((totalAiMessages / contactIds.size) * 10) / 10 : 0,
+      avgMessagesPerContact: contactIds.length ? Math.round((totalAiMessages / contactIds.length) * 10) / 10 : 0,
     },
     chart,
     conversations: conversationsTable,
