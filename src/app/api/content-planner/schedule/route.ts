@@ -3,10 +3,16 @@ import { prisma } from '@/lib/db';
 import { isRoleContext, requirePermission } from '@/lib/roles';
 import { logAudit } from '@/lib/audit';
 import { parseStoredConfig, DEFAULT_PUBLISH_TIME, DEFAULT_TIMEZONE } from '@/lib/content-planner-config';
-import { getPublishMode, sanitizeBatch } from '@/lib/scheduled-posts';
+import { getPublishMode, isMissingTableError, sanitizeBatch } from '@/lib/scheduled-posts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+/** La tabla ScheduledPost aún no existe en esta base: se avisa con claridad en vez de un 500 mudo. */
+const SCHEMA_PENDING = {
+  error: 'schema_pending',
+  message: 'Falta aplicar la tabla ScheduledPost en esta base de datos.',
+} as const;
 
 const PUBLIC_SELECT = {
   id: true,
@@ -35,13 +41,18 @@ export async function GET(req: NextRequest) {
   if (!isRoleContext(ctx)) return ctx;
 
   const campaignRef = req.nextUrl.searchParams.get('campaignRef');
-  const posts = await prisma.scheduledPost.findMany({
-    where: { workspaceId: ctx.workspace.id, ...(campaignRef ? { campaignRef } : {}) },
-    orderBy: { scheduledAt: 'asc' },
-    take: 200,
-    select: PUBLIC_SELECT,
-  });
-  return NextResponse.json({ mode: getPublishMode(), posts });
+  try {
+    const posts = await prisma.scheduledPost.findMany({
+      where: { workspaceId: ctx.workspace.id, ...(campaignRef ? { campaignRef } : {}) },
+      orderBy: { scheduledAt: 'asc' },
+      take: 200,
+      select: PUBLIC_SELECT,
+    });
+    return NextResponse.json({ mode: getPublishMode(), posts });
+  } catch (e) {
+    if (isMissingTableError(e)) return NextResponse.json(SCHEMA_PENDING, { status: 503 });
+    throw e;
+  }
 }
 
 /**
@@ -82,6 +93,7 @@ export async function POST(req: NextRequest) {
   let created = 0;
   let updated = 0;
 
+  try {
   for (const p of batch.posts) {
     const key = { workspaceId, campaignRef: batch.campaignRef, dayNumber: p.dayNumber };
     const existing = await prisma.scheduledPost.findUnique({
@@ -112,6 +124,10 @@ export async function POST(req: NextRequest) {
       });
       created++;
     }
+  }
+  } catch (e) {
+    if (isMissingTableError(e)) return NextResponse.json(SCHEMA_PENDING, { status: 503 });
+    throw e;
   }
 
   await logAudit({

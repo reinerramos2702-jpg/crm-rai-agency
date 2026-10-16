@@ -185,3 +185,12 @@ export function safeError(e: unknown): string {
     .replace(/EA[A-Za-z0-9]{20,}/g, '***')
     .slice(0, 500);
 }
+
+/**
+ * ¿El error de Prisma indica que la tabla no existe (migración sin aplicar)?
+ * P2021 = tabla inexistente, P2022 = columna inexistente. Se detecta por forma, sin importar Prisma.
+ */
+export function isMissingTableError(e: unknown): boolean {
+  const code = (e as { code?: unknown } | null)?.code;
+  return code === 'P2021' || code === 'P2022';
+}

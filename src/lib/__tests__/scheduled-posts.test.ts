@@ -4,6 +4,7 @@ import {
   canTransition,
   getPublishMode,
   isIsoDate,
+  isMissingTableError,
   isPublicHttpsUrl,
   retryDelayMs,
   safeError,
@@ -112,5 +113,17 @@ describe('estados, reintentos y errores', () => {
   });
   it('safeError oculta tokens', () => {
     expect(safeError(new Error('fallo ?access_token=EAABsbCS1234567890abcdefXYZ&x=1'))).not.toContain('EAABsbCS');
+  });
+});
+
+describe('isMissingTableError', () => {
+  it('detecta tabla o columna inexistente de Prisma', () => {
+    expect(isMissingTableError({ code: 'P2021' })).toBe(true);
+    expect(isMissingTableError({ code: 'P2022' })).toBe(true);
+  });
+  it('ignora otros errores', () => {
+    expect(isMissingTableError({ code: 'P2002' })).toBe(false);
+    expect(isMissingTableError(new Error('x'))).toBe(false);
+    expect(isMissingTableError(null)).toBe(false);
   });
 });

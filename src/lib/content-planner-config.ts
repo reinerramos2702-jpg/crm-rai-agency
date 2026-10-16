@@ -33,7 +33,8 @@ export interface ContentPlannerConfig {
 }
 
 export const DEFAULT_PUBLISH_TIME = '09:00';
-export const DEFAULT_TIMEZONE = 'UTC';
+/** Zona de la operación (Venezuela, UTC-4, sin horario de verano). */
+export const DEFAULT_TIMEZONE = 'America/Caracas';
 
 export const LIMITS = {
   short: 200,
