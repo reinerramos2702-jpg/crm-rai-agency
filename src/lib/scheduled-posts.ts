@@ -66,8 +66,9 @@ export function isPublicHttpsUrl(v: unknown): v is string {
     if (u.protocol !== 'https:') return false;
     const h = u.hostname.toLowerCase();
     if (h === 'localhost' || h.endsWith('.localhost') || h.endsWith('.local') || h.endsWith('.internal')) return false;
-    if (/^(\d{1,3}\.){3}\d{1,3}$/.test(h)) {
-      const [a, b] = h.split('.').map(Number);
+    const octets = h.split('.');
+    if (octets.length === 4 && octets.every((o) => o.length >= 1 && o.length <= 3 && /^\d+$/.test(o))) {
+      const [a, b] = octets.map(Number);
       if (a === 10 || a === 127 || a === 0 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 169 && b === 254)) return false;
     }
     if (h.startsWith('[')) return false; // IPv6 literal: no se acepta

@@ -167,3 +167,4 @@
 - Registro `tour/tours.ts`: guía propia de Guía de Inicio + 19 módulos + recorrido general del menú. Dashboard y Automatización conservan su recorrido en la página (Dashboard ganó marcas en «Accesos rápidos»).
 - Evidencia: tsc limpio, 281 tests (6 nuevos del registro), verificado en vivo (Guía de Inicio, tour general con marcas en el menú, Dashboard, Automatización, móvil 390px sin overflow).
 - Deuda: textos de módulos sin pantalla revisada son genéricos (revisar con Reiner); botón «Guía de esta pantalla» no existe en `/` y `/automatizacion` (usan su botón «Ver recorrido»).
+- Limpieza (16 oct): eslint de todo el repo en 0 errores (se corrigió una regex insegura de IPv4 en `scheduled-posts.ts`, ahora sin backtracking). Deuda de tamaño documentada: `ContentIGTab.tsx` ~1200 líneas y `automatizacion/page.tsx` ~1000 → dividir por pestaña en un corte aparte (sin cambiar comportamiento, con tests de humo).
