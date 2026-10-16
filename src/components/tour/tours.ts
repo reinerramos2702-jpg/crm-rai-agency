@@ -119,7 +119,7 @@ export const CRM_TOUR: ModuleTour = {
       hints: [
         { target: navLink('/'), label: 'Dashboard: tus campañas y su estado.' },
         { target: navLink('/launchpad'), label: 'Guía de Inicio: lo que debes configurar primero.' },
-        { target: navLink('/automatizacion'), label: 'Automatización: flujos y contenido de Instagram.' },
+        { target: dataTourSel('sidebar-search'), label: 'Buscar: salta a cualquier módulo al instante (atajo: Ctrl+K).' },
         { target: dataTourSel('sidebar-toggle'), label: 'Este botón reduce el menú a iconos para ganar espacio (atajo: Ctrl+B).' },
       ],
     },

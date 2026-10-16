@@ -3,71 +3,20 @@
 import React, { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard,
-  PlusCircle,
-  Key,
-  Settings,
-  Wifi,
-  WifiOff,
-  Megaphone,
-  Receipt,
-  MessageSquare,
-  Rocket,
-  Calendar,
-  Zap,
-  ShieldCheck,
-  Images,
-  Bot,
-  Users,
-  Target,
-  UserCheck,
-  BedDouble,
-  CreditCard,
-  Globe,
-  FolderOpen,
-  Star,
-  BarChart3,
-  Store,
-  Menu,
-  X,
-  ChevronLeft,
-} from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Wifi, WifiOff, ShieldCheck, Menu, X, ChevronLeft, Search, PanelLeftClose } from 'lucide-react';
 import { hasModuleAccess, ROLE_LABELS, type Role } from '@/lib/roles-shared';
 import { apiFetch } from '@/lib/client-api';
+import { NAV_GROUPS, NAV_ITEMS, findNavItem } from './nav-config';
+import { CommandPalette, type PaletteItem } from './CommandPalette';
 
 interface SidebarProps {
   n8nConnected?: boolean;
 }
 
-const NAV_ITEMS = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/launchpad', label: 'Guía de Inicio', icon: Rocket },
-  { href: '/campaign/new', label: 'Nueva Campaña', icon: PlusCircle },
-  { href: '/generador-imagenes', label: 'Generador Imágenes', icon: Images },
-  { href: '/agentes-ia', label: 'Agentes de IA', icon: Bot },
-  { href: '/conversaciones', label: 'Conversaciones', icon: MessageSquare },
-  { href: '/calendarios', label: 'Calendarios', icon: Calendar },
-  { href: '/contactos', label: 'Contactos', icon: Users },
-  { href: '/clientes-potenciales', label: 'Clientes Potenciales', icon: Target },
-  { href: '/pasajeros', label: 'Pasajeros', icon: UserCheck },
-  { href: '/reservas', label: 'Reservas', icon: BedDouble },
-  { href: '/pagos', label: 'Pagos', icon: CreditCard },
-  { href: '/automatizacion', label: 'Automatización', icon: Zap },
-  { href: '/marketing', label: 'Marketing', icon: Megaphone },
-  { href: '/sitios', label: 'Sitios', icon: Globe },
-  { href: '/contenido-multimedia', label: 'Contenido multimedia', icon: FolderOpen },
-  { href: '/reputacion', label: 'Reputación', icon: Star },
-  { href: '/informes', label: 'Informes', icon: BarChart3 },
-  { href: '/marketplace', label: 'Aplicaciones del mercado', icon: Store },
-  { href: '/facturacion', label: 'Facturación', icon: Receipt },
-  { href: '/keys', label: 'Claves de IA', icon: Key },
-  { href: '/settings', label: 'Configuración', icon: Settings },
-];
-
 /** Preferencia persistida del menú lateral (solo escritorio). */
 const COLLAPSE_KEY = 'rai-sidebar-collapsed-v1';
+const RECENT_KEY = 'rai-cmd-recent-v1';
 /** Evento para abrir/cerrar el menú desde otros componentes (p. ej. la guía). */
 export const SIDEBAR_EVENT = 'rai:sidebar';
 
@@ -78,11 +27,16 @@ const cv = (vars: Record<string, string | number>) => vars as CSSProperties;
  */
 export function Sidebar({ n8nConnected }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [role, setRole] = useState<Role | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [tip, setTip] = useState<{ label: string; top: number } | null>(null);
   const waveTimer = useRef<number | null>(null);
+  const asideRef = useRef<HTMLElement | null>(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [recentIds, setRecentIds] = useState<string[]>([]);
+  const [mac, setMac] = useState(false);
 
   // El atributo lo fija un script en <head> (sin parpadeo); aquí solo se sincroniza el estado.
   const applyCollapsed = useCallback((value: boolean) => {
@@ -114,6 +68,11 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+        return;
+      }
       if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey || e.key.toLowerCase() !== 'b') return;
       const el = e.target as HTMLElement | null;
       if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
@@ -149,13 +108,82 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
     setMobileOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    setMac(/Mac|iPhone|iPad/.test(navigator.platform));
+    try {
+      const raw = JSON.parse(window.localStorage.getItem(RECENT_KEY) || '[]');
+      if (Array.isArray(raw)) setRecentIds(raw.filter((x): x is string => typeof x === 'string').slice(0, 6));
+    } catch {
+      /* sin recientes */
+    }
+  }, []);
+
+  const pushRecent = useCallback((id: string) => {
+    setRecentIds((prev) => {
+      const next = [id, ...prev.filter((x) => x !== id)].slice(0, 6);
+      try {
+        window.localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+      } catch {
+        /* la lista solo dura la sesión */
+      }
+      return next;
+    });
+  }, []);
+
+  // Cada módulo visitado alimenta «Recientes» de la paleta.
+  useEffect(() => {
+    const item = findNavItem(pathname);
+    if (item) pushRecent(`nav:${item.href}`);
+  }, [pathname, pushRecent]);
+
+  // Al cambiar de módulo, el ítem activo debe quedar a la vista dentro del menú.
+  useEffect(() => {
+    const aside = asideRef.current;
+    const link = aside?.querySelector<HTMLElement>('.sb-link.nav-active');
+    if (!aside || !link) return;
+    const a = aside.getBoundingClientRect();
+    const l = link.getBoundingClientRect();
+    if (l.top < a.top + 90 || l.bottom > a.bottom - 20) {
+      aside.scrollTo({ top: aside.scrollTop + (l.top - a.top) - aside.clientHeight / 2 + l.height / 2, behavior: 'smooth' });
+    }
+  }, [pathname, role]);
+
   const showTip = (label: string, el: HTMLElement) => {
     if (document.documentElement.getAttribute('data-sidebar') !== 'collapsed') return;
     const r = el.getBoundingClientRect();
     setTip({ label, top: r.top + r.height / 2 });
   };
 
-  const visibleItems = NAV_ITEMS.filter((item) => !role || hasModuleAccess(role, item.href));
+  const canSee = (href: string) => !role || hasModuleAccess(role, href);
+  const groups = NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => canSee(i.href)) })).filter((g) => g.items.length > 0);
+  const visibleCount = groups.reduce((n, g) => n + g.items.length, 0);
+
+  const paletteItems: PaletteItem[] = [
+    ...NAV_ITEMS.filter((i) => canSee(i.href)).map((i) => ({
+      id: `nav:${i.href}`,
+      label: i.label,
+      group: NAV_GROUPS.find((g) => g.items.includes(i))?.label ?? 'Módulos',
+      icon: i.icon,
+      href: i.href,
+      keywords: i.keywords,
+    })),
+    {
+      id: 'act:sidebar',
+      label: collapsed ? 'Expandir menú lateral' : 'Reducir menú lateral a iconos',
+      group: 'Acciones',
+      icon: PanelLeftClose,
+      keywords: 'ocultar mostrar barra lateral sidebar',
+      run: () => applyCollapsed(!collapsed),
+    },
+  ];
+
+  const selectPaletteItem = (item: PaletteItem) => {
+    setPaletteOpen(false);
+    if (item.href) {
+      pushRecent(item.id);
+      router.push(item.href);
+    } else item.run?.();
+  };
 
   return (
     <>
@@ -203,7 +231,7 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
       </button>
       <span className="sb-sweep" aria-hidden="true" />
 
-      <aside className={`app-sidebar ${mobileOpen ? 'open' : ''}`}>
+      <aside ref={asideRef} className={`app-sidebar ${mobileOpen ? 'open' : ''}`}>
       {/* Logo */}
       <div
         className="sb-brand"
@@ -243,46 +271,78 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
       </div>
 
       {/* Navegación */}
-      <nav style={{ flex: 1, padding: '12px 8px' }}>
-        {visibleItems.map(({ href, label, icon: Icon }, idx) => {
-          const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
-          return (
-            <Link
-              key={href}
-              href={href}
-              aria-label={label}
-              onMouseEnter={(e) => showTip(label, e.currentTarget)}
-              onFocus={(e) => showTip(label, e.currentTarget)}
-              onMouseLeave={() => setTip(null)}
-              onBlur={() => setTip(null)}
-              style={{
-                ...cv({ '--i': idx + 1 }),
-                display: 'flex',
-                alignItems: 'center',
-                padding: '10px 12px',
-                borderRadius: 8,
-                marginBottom: 2,
-                color: isActive ? 'var(--rai-gold)' : 'var(--rai-muted)',
-                background: isActive ? 'rgba(201,168,76,0.1)' : 'transparent',
-                border: isActive ? '1px solid rgba(201,168,76,0.2)' : '1px solid transparent',
-                fontSize: 14,
-                fontWeight: isActive ? 600 : 400,
-                textDecoration: 'none',
-              }}
-              className={isActive ? 'nav-active' : 'nav-item'}
-            >
-              <Icon size={18} strokeWidth={isActive ? 2.5 : 2} className="sb-ic" />
-              <span className="sb-label">{label}</span>
-            </Link>
-          );
-        })}
+      {/* Búsqueda rápida (abre la paleta de comandos) */}
+      <div className="sb-searchwrap" style={cv({ '--i': 0 })}>
+        <button
+          type="button"
+          className="sb-search"
+          onClick={() => setPaletteOpen(true)}
+          aria-label="Buscar (paleta de comandos)"
+          aria-keyshortcuts="Control+K Meta+K"
+          title={`Buscar (${mac ? '⌘K' : 'Ctrl+K'})`}
+          onMouseEnter={(e) => showTip('Buscar', e.currentTarget)}
+          onMouseLeave={() => setTip(null)}
+          data-tour="sidebar-search"
+        >
+          <Search size={18} className="sb-ic" />
+          <span className="sb-label">Buscar…</span>
+          <kbd className="sb-label sb-kbd">{mac ? '⌘K' : 'Ctrl K'}</kbd>
+        </button>
+      </div>
+
+      {/* Navegación agrupada por tarea */}
+      <nav style={{ flex: 1, padding: '4px 8px 12px' }} aria-label="Navegación principal">
+        {(() => {
+          let idx = 0;
+          return groups.map((group, gi) => (
+            <div key={group.id} role="group" aria-label={group.label} className="sb-group">
+              <div className="sb-section" style={cv({ '--i': idx + 1 })} data-first={gi === 0 || undefined}>
+                <span className="sb-label">{group.label}</span>
+              </div>
+              {group.items.map(({ href, label, icon: Icon }) => {
+                idx += 1;
+                const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    aria-label={label}
+                    aria-current={isActive ? 'page' : undefined}
+                    onMouseEnter={(e) => showTip(label, e.currentTarget)}
+                    onFocus={(e) => showTip(label, e.currentTarget)}
+                    onMouseLeave={() => setTip(null)}
+                    onBlur={() => setTip(null)}
+                    style={{
+                      ...cv({ '--i': idx }),
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '10px 12px',
+                      borderRadius: 8,
+                      marginBottom: 2,
+                      color: isActive ? 'var(--rai-gold)' : 'var(--rai-muted)',
+                      background: isActive ? 'rgba(201,168,76,0.1)' : 'transparent',
+                      border: isActive ? '1px solid rgba(201,168,76,0.2)' : '1px solid transparent',
+                      fontSize: 14,
+                      fontWeight: isActive ? 600 : 400,
+                      textDecoration: 'none',
+                    }}
+                    className={`sb-link ${isActive ? 'nav-active' : 'nav-item'}`}
+                  >
+                    <Icon size={18} strokeWidth={isActive ? 2.5 : 2} className="sb-ic" />
+                    <span className="sb-label">{label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          ));
+        })()}
       </nav>
 
       {/* Estado n8n */}
       <div
         className="sb-foot"
         style={{
-          ...cv({ '--i': visibleItems.length + 1 }),
+          ...cv({ '--i': visibleCount + 2 }),
           padding: '16px 20px',
           borderTop: '1px solid var(--rai-border)',
         }}
@@ -326,6 +386,13 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
         </div>
       </div>
     </aside>
+      <CommandPalette
+        open={paletteOpen}
+        items={paletteItems}
+        recentIds={recentIds}
+        onClose={() => setPaletteOpen(false)}
+        onSelect={selectPaletteItem}
+      />
       {collapsed && tip && (
         <div key={tip.label} className="sb-tip" role="tooltip" style={{ top: tip.top }}>
           {tip.label}

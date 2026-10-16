@@ -182,3 +182,11 @@
 - Efectos (todos con `transform`/`opacity`, salvo el ancho del menú y el margen del contenido): ancho con curva expo-out, etiquetas que se pliegan y deslizan en cascada (orden inverso al reducir), onda de iconos que «saltan» en cascada, vuelta del logo, destello dorado que recorre el borde y tooltip de cada icono al pasar el mouse o enfocar. Respeta `prefers-reduced-motion` (el cambio es instantáneo).
 - Móvil sin cambios (cajón con hamburguesa). El recorrido general del CRM expande el menú antes de señalarlo y explica el botón.
 - Verificado: iconos, logo y estado centrados en la columna de 64 px; 0 desborde horizontal; 133 transiciones y 5 animaciones creadas al alternar.
+
+## UX tipo CRM profesional: menú agrupado + paleta Ctrl+K (15 oct 2026)
+Investigación (UXMatters «CRM UX 2026», SaaSUI «sidebar navigation patterns», guías de Cmd+K): más de 7–8 ítems planos forman un «muro de enlaces»; hay que agrupar por tarea y frecuencia, mantener el marcador activo también en modo iconos, y ofrecer una paleta de comandos con recientes, búsqueda tolerante y teclado completo.
+- Menú en 6 grupos (Principal, Contenido y marketing, Clientes, Operación, Crecimiento, Cuenta) definidos en `nav-config.ts` (fuente única para menú y paleta). En modo iconos las etiquetas de grupo pasan a separadores finos.
+- Marcador activo: barra dorada con resorte a la izquierda + relleno + peso; el ítem activo se desplaza a la vista al cambiar de módulo.
+- Botón «Buscar» en el menú y paleta de comandos (Ctrl/Cmd+K): módulos filtrados por rol, acción de reducir/expandir menú, «Recientes», búsqueda sin tildes y por sinónimos (`command-search.ts`, 8 tests), patrón combobox ARIA, foco devuelto al cerrar, respeta reduced-motion; funciona en móvil desde el cajón.
+- Verificado: 6 grupos/22 enlaces, búsqueda «reputacion» → Reputación → navega y guarda recientes, iconos centrados a 32 px en modo reducido, paleta sin desborde a 320/390/768. Tests 293, lint 0, tsc limpio.
+- Pendiente de esta línea (no hecho): migas de pan, vistas guardadas, estados vacíos con acción, esqueletos de carga unificados, badges de conteo.
