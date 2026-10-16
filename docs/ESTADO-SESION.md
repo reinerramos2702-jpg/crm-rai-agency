@@ -1,5 +1,5 @@
 # Estado de sesión — CRM RAI Agency
-Última actualización: 10 octubre 2026 (sesión Cowork, rama `rai-feat-login-registro-ui`; verificado 10 oct: sin cambios de código desde el 5 oct, implementación del login sin iniciar; specs login v4 y sistema visual premium escritas el 10 oct). Las secciones marcadas "25 sep" son el cierre anterior de OpenCode, conservado como historial.
+Última actualización: 16 octubre 2026 (rama local `rai-feat-dashboard-premium`, solo commits locales, sin push; ver «Fase efectos + módulos (16 oct 2026)» al final). Las secciones del 1-10 oct describen el estado de la rama de login en esa fecha. Las secciones marcadas "25 sep" son el cierre anterior de OpenCode, conservado como historial.
 
 ## Actualización 15 oct 2026 — Contenido IG (rama `rai-feat-programacion-ig`, solo commits locales)
 - Cadena de ramas locales (sin push): `rai-feat-automatizacion-config` (Corte A) → `rai-feat-automatizacion-ui` (Corte C: UI premium, tour, responsive) → `rai-feat-programacion-ig` (Corte B + extensión premium/tour a las demás pestañas; commits da14717, 0229698).
@@ -198,5 +198,19 @@ Diagnóstico: las páginas renderizan en ~50 ms; el retraso venía de las APIs (
 - Medido en Chrome (modo desarrollo, tras precarga): Launchpad y Generador muestran su contenido a ~225 ms desde el clic. Para velocidad real: `next build` + `next start` (sin compilado bajo demanda).
 - Efectos de clic/toque (`ClickFx.tsx`, anillo dorado discreto, máx. 4 a la vez, desactivado con reduced-motion), presión `:active`, elevación suave de tarjetas, anillo de foco en campos, rebote del check, llenado de progreso con curva suave. Solo `transform`/`opacity`, sin blur.
 - Launchpad: tarjeta «Siguiente paso recomendado». Generador de imágenes: esqueletos de carga en lugar de spinner, zona de arrastre del documento de marca con estilo por clase, estado vacío con flujo de 3 pasos, tarjetas con elevación.
-- Verificado: tsc 0, tests 304, eslint 0; 0 desborde en 320/390/768/1024/1440 en `/launchpad`, `/generador-imagenes`, `/campaign/new`.
-- Deuda/pendiente: radio-cards del pipeline en Nueva Campaña; migas de pan, vistas guardadas, centro de actividad y badges (propuestas entregadas a Reiner, sin implementar); aplicar el mismo `useCachedJson` a otros módulos con carga lenta.
+- Verificado en ese corte: tsc 0, tests 304, eslint 0; 0 desborde en 320/390/768/1024/1440 en `/launchpad`, `/generador-imagenes`, `/campaign/new`. (Cifra vigente al cierre de la fase efectos: 388 tests; ver sección del 16 oct.)
+- Deuda/pendiente (estado al 16 oct): radio-cards del pipeline y vista guardada del Generador ya hechas (`9153856`, `dddac5b`); siguen sin implementar migas de pan, centro de actividad y badges de menú; aplicar `useCachedJson` a Calendario, Contactos y Conversaciones.
+
+## Fase efectos + módulos (16 oct 2026)
+Rama local `rai-feat-dashboard-premium` (sin push; commits locales). Lo ya registrado arriba (recorrido guiado, Nueva Campaña premium, menú reducible, menú agrupado + Ctrl+K, caché SWR/precarga/ClickFx) no se repite; aquí solo lo nuevo y el cierre de verificación.
+- **Base de efectos sin blur** (`d73bb05`): `src/styles/effects.css` (shimmer, puntos de estado, sombras de profundidad, acciones al hover, campos progresivos), selector de densidad Compacta/Estándar/Espaciosa (`DensityToggle`, `html[data-density]`, `src/lib/density.ts`), componentes compartidos `Skeleton` y `EmptyState`, y registro de efectos adoptados y rechazados en `docs/DISENO-EFECTOS.md`.
+- **Nueva Campaña** (`9153856`): tarjetas de pipeline accesibles (`radiogroup`), borrador auto-guardado (7 días) con restaurar o descartar, campos opcionales progresivos.
+- **Launchpad** (`98b76ea`): banner de hito al 100 %, pulso de sincronización, esqueleto de carga, rebote del check solo en la transición y punto de estado por ítem.
+- **Generador de imágenes** (`dddac5b`): vista guardada con buscador, chips de estado con contadores y orden; acciones al hover; esqueleto y estado vacío compartidos; corrección de la elevación de tarjetas.
+- **Commits de la serie** (de más antiguo a más reciente): `a402552`, `6ac3cf4`, `05490e8`, `5458874`, `c1de1e6`, `3133574`, `7e6cc86`, `d73bb05`, `9153856`, `98b76ea`, `dddac5b`.
+- **Verificación**: `tsc` 0 errores, ESLint 0, 388 tests (34 archivos), 0 desborde horizontal a 320/390/768/1024/1440 en `/`, `/launchpad`, `/generador-imagenes` y `/campaign/new`. `panel-check`: 0 errores, 27 avisos preexistentes.
+- **Documentación nueva**: `docs/planning/ROADMAP-ESCALABILIDAD.md` (rendimiento, arquitectura defensiva y marco legal; backlog por fases; sin asesoría legal). Panel de control actualizado con 6 ítems hechos y 5 pendientes.
+- **Deuda**: `src/app/campaign/new/page.tsx` (~1130 líneas) por dividir por sección; `ContentIGTab.tsx` (~1200) y `automatizacion/page.tsx` (~1000) en cortes aparte. Falta aplicar `useCachedJson` a Calendario, Contactos y Conversaciones; atajos `N`/`Esc`; migas de pan, centro de actividad y badges de menú; bloqueo optimista + `AuditLog`; paquete legal con revisión de abogado.
+- **Limitación de verificación**: ClickFx no se vio en vivo porque el Chrome de pruebas tiene `prefers-reduced-motion` activo; revisar en un navegador normal.
+- **Pendientes de Reiner**: confirmar que el SQL de staging (`docs/planning/staging-scheduledpost.sql`) está aplicado para probar «Programar lote»; corregir «Rainer» por «Reiner» solo en staging/UI (no es código); revisar los textos de la guía de módulos; borrado de ramas locales solo con su «sí» explícito.
+- **Bloqueado hasta autorización de Reiner**: push, merge, migraciones remotas, producción, `IG_PUBLISH_MODE=live` y secretos de GitHub.
