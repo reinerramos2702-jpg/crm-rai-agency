@@ -33,7 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('rai-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('rai-theme');if(t)document.documentElement.setAttribute('data-theme',t);if(localStorage.getItem('rai-sidebar-collapsed-v1')==='1')document.documentElement.setAttribute('data-sidebar','collapsed')}catch(e){}})()`,
           }}
         />
       </head>

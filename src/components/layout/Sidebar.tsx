@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -32,6 +32,8 @@ import {
   Store,
   Menu,
   X,
+  PanelLeftClose,
+  ChevronRight,
 } from 'lucide-react';
 import { hasModuleAccess, ROLE_LABELS, type Role } from '@/lib/roles-shared';
 import { apiFetch } from '@/lib/client-api';
@@ -65,6 +67,13 @@ const NAV_ITEMS = [
   { href: '/settings', label: 'Configuración', icon: Settings },
 ];
 
+/** Preferencia persistida del menú lateral (solo escritorio). */
+const COLLAPSE_KEY = 'rai-sidebar-collapsed-v1';
+/** Evento para abrir/cerrar el menú desde otros componentes (p. ej. la guía). */
+export const SIDEBAR_EVENT = 'rai:sidebar';
+
+const cv = (vars: Record<string, string | number>) => vars as CSSProperties;
+
 /**
  * Sidebar lateral premium con logo RAI, navegación y estado de n8n.
  */
@@ -72,6 +81,50 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
   const pathname = usePathname();
   const [role, setRole] = useState<Role | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // El atributo lo fija un script en <head> (sin parpadeo); aquí solo se sincroniza el estado.
+  const applyCollapsed = useCallback((value: boolean) => {
+    const root = document.documentElement;
+    if (value) root.setAttribute('data-sidebar', 'collapsed');
+    else root.removeAttribute('data-sidebar');
+    try {
+      if (value) window.localStorage.setItem(COLLAPSE_KEY, '1');
+      else window.localStorage.removeItem(COLLAPSE_KEY);
+    } catch {
+      /* sin almacenamiento: la preferencia solo dura la sesión */
+    }
+    setCollapsed(value);
+  }, []);
+
+  useEffect(() => {
+    setCollapsed(document.documentElement.getAttribute('data-sidebar') === 'collapsed');
+    // Activa las transiciones solo después de la primera pintura.
+    const id = window.requestAnimationFrame(() =>
+      window.requestAnimationFrame(() => document.documentElement.classList.add('sb-anim')),
+    );
+    return () => window.cancelAnimationFrame(id);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey || e.key.toLowerCase() !== 'b') return;
+      const el = e.target as HTMLElement | null;
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+      e.preventDefault();
+      applyCollapsed(document.documentElement.getAttribute('data-sidebar') !== 'collapsed');
+    };
+    const onEvent = (e: Event) => {
+      const mode = (e as CustomEvent<string>).detail;
+      applyCollapsed(mode === 'close');
+    };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener(SIDEBAR_EVENT, onEvent);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener(SIDEBAR_EVENT, onEvent);
+    };
+  }, [applyCollapsed]);
 
   useEffect(() => {
     let cancelled = false;
@@ -124,9 +177,22 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
         onClick={() => setMobileOpen(false)}
       />
 
-      <aside className={`app-sidebar ${mobileOpen ? 'open' : ''}`}>
+      {/* Pestaña para volver a mostrar el menú (solo escritorio, con el menú oculto) */}
+      <button
+        type="button"
+        className="sb-reopen"
+        aria-label="Mostrar menú lateral"
+        title="Mostrar menú (Ctrl+B)"
+        tabIndex={collapsed ? 0 : -1}
+        onClick={() => applyCollapsed(false)}
+      >
+        <ChevronRight size={16} />
+      </button>
+
+      <aside className={`app-sidebar ${mobileOpen ? 'open' : ''}`} aria-hidden={collapsed || undefined}>
       {/* Logo */}
       <div
+        className="sb-brand"
         style={{
           padding: '24px 20px',
           borderBottom: '1px solid var(--rai-border)',
@@ -159,18 +225,32 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
               Agency CRM
             </div>
           </div>
+          <button
+            type="button"
+            className="sb-toggle"
+            aria-label="Ocultar menú lateral"
+            aria-expanded={!collapsed}
+            title="Ocultar menú (Ctrl+B)"
+            data-tour="sidebar-toggle"
+            tabIndex={collapsed ? -1 : 0}
+            onClick={() => applyCollapsed(true)}
+          >
+            <PanelLeftClose size={16} />
+          </button>
         </div>
       </div>
 
       {/* Navegación */}
       <nav style={{ flex: 1, padding: '12px 8px' }}>
-        {visibleItems.map(({ href, label, icon: Icon }) => {
+        {visibleItems.map(({ href, label, icon: Icon }, idx) => {
           const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
           return (
             <Link
               key={href}
               href={href}
+              tabIndex={collapsed ? -1 : undefined}
               style={{
+                ...cv({ '--i': idx + 1 }),
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
@@ -180,7 +260,6 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
                 color: isActive ? 'var(--rai-gold)' : 'var(--rai-muted)',
                 background: isActive ? 'rgba(201,168,76,0.1)' : 'transparent',
                 border: isActive ? '1px solid rgba(201,168,76,0.2)' : '1px solid transparent',
-                transition: 'var(--transition)',
                 fontSize: 14,
                 fontWeight: isActive ? 600 : 400,
                 textDecoration: 'none',
@@ -196,7 +275,9 @@ export function Sidebar({ n8nConnected }: SidebarProps) {
 
       {/* Estado n8n */}
       <div
+        className="sb-foot"
         style={{
+          ...cv({ '--i': visibleItems.length + 1 }),
           padding: '16px 20px',
           borderTop: '1px solid var(--rai-border)',
         }}

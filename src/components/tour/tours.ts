@@ -97,6 +97,8 @@ function buildModuleTour(spec: ModuleSpec): ModuleTour {
 
 /* ---------- Recorrido general del CRM (menú lateral) ---------- */
 
+const dataTourSel = (name: string): string => `[data-tour="${name}"]`;
+
 export const CRM_TOUR: ModuleTour = {
   id: 'crm',
   label: 'el CRM',
@@ -118,7 +120,7 @@ export const CRM_TOUR: ModuleTour = {
         { target: navLink('/'), label: 'Dashboard: tus campañas y su estado.' },
         { target: navLink('/launchpad'), label: 'Guía de Inicio: lo que debes configurar primero.' },
         { target: navLink('/automatizacion'), label: 'Automatización: flujos y contenido de Instagram.' },
-        { target: navLink('/settings'), label: 'Configuración: tu cuenta y tu espacio de trabajo.' },
+        { target: dataTourSel('sidebar-toggle'), label: 'Este botón oculta el menú para ganar espacio (atajo: Ctrl+B).' },
       ],
     },
     {

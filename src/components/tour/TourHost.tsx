@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation';
 import { BookOpen, Compass, HelpCircle, RotateCcw, X } from 'lucide-react';
 import ProductTour from './ProductTour';
+import { SIDEBAR_EVENT } from '../layout/Sidebar';
 import {
   CRM_TOUR,
   TOUR_AUTO_OFF_KEY,
@@ -92,6 +93,8 @@ export default function TourHost() {
 
   const start = useCallback((tour: ModuleTour) => {
     setMenuOpen(false);
+    // El recorrido general señala el menú lateral: debe estar visible.
+    if (tour.id === 'crm') window.dispatchEvent(new CustomEvent(SIDEBAR_EVENT, { detail: 'open' }));
     setActive(tour);
   }, []);
 

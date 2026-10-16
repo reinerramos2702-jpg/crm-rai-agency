@@ -2943,3 +2943,37 @@ button.dash-chip.is-on{background:color-mix(in srgb,var(--rai-gold) 15%,transpar
   .cn-chat .chat-bubble{max-width:94% !important}
   .cn-chat-head .btn{width:100%}
 }
+
+/* ═══════════ Menú lateral ocultable (sb-*) — solo escritorio ═══════════ */
+.sb-toggle,.sb-reopen{display:none}
+.app-sidebar nav a{transition:background-color .2s ease,color .2s ease,border-color .2s ease}
+
+@media (min-width:769px){
+  .sb-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;margin-left:auto;flex-shrink:0;padding:0 !important;border-radius:10px !important;border:1px solid var(--rai-border) !important;background:transparent !important;color:var(--rai-muted) !important;cursor:pointer;box-shadow:none !important;transition:color .2s ease,border-color .2s ease,background-color .2s ease}
+  .sb-toggle:focus-visible,.sb-reopen:focus-visible{outline:2px solid var(--rai-gold);outline-offset:2px}
+  @media (hover:hover){.sb-toggle:hover{color:var(--rai-gold) !important;border-color:var(--rai-gold) !important;background:rgba(201,168,76,.08) !important}}
+
+  .sb-reopen{display:flex;position:fixed;left:0;top:50%;margin-top:-28px;width:22px;height:56px;align-items:center;justify-content:center;padding:0 !important;border:1px solid var(--rai-border) !important;border-left:0 !important;border-radius:0 12px 12px 0 !important;background:var(--rai-card) !important;color:var(--rai-gold) !important;cursor:pointer;box-shadow:none !important;z-index:90;opacity:0;transform:translateX(-100%);pointer-events:none}
+  @media (hover:hover){.sb-reopen:hover{width:30px;background:var(--rai-dark) !important}}
+  html[data-sidebar="collapsed"] .sb-reopen{opacity:1;transform:none;pointer-events:auto}
+
+  html[data-sidebar="collapsed"] .app-sidebar{transform:translateX(-100%);visibility:hidden}
+  html[data-sidebar="collapsed"] .app-main{margin-left:0}
+
+  /* Estado base de los elementos que se escalonan al ocultar/mostrar */
+  .app-sidebar nav a,.sb-brand,.sb-foot{--sb-d:calc(var(--i,0) * 22ms + 140ms)}
+  html[data-sidebar="collapsed"] .app-sidebar nav a,
+  html[data-sidebar="collapsed"] .sb-brand,
+  html[data-sidebar="collapsed"] .sb-foot{opacity:0;transform:translateX(-16px);--sb-d:calc((24 - var(--i,0)) * 9ms)}
+}
+
+@media (min-width:769px) and (prefers-reduced-motion:no-preference){
+  html.sb-anim .app-sidebar{transition:transform .42s cubic-bezier(.22,1,.36,1) .12s,visibility 0s linear .54s}
+  html.sb-anim:not([data-sidebar="collapsed"]) .app-sidebar{transition:transform .42s cubic-bezier(.22,1,.36,1),visibility 0s}
+  html.sb-anim .app-main{transition:margin-left .42s cubic-bezier(.22,1,.36,1) .12s}
+  html.sb-anim:not([data-sidebar="collapsed"]) .app-main{transition:margin-left .42s cubic-bezier(.22,1,.36,1)}
+  html.sb-anim .app-sidebar nav a{transition:background-color .2s ease,color .2s ease,border-color .2s ease,opacity .3s ease var(--sb-d),transform .4s cubic-bezier(.22,1,.36,1) var(--sb-d)}
+  html.sb-anim .sb-brand,html.sb-anim .sb-foot{transition:opacity .3s ease var(--sb-d),transform .4s cubic-bezier(.22,1,.36,1) var(--sb-d)}
+  html.sb-anim .sb-reopen{transition:opacity .3s ease .3s,transform .45s cubic-bezier(.22,1,.36,1) .3s,width .2s ease,background-color .2s ease}
+  html.sb-anim:not([data-sidebar="collapsed"]) .sb-reopen{transition:opacity .15s ease,transform .25s ease}
+}
