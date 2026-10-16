@@ -1,7 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useCachedJson } from '@/lib/use-cached-json';
+import { categoryPercent, computeNextStep, countCompleted, detectMilestone } from '@/lib/launchpad-progress';
+import { SkeletonLine } from '@/components/ui/Skeleton';
+import { NextStepCard } from './NextStepCard';
+import { MilestoneBanner } from './MilestoneBanner';
+import './launchpad.css';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -36,10 +41,11 @@ import {
   ShieldCheck,
   Bell,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 interface ChecklistItem {
   id: string;
-  icon: any;
+  icon: LucideIcon;
   title: string;
   description: string;
   href: string;
@@ -48,7 +54,7 @@ interface ChecklistItem {
 interface Category {
   id: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   items: ChecklistItem[];
 }
 
@@ -244,6 +250,9 @@ const CATEGORIES: Category[] = [
   },
 ];
 
+const ALL_ITEMS: ChecklistItem[] = CATEGORIES.flatMap((c) => c.items);
+const OVERALL = { id: 'todo', items: ALL_ITEMS };
+
 interface LaunchpadProgress {
   completed: string[];
   manualItemIds: string[];
@@ -251,6 +260,13 @@ interface LaunchpadProgress {
 
 const EMPTY_IDS: string[] = [];
 const EMPTY_MANIFEST: TutorialManifest = {};
+const CELEBRATE_MS = 900;
+const SYNC_PULSE_MS = 1200;
+
+interface Celebration {
+  items: ReadonlySet<string>;
+  categories: ReadonlySet<string>;
+}
 
 interface TutorialManifestEntry {
   version: number;
@@ -273,10 +289,59 @@ export default function LaunchpadPage() {
   });
   const completed = progress.data?.completed ?? EMPTY_IDS;
   const manualItemIds = progress.data?.manualItemIds ?? EMPTY_IDS;
-  const loaded = progress.data !== undefined || progress.error !== null;
+  const hasData = progress.data !== undefined;
+  const loaded = hasData || progress.error !== null;
   const manifest: TutorialManifest = manifestState.data?.items ?? EMPTY_MANIFEST;
 
   const category = CATEGORIES.find((c) => c.id === activeCategory) ?? CATEGORIES[0];
+
+  // Celebraciones: solo ante una transición real (nunca en la carga inicial).
+  const [celebrate, setCelebrate] = useState<Celebration | null>(null);
+  const [milestoneOpen, setMilestoneOpen] = useState(false);
+  const prevCompleted = useRef<readonly string[] | null>(null);
+
+  useEffect(() => {
+    if (!hasData) return;
+    const prev = prevCompleted.current;
+    prevCompleted.current = completed;
+    if (prev === null) return; // primera lectura: es la línea base, no un hito
+    const milestone = detectMilestone(prev, completed, CATEGORIES);
+    if (milestone.newlyDone.length === 0) return;
+    setCelebrate({ items: new Set(milestone.newlyDone), categories: new Set(milestone.categoriesCompleted) });
+    if (milestone.overallCompleted) setMilestoneOpen(true);
+  }, [hasData, completed]);
+
+  useEffect(() => {
+    if (!celebrate) return;
+    const timer = setTimeout(() => setCelebrate(null), CELEBRATE_MS);
+    return () => clearTimeout(timer);
+  }, [celebrate]);
+
+  // Pulso de sincronización: al terminar una revalidación que cambió el progreso mostrado.
+  const [syncing, setSyncing] = useState(false);
+  const syncBaseline = useRef<string | null>(null);
+  const wasRevalidating = useRef(false);
+
+  useEffect(() => {
+    if (!hasData) return;
+    const signature = [...completed].sort().join('|');
+    const finished = wasRevalidating.current && !progress.revalidating;
+    wasRevalidating.current = progress.revalidating;
+    if (syncBaseline.current === null) {
+      syncBaseline.current = signature; // primera carga: sin pulso
+      return;
+    }
+    if (progress.revalidating) return;
+    const changed = signature !== syncBaseline.current;
+    syncBaseline.current = signature;
+    if (finished && changed) setSyncing(true);
+  }, [hasData, completed, progress.revalidating]);
+
+  useEffect(() => {
+    if (!syncing) return;
+    const timer = setTimeout(() => setSyncing(false), SYNC_PULSE_MS);
+    return () => clearTimeout(timer);
+  }, [syncing]);
 
   const toggleComplete = (id: string) => {
     if (!manualItemIds.includes(id)) return; // ítem automático: no se puede marcar a mano
@@ -290,19 +355,12 @@ export default function LaunchpadPage() {
     }).catch(() => void progress.refresh()); // si falla, recarga el estado real del servidor
   };
 
-  const categoryProgress = (cat: Category) =>
-    Math.round(
-      (cat.items.filter((i) => completed.includes(i.id)).length / cat.items.length) * 100
-    );
-
-  const allItems = CATEGORIES.flatMap((c) => c.items);
-  const overallProgress = Math.round(
-    (allItems.filter((i) => completed.includes(i.id)).length / allItems.length) * 100
-  );
+  const completedCount = countCompleted(OVERALL, completed);
+  const overallProgress = categoryPercent(OVERALL, completed);
+  const categoryProgress = categoryPercent(category, completed);
 
   // Siguiente paso sugerido: primer ítem pendiente en el orden de la guía.
-  const nextStep = loaded ? allItems.find((i) => !completed.includes(i.id)) : undefined;
-  const nextStepCategory = nextStep ? CATEGORIES.find((c) => c.items.some((i) => i.id === nextStep.id)) : undefined;
+  const nextStep = loaded ? computeNextStep(CATEGORIES, completed) : undefined;
 
   const openTutorial = (item: ChecklistItem) => {
     setTutorialItem(item);
@@ -322,11 +380,18 @@ export default function LaunchpadPage() {
         Hola, aquí tienes tu lista de configuración personalizada con todo lo que necesitas para empezar.
       </p>
 
-      <div className="card mb-6">
+      <div className={`card mb-6 fx-sync${syncing ? ' is-syncing' : ''}`}>
         <div className="row-between mb-2">
           <span className="muted" style={{ fontSize: 12 }}>Progreso general de la plataforma</span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--rai-gold)' }}>
-            {loaded ? `${completed.length} / ${allItems.length} pasos · ${overallProgress}%` : 'Calculando…'}
+          <span className="lp-overall-value" aria-busy={!loaded}>
+            {loaded ? (
+              `${completedCount} / ${ALL_ITEMS.length} pasos · ${overallProgress}%`
+            ) : (
+              <>
+                <SkeletonLine width={116} height={14} />
+                <span className="fx-sr-only">Calculando progreso…</span>
+              </>
+            )}
           </span>
         </div>
         <div className="lp-progress-track">
@@ -334,33 +399,27 @@ export default function LaunchpadPage() {
         </div>
       </div>
 
-      {nextStep && nextStepCategory && (
-        <div className="card mb-6 lp-next" data-tour="lp-next">
-          <span className="lp-next-icon" aria-hidden="true">
-            <nextStep.icon size={18} />
-          </span>
-          <div className="lp-next-body">
-            <span className="lp-next-kicker">Siguiente paso recomendado</span>
-            <strong className="lp-next-title">{nextStep.title}</strong>
-          </div>
-          <button
-            type="button"
-            className="primary lp-next-cta"
-            onClick={() => {
-              setActiveCategory(nextStepCategory.id);
-              setExpanded(nextStep.id);
-            }}
-          >
-            Ver paso
-          </button>
-        </div>
+      {milestoneOpen && overallProgress === 100 && (
+        <MilestoneBanner total={ALL_ITEMS.length} onDismiss={() => setMilestoneOpen(false)} />
+      )}
+
+      {nextStep && (
+        <NextStepCard
+          icon={nextStep.item.icon}
+          title={nextStep.item.title}
+          onView={() => {
+            setActiveCategory(nextStep.category.id);
+            setExpanded(nextStep.item.id);
+          }}
+        />
       )}
 
       <div className="lp-layout">
         <div className="lp-cats" role="tablist" aria-label="Categorías de la guía">
-          {CATEGORIES.map(({ id, label, icon: Icon, items }) => {
+          {CATEGORIES.map((cat) => {
+            const { id, label, icon: Icon } = cat;
             const isActive = id === activeCategory;
-            const pct = categoryProgress({ id, label, icon: Icon, items });
+            const pct = categoryPercent(cat, completed);
             return (
               <button
                 key={id}
@@ -376,7 +435,10 @@ export default function LaunchpadPage() {
                   <Icon size={14} aria-hidden="true" />
                   <span className="lp-cat-text">{label}</span>
                 </span>
-                <span className={`lp-pct${pct === 100 ? ' done' : ''}`} aria-label={`${pct}% completado`}>
+                <span
+                  className={`lp-pct${pct === 100 ? ' done' : ''}${celebrate?.categories.has(id) ? ' is-pop' : ''}`}
+                  aria-label={`${pct}% completado`}
+                >
                   {pct}%
                 </span>
               </button>
@@ -391,30 +453,24 @@ export default function LaunchpadPage() {
                 Tu progreso de {category.label.toLowerCase()}
               </span>
               <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--rai-gold)' }}>
-                {categoryProgress(category)}%
+                {categoryProgress}%
               </span>
             </div>
             <div className="lp-progress-track">
-              <div className="lp-progress-fill" style={{ width: `${categoryProgress(category)}%` }} />
+              <div className="lp-progress-fill" style={{ width: `${categoryProgress}%` }} />
             </div>
           </div>
 
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-            {category.items.map((item, i) => {
+            {category.items.map((item) => {
               const isOpen = expanded === item.id;
               const isDone = completed.includes(item.id);
               const isManual = manualItemIds.includes(item.id);
               const Icon = item.icon;
               const tutorial = manifest[item.id];
+              const isPopping = celebrate?.items.has(item.id) ?? false;
               return (
-                <div
-                  key={item.id}
-                  style={{
-                    borderBottom:
-                      i < category.items.length - 1 ? '1px solid var(--rai-border)' : 'none',
-                    background: isDone ? 'rgba(46,196,182,0.04)' : 'transparent',
-                  }}
-                >
+                <div key={item.id} className={`lp-row${isDone ? ' is-done' : ''}`}>
                   <div
                     className="row-between lp-item"
                     style={{ padding: '14px 16px', gap: 12 }}
@@ -438,7 +494,7 @@ export default function LaunchpadPage() {
                             toggleComplete(item.id);
                           }
                         }}
-                        className="lp-ring"
+                        className={`lp-ring${isPopping ? ' is-pop' : ''}`}
                         aria-label={
                           isManual
                             ? isDone
@@ -463,21 +519,20 @@ export default function LaunchpadPage() {
                         </svg>
                         {isDone && <Check size={14} strokeWidth={3} className="lp-ring-check" />}
                       </div>
-                      <Icon size={16} color="var(--rai-gold)" style={{ marginTop: 8, flexShrink: 0 }} />
+                      <Icon size={16} color="var(--rai-gold)" className="lp-row-icon" style={{ marginTop: 8, flexShrink: 0 }} />
                       <div style={{ marginTop: 4 }}>
-                        <div
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 600,
-                            textDecoration: isDone ? 'line-through' : 'none',
-                            color: isDone ? 'var(--rai-muted)' : 'var(--rai-text)',
-                          }}
-                        >
-                          {item.title}
-                        </div>
-                        <div className="muted mt-2" style={{ fontSize: 12, maxWidth: 560 }}>
+                        <div className="lp-row-title">{item.title}</div>
+                        <div className="muted mt-2 lp-row-desc" style={{ fontSize: 12, maxWidth: 560 }}>
                           {item.description}
                         </div>
+                        {hasData && !isManual && (
+                          <div className="lp-auto">
+                            <span className={`fx-dot ${isDone ? 'fx-dot--ok' : 'fx-dot--warn'}`} aria-hidden="true" />
+                            <span>
+                              {isDone ? 'Completado automáticamente' : 'Se completará solo según tu actividad'}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="row lp-item-end" style={{ gap: 10, flexShrink: 0, alignItems: 'center' }}>

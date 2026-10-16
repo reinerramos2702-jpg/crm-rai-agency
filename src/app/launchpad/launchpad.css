@@ -1,0 +1,148 @@
+/* ============================================================================
+   Guía de Inicio (/launchpad) — efectos propios de la página.
+   Los estilos base `lp-*` siguen en globals.css; aquí solo lo nuevo.
+   Reglas: sin desenfoque, solo transform/opacity animados, movimiento dentro de
+   `prefers-reduced-motion: no-preference`, hover bajo `(hover: hover)`.
+   ============================================================================ */
+
+
+/* ---------- Valor del progreso general (texto o esqueleto, misma altura) ---------- */
+.lp-overall-value {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 18px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--rai-gold);
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ---------- Filas de la lista ---------- */
+.lp-row:not(:last-child) { border-bottom: 1px solid var(--rai-border); }
+.lp-row.is-done { background: color-mix(in srgb, var(--rai-success) 5%, transparent); }
+
+.lp-row-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--rai-text);
+}
+.lp-row.is-done .lp-row-title {
+  color: var(--rai-muted);
+  text-decoration: line-through;
+}
+
+/* Indicador de ítems automáticos: punto de estado + texto */
+.lp-auto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--rai-muted);
+}
+.lp-auto > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+
+/* Una fila completada se atenúa (opacidad) sin perder legibilidad */
+.lp-row.is-done .lp-row-icon,
+.lp-row.is-done .lp-row-desc,
+.lp-row.is-done .lp-auto { opacity: 0.72; }
+
+/* El anillo ya no rebota al cargar: el check de globals.css se anula y solo
+   la clase `is-pop` (que la página pone únicamente en la transición) anima. */
+.lp-ring .lp-ring-check { animation: none; }
+
+
+/* ---------- Hito: plataforma lista al 100 % ---------- */
+.card.lp-milestone {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-color: var(--rai-gold);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--rai-gold) 10%, transparent), transparent 70%),
+    var(--rai-card);
+  box-shadow: var(--fx-elev-1);
+}
+/* El tema claro de .card fija su borde con más especificidad: se repite aquí */
+[data-theme="light"] .card.lp-milestone { border-color: var(--rai-gold); }
+
+.lp-milestone-badge {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--rai-gold);
+  background: var(--rai-card);
+  border: 1px solid var(--rai-gold);
+}
+.lp-milestone-badge svg { display: block; overflow: hidden; }
+
+/* Cubierta que se desplaza para «dibujar» el trazo (solo transform) */
+.lp-milestone-cover { display: none; fill: var(--rai-card); }
+
+.lp-milestone-text {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.lp-milestone-text strong { color: var(--rai-gold); }
+
+button.lp-milestone-close {
+  display: grid !important;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: var(--rai-muted) !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+button.lp-milestone-close:focus-visible { outline: 2px solid var(--rai-gold); outline-offset: 2px; }
+
+@media (hover: hover) {
+  button.lp-milestone-close:hover {
+    color: var(--rai-text) !important;
+    background: color-mix(in srgb, var(--rai-muted) 16%, transparent) !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .card.lp-milestone { gap: 10px; }
+  .lp-milestone-badge { width: 34px; height: 34px; }
+}
+
+
+/* ---------- Movimiento (solo transform / opacity) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .lp-row .lp-row-icon,
+  .lp-row .lp-row-desc,
+  .lp-row .lp-auto { transition: opacity 0.3s ease; }
+
+  /* Rebote breve solo en la transición (la clase la aplica la página ~0,9 s) */
+  .lp-ring.is-pop,
+  .lp-pct.is-pop { animation: fx-pop 0.28s ease-out; }
+
+  .lp-milestone-cover {
+    display: block;
+    animation: lp-draw-check 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+  }
+  @keyframes lp-draw-check {
+    from { transform: translateX(0); }
+    to   { transform: translateX(26px); }
+  }
+}
