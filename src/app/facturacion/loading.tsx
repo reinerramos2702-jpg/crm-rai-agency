@@ -1,6 +1,7 @@
-import { PageSkeleton } from '@/components/ui/PageSkeleton';
+import { BillingSkeleton } from './_components/BillingSkeleton';
+import './_components/facturacion.css';
 
-/** Esqueleto instantáneo mientras se resuelve la ruta (Next lo muestra al hacer clic en el menú). */
+/** Esqueleto instantáneo con la misma estructura que la página (sin saltos de diseño). */
 export default function Loading() {
-  return <PageSkeleton title="Facturación" cards={3} rows={5} />;
+  return <BillingSkeleton />;
 }

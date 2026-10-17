@@ -1,0 +1,139 @@
+/* ============================================================================
+   Kit de módulos (Facturación e Informes) — pestañas con scroll, acción
+   deshabilitada con motivo y banda informativa.
+   Reglas: sin desenfoque; movimiento solo con transform y opacity (150–250 ms,
+   ease-out) bajo prefers-reduced-motion: no-preference; hover bajo (hover: hover);
+   tokens var(--rai-*). Los botones propios llevan !important (docs/DISENO-EFECTOS.md).
+   ============================================================================ */
+
+/* ---------- Pestañas en una sola fila ---------- */
+.mk-tabs { position: relative; margin-bottom: 20px; border-bottom: 1px solid var(--rai-border); min-width: 0; }
+.mk-tabs-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rai-border) transparent;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+.mk-tabs[data-edge-start="true"] .mk-tabs-scroll {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 28px);
+  mask-image: linear-gradient(to right, transparent 0, #000 28px);
+}
+.mk-tabs[data-edge-end="true"] .mk-tabs-scroll {
+  -webkit-mask-image: linear-gradient(to left, transparent 0, #000 28px);
+  mask-image: linear-gradient(to left, transparent 0, #000 28px);
+}
+.mk-tabs[data-edge-start="true"][data-edge-end="true"] .mk-tabs-scroll {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+}
+.mk-tabs-track { position: relative; display: flex; flex-wrap: nowrap; gap: 4px; width: max-content; min-width: 100%; }
+
+.mk-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  gap: 8px;
+  min-height: 46px;
+  padding: 8px 16px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--rai-muted) !important;
+  box-shadow: none !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  scroll-snap-align: center;
+}
+.mk-tab[aria-selected="true"] { color: var(--rai-gold) !important; font-weight: 600 !important; }
+.mk-tab:focus-visible { outline: 2px solid var(--rai-gold); outline-offset: -2px; }
+.mk-live { flex: 0 0 auto; }
+
+/* Subrayado: 1 px de ancho con origen a la izquierda; se estira con scaleX */
+.mk-indicator {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--rai-gold);
+  transform-origin: left center;
+  opacity: 0;
+  pointer-events: none;
+}
+.mk-indicator[data-ready="true"] { opacity: 1; }
+
+/* ---------- Acción deshabilitada con motivo ---------- */
+.mk-da { position: relative; display: inline-flex; }
+.mk-da-btn { opacity: 0.6; cursor: not-allowed !important; box-shadow: none !important; }
+.mk-da-btn:active { transform: none !important; }
+.mk-da-tip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 32px));
+  padding: 8px 12px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  font-weight: 500;
+  text-align: left;
+  white-space: normal;
+  color: var(--rai-text);
+  background: var(--rai-card);
+  border: 1px solid var(--rai-border);
+  border-radius: 10px;
+  box-shadow: var(--fx-elev-2, 0 4px 12px rgba(0, 0, 0, 0.25));
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  pointer-events: none;
+}
+.mk-da[data-align="end"] .mk-da-tip { left: auto; right: 0; }
+.mk-da.is-open .mk-da-tip,
+.mk-da:focus-within .mk-da-tip { opacity: 1; visibility: visible; transform: none; }
+
+/* ---------- Banda informativa ---------- */
+.mk-band {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 9px 14px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--rai-muted);
+  background: color-mix(in srgb, var(--rai-gold) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--rai-gold) 22%, var(--rai-border));
+  border-radius: 10px;
+}
+.mk-band svg { flex: 0 0 auto; margin-top: 2px; color: var(--rai-gold); }
+
+/* ---------- Movimiento: solo transform y opacity ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .mk-tabs-scroll { scroll-behavior: smooth; }
+  .mk-indicator[data-ready="true"] { transition: transform 220ms ease-out; }
+  .mk-da-tip { transition: opacity 160ms ease-out, transform 160ms ease-out, visibility 0s linear 160ms; }
+  .mk-da.is-open .mk-da-tip,
+  .mk-da:focus-within .mk-da-tip { transition-delay: 0s; }
+}
+@media (hover: hover) {
+  .mk-tab[aria-selected="false"]:hover { color: var(--rai-text) !important; }
+  .mk-da:hover .mk-da-tip { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk-da-tip { transition: none; }
+}
+
+/* ---------- Responsive 320–1440 ---------- */
+@media (max-width: 560px) {
+  .mk-tab { padding: 8px 12px !important; font-size: 13px !important; }
+  .mk-da[data-align="end"] .mk-da-tip { right: 0; }
+  .mk-da .mk-da-tip { left: 0; }
+}
