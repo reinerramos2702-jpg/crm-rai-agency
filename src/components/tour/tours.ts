@@ -314,7 +314,8 @@ const SPECS: Array<{ path: string; spec: ModuleSpec }> = [
       label: 'Marketing',
       intro: 'Herramientas para promocionar tu negocio y captar clientes.',
       mainTitle: 'Tus herramientas de marketing',
-      mainTip: 'Elige la herramienta con la que quieres trabajar.',
+      mainTip: 'Cada pestaña es una herramienta real: calendario de publicaciones, fragmentos, enlaces con contador, cuenta atrás, marca y más.',
+      mainTarget: () => visible($(dataTourSel('marketing-tabs'))),
     },
   },
   {
@@ -332,9 +333,10 @@ const SPECS: Array<{ path: string; spec: ModuleSpec }> = [
     spec: {
       id: 'contenido-multimedia',
       label: 'Contenido multimedia',
-      intro: 'Tu biblioteca de imágenes y archivos.',
+      intro: 'Todo lo que generaste en el CRM, reunido en un solo lugar.',
+      searchTip: 'Busca por nombre, origen o etiqueta. En «Filtros» acotas por origen y fecha.',
       mainTitle: 'Tu biblioteca',
-      mainTip: 'Guarda y reutiliza aquí los archivos de tus campañas.',
+      mainTip: 'Abre un archivo para verlo, descargarlo o usarlo; marca varios para actuar en lote.',
     },
   },
   {
