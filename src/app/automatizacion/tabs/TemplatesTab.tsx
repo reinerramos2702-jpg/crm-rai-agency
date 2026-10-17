@@ -4,18 +4,18 @@ import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LayoutTemplate, Search, SearchX, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { TEMPLATE_SORT_LABELS, sortTemplates, type TemplateSort } from '@/lib/automation-templates';
 import {
-  TEMPLATE_SORT_LABELS,
-  countByNiche,
-  filterTemplates,
-  sortTemplates,
-  type NicheFilter,
-  type TemplateSort,
-} from '@/lib/automation-templates';
+  DEFAULT_GALLERY_FILTERS,
+  countByCategory,
+  filterGallery,
+  templateRequirements,
+  type GalleryFilters,
+} from '@/lib/automation-template-gallery';
 import { applyNameTemplate } from '@/lib/automation-prefs';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { errorMessage } from '../api';
-import { NICHE_FILTERS, TEMPLATES, type TemplateT } from '../templates-data';
+import { CATEGORY_FILTERS, NICHE_FILTERS, TEMPLATES, type TemplateT } from '../templates-data';
 import { TemplateCard } from '../components/TemplateCard';
 import { TemplatePreview } from '../components/TemplatePreview';
 import { useAutomationPrefs } from '../use-automation-prefs';
@@ -24,32 +24,38 @@ import '../templates.css';
 
 interface TemplatesTabProps {
   createWorkflow: (input: NewWorkflowInput) => Promise<{ id: string }>;
+  /** `null` mientras se cargan los ajustes. */
+  webhookConfigured: boolean | null;
 }
 
-export default function TemplatesTab({ createWorkflow }: TemplatesTabProps) {
+export default function TemplatesTab({ createWorkflow, webhookConfigured }: TemplatesTabProps) {
   const router = useRouter();
   const { prefs } = useAutomationPrefs();
-  const [query, setQuery] = useState('');
-  const [niche, setNiche] = useState<NicheFilter>('todas');
+  const [filters, setFilters] = useState<GalleryFilters>(DEFAULT_GALLERY_FILTERS);
   const [sort, setSort] = useState<TemplateSort>('recomendado');
-  const [preview, setPreview] = useState<TemplateT | null>(null);
+  const [open, setOpen] = useState<TemplateT | null>(null);
   const [creatingId, setCreatingId] = useState<string | null>(null);
 
-  const counts = useMemo(() => countByNiche(TEMPLATES, query), [query]);
-  const visible = useMemo(() => sortTemplates(filterTemplates(TEMPLATES, query, niche), sort), [query, niche, sort]);
-  const filtering = query.trim() !== '' || niche !== 'todas';
-
-  const clearFilters = () => {
-    setQuery('');
-    setNiche('todas');
-  };
+  const counts = useMemo(() => countByCategory(TEMPLATES, filters), [filters]);
+  const visible = useMemo(() => sortTemplates(filterGallery(TEMPLATES, filters), sort), [filters, sort]);
+  const requirementsById = useMemo(
+    () => new Map(TEMPLATES.map((t) => [t.id, templateRequirements(t, { webhookConfigured })])),
+    [webhookConfigured]
+  );
+  const filtering = filters.query.trim() !== '' || filters.category !== 'todas' || filters.niche !== 'todas';
+  const set = (patch: Partial<GalleryFilters>) => setFilters((f) => ({ ...f, ...patch }));
 
   async function createFromTemplate(template: TemplateT) {
     if (creatingId) return;
     setCreatingId(template.id);
     try {
-      const workflow = await createWorkflow({ templateId: template.id, name: applyNameTemplate(prefs.nameTemplate, template.name) });
-      toast.success('Flujo creado como borrador. Revísalo y actívalo cuando esté listo.');
+      const workflow = await createWorkflow({
+        name: applyNameTemplate(prefs.nameTemplate, template.name),
+        description: template.description,
+        trigger: template.trigger,
+        steps: template.steps,
+      });
+      toast.success('Flujo creado como borrador (inactivo). Revísalo y actívalo cuando esté listo.');
       router.push(`/automatizacion/${workflow.id}`);
     } catch (e: unknown) {
       toast.error(errorMessage(e));
@@ -65,17 +71,25 @@ export default function TemplatesTab({ createWorkflow }: TemplatesTabProps) {
             <Search size={16} aria-hidden="true" />
             <input
               type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Busca por nombre, disparador o acción…"
+              value={filters.query}
+              onChange={(e) => set({ query: e.target.value })}
+              placeholder="Busca: cita, reseña, pedido, etiqueta…"
               aria-label="Buscar plantillas"
             />
-            {query && (
-              <button type="button" className="au-search-clear" onClick={() => setQuery('')} aria-label="Borrar búsqueda">
+            {filters.query && (
+              <button type="button" className="au-search-clear" onClick={() => set({ query: '' })} aria-label="Borrar búsqueda">
                 <X size={15} />
               </button>
             )}
           </div>
+          <label className="au-field">
+            <span>Negocio</span>
+            <select className="au-select" value={filters.niche} onChange={(e) => set({ niche: e.target.value as GalleryFilters['niche'] })}>
+              {NICHE_FILTERS.map((n) => (
+                <option key={n.id} value={n.id}>{n.label}</option>
+              ))}
+            </select>
+          </label>
           <label className="au-field">
             <span>Ordenar</span>
             <select className="au-select" value={sort} onChange={(e) => setSort(e.target.value as TemplateSort)}>
@@ -85,16 +99,16 @@ export default function TemplatesTab({ createWorkflow }: TemplatesTabProps) {
             </select>
           </label>
         </div>
-        <div className="au-chips" role="group" aria-label="Filtrar por categoría">
-          {NICHE_FILTERS.map((f) => (
-            <button key={f.id} type="button" className="au-chip" aria-pressed={niche === f.id} onClick={() => setNiche(f.id)}>
-              {f.label} <span className="au-chip-n">{counts[f.id]}</span>
+        <div className="au-chips" role="group" aria-label="Filtrar por objetivo">
+          {CATEGORY_FILTERS.filter((c) => c.id === 'todas' || counts[c.id] > 0 || filters.category === c.id).map((c) => (
+            <button key={c.id} type="button" className="au-chip" aria-pressed={filters.category === c.id} onClick={() => set({ category: c.id })}>
+              {c.label} <span className="au-chip-n">{counts[c.id]}</span>
             </button>
           ))}
         </div>
         <p className="tp-count" role="status" aria-live="polite">
           {visible.length === 1 ? '1 plantilla' : `${visible.length} plantillas`}
-          {filtering ? ' con los filtros actuales' : ' listas para usar'}
+          {filtering ? ' con los filtros actuales' : ' listas para usar'}. Todas se crean inactivas.
         </p>
       </div>
 
@@ -102,9 +116,9 @@ export default function TemplatesTab({ createWorkflow }: TemplatesTabProps) {
         <EmptyState
           icon={filtering ? SearchX : LayoutTemplate}
           title="Ninguna plantilla coincide"
-          text="Prueba con otra palabra (por ejemplo «cita», «pedido» o «etiqueta») o cambia de categoría."
+          text="Prueba con otra palabra (por ejemplo «cita», «pedido» o «etiqueta») o cambia de objetivo."
           action={
-            <button type="button" className="au-btn au-btn--soft" onClick={clearFilters}>
+            <button type="button" className="au-btn au-btn--soft" onClick={() => setFilters(DEFAULT_GALLERY_FILTERS)}>
               Limpiar filtros
             </button>
           }
@@ -112,23 +126,17 @@ export default function TemplatesTab({ createWorkflow }: TemplatesTabProps) {
       ) : (
         <div className="tp-grid" data-tour="tpl-grid">
           {visible.map((template) => (
-            <TemplateCard
-              key={template.id}
-              template={template}
-              busy={creatingId === template.id}
-              disabled={creatingId !== null}
-              onPreview={setPreview}
-              onUse={createFromTemplate}
-            />
+            <TemplateCard key={template.id} template={template} requirements={requirementsById.get(template.id) ?? []} onOpen={setOpen} />
           ))}
         </div>
       )}
 
-      {preview && (
+      {open && (
         <TemplatePreview
-          template={preview}
-          busy={creatingId === preview.id}
-          onClose={() => setPreview(null)}
+          template={open}
+          requirements={requirementsById.get(open.id) ?? []}
+          busy={creatingId === open.id}
+          onClose={() => setOpen(null)}
           onUse={createFromTemplate}
         />
       )}

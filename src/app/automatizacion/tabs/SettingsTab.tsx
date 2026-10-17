@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { Bell, ExternalLink, Loader2, Settings as SettingsIcon, Zap } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { SkeletonLine } from '@/components/ui/Skeleton';
-import { errorMessage } from '../api';
+import { ExternalLink, Settings as SettingsIcon } from 'lucide-react';
 import { BackupCard } from '../components/BackupCard';
+import { EngineCard } from '../components/EngineCard';
+import { NotifyCard } from '../components/NotifyCard';
 import { PrefsCard } from '../components/PrefsCard';
+import { SafetyCard } from '../components/SafetyCard';
 import { SoonCards } from '../components/SoonCards';
 import type { SettingsT } from '../types';
 import type { useAutomations } from '../use-automations';
@@ -21,98 +21,30 @@ interface SettingsTabProps {
 }
 
 export default function SettingsTab({ settings, loading, save, data }: SettingsTabProps) {
-  const [saving, setSaving] = useState<'enabled' | 'email' | null>(null);
-  const [email, setEmail] = useState('');
-
-  const hasSettings = settings !== null;
-  const savedEmail = settings?.automationNotifyEmail ?? '';
-  useEffect(() => {
-    if (hasSettings) setEmail(savedEmail);
-  }, [hasSettings, savedEmail]);
-
-  async function persist(kind: 'enabled' | 'email', patch: Partial<SettingsT>, success: string) {
-    setSaving(kind);
-    try {
-      await save(patch);
-      toast.success(success);
-    } catch (e: unknown) {
-      toast.error(errorMessage(e));
-    } finally {
-      setSaving(null);
-    }
-  }
-
-  const enabled = settings?.automationsEnabled ?? true;
-  const emailChanged = savedEmail !== email.trim();
-
+  const hasWebhook = !!settings?.n8nWebhookUrl;
   return (
     <div className="st-grid" data-tour="settings">
       <h2 className="st-section-title">Motor</h2>
-      <div className="st-card">
-        <div className="st-card-head">
-          <div>
-            <h3 className="st-card-title"><Zap size={16} /> Motor de automatización</h3>
-            <p className="st-card-text">
-              Interruptor general. Si lo desactivas, ningún flujo se ejecutará (ni por eventos ni por el cron), aunque esté
-              marcado como «Activo». Útil para pausar todo de golpe.
-            </p>
-          </div>
-          {loading ? (
-            <SkeletonLine width={96} height={36} />
-          ) : (
-            <div className="st-card-side">
-              <span className="st-state">
-                <span className={`fx-dot ${enabled ? 'fx-dot--ok' : 'fx-dot--danger'}`} aria-hidden="true" />
-                {enabled ? 'Activado' : 'Pausado'}
-              </span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={enabled}
-                aria-label="Motor de automatización"
-                className="au-switch"
-                disabled={saving === 'enabled'}
-                onClick={() => void persist('enabled', { automationsEnabled: !enabled }, enabled ? 'Automatización pausada globalmente.' : 'Automatización activada.')}
-              >
-                <span className="au-switch-knob" />
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      <EngineCard settings={settings} loading={loading} save={save} workflows={data.workflows} />
+
+      <h2 className="st-section-title">Seguridad</h2>
+      <SafetyCard settings={settings} workflows={data.workflows} />
 
       <h2 className="st-section-title">Notificaciones</h2>
-      <div className="st-card">
-        <h3 className="st-card-title"><Bell size={16} /> Correo de alertas internas</h3>
-        <p className="st-card-text">
-          Dirección donde recibirás un resumen si un flujo crítico falla repetidamente (el envío por correo llega pronto; hoy se
-          usa como referencia para tus webhooks de notificación).
-        </p>
-        <div className="st-inline">
-          <input type="email" placeholder="gerencia@tuempresa.com" aria-label="Correo de alertas" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <button
-            type="button"
-            className="au-btn au-btn--soft"
-            disabled={saving === 'email' || !emailChanged}
-            onClick={() => void persist('email', { automationNotifyEmail: email.trim() || null }, 'Correo de notificaciones guardado.')}
-          >
-            {saving === 'email' ? <Loader2 size={14} className="au-spin" /> : null} Guardar
-          </button>
-        </div>
-      </div>
+      <NotifyCard settings={settings} save={save} />
       <div className="st-card">
         <div className="st-card-head">
           <div>
             <h3 className="st-card-title"><ExternalLink size={16} /> Webhook de notificaciones (n8n)</h3>
             <p className="st-card-text">
               Los pasos «Enviar notificación» usan la URL de Configuración general → Conexión n8n.
-              {settings?.n8nWebhookUrl ? ' Ya está configurada.' : ' Aún no está configurada: esos pasos se registrarán como omitidos.'}
+              {hasWebhook ? ' Ya está configurada.' : ' Aún no está configurada: esos pasos se registrarán como omitidos.'}
             </p>
           </div>
           {!loading && (
             <span className="st-state">
-              <span className={`fx-dot ${settings?.n8nWebhookUrl ? 'fx-dot--ok' : 'fx-dot--warn'}`} aria-hidden="true" />
-              {settings?.n8nWebhookUrl ? 'Conectado' : 'Sin configurar'}
+              <span className={`fx-dot ${hasWebhook ? 'fx-dot--ok' : 'fx-dot--warn'}`} aria-hidden="true" />
+              {hasWebhook ? 'Conectado' : 'Sin configurar'}
             </span>
           )}
         </div>

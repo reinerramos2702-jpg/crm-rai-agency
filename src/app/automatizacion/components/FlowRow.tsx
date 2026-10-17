@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Copy, Pencil, Trash2, Zap } from 'lucide-react';
 import { formatDateTime, relativeTime } from '@/lib/automation-runs';
+import { lastRunBadge } from '@/lib/automation-flows';
 import { zoneOption, type DisplayZone } from '@/lib/automation-prefs';
 import { STATUS_LABELS, TRIGGER_META } from '@/lib/automations/ui-meta';
 import type { WorkflowT } from '../types';
@@ -16,19 +17,22 @@ interface FlowRowProps {
   pending: boolean;
   showDescription: boolean;
   zone: DisplayZone;
+  compact?: boolean;
   onToggle: (flow: WorkflowT) => void;
   onDuplicate: (flow: WorkflowT) => void;
   onDelete: (flow: WorkflowT) => void;
 }
 
-export function FlowRow({ flow, pending, showDescription, zone, onToggle, onDuplicate, onDelete }: FlowRowProps) {
+export function FlowRow({ flow, pending, showDescription, zone, compact = false, onToggle, onDuplicate, onDelete }: FlowRowProps) {
   const active = flow.status === 'active';
   const runs = flow._count?.runs ?? flow.runsCount ?? 0;
   const trigger = TRIGGER_META[flow.trigger?.type]?.label ?? flow.trigger?.type ?? '—';
   const href = `/automatizacion/${flow.id}`;
+  const badge = lastRunBadge(flow.lastRunStatus);
+  const when = flow.lastRunAt ? relativeTime(flow.lastRunAt) : null;
 
   return (
-    <li className={`fl-row fx-reveal${pending ? ' is-pending' : ''}`}>
+    <li className={`fl-row fx-reveal${pending ? ' is-pending' : ''}${compact ? ' fl-row--compact' : ''}`}>
       <button
         type="button"
         role="switch"
@@ -48,8 +52,9 @@ export function FlowRow({ flow, pending, showDescription, zone, onToggle, onDupl
           <span><Zap size={12} aria-hidden="true" /> {trigger}</span>
           <span>{flow.steps?.length ?? 0} pasos</span>
           <span>{runs} {runs === 1 ? 'ejecución' : 'ejecuciones'}</span>
-          <span title={formatDateTime(flow.lastRunAt, zoneOption(zone))}>
-            {flow.lastRunAt ? `Última: ${relativeTime(flow.lastRunAt)}` : 'Sin ejecutar'}
+          <span className={badge ? `fl-last fl-last--${badge.tone}` : undefined} title={formatDateTime(flow.lastRunAt, zoneOption(zone))}>
+            {badge && <span className={`fx-dot ${badge.tone === 'ok' ? 'fx-dot--ok' : badge.tone === 'danger' ? 'fx-dot--danger' : badge.tone === 'warn' ? 'fx-dot--warn' : ''}`} aria-hidden="true" />}
+            {badge ? `${badge.label}${when ? ` · ${when}` : ''}` : when ? `Última: ${when}` : 'Sin ejecutar'}
           </span>
         </div>
       </div>

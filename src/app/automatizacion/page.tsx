@@ -71,6 +71,7 @@ export default function AutomatizacionPage() {
 
   const activeCount = data.workflows.filter((w) => w.status === 'active').length;
   const totalRuns = data.workflows.reduce((sum, w) => sum + (w._count?.runs ?? w.runsCount ?? 0), 0);
+  const webhookConfigured = settings.settings ? !!settings.settings.n8nWebhookUrl : null;
   const paused = settings.settings !== null && !settings.settings.automationsEnabled;
 
   return (
@@ -132,9 +133,15 @@ export default function AutomatizacionPage() {
 
       <div id="au-panel" role="tabpanel" aria-labelledby={`au-tab-${topTab}`}>
         {topTab === 'flujos' && (
-          <FlowsTab data={data} folderFilter={folderFilter} onFolderFilter={setFolderFilter} onGoTemplates={() => selectTab('plantillas')} />
+          <FlowsTab
+            data={data}
+            folderFilter={folderFilter}
+            onFolderFilter={setFolderFilter}
+            onGoTemplates={() => selectTab('plantillas')}
+            webhookConfigured={webhookConfigured}
+          />
         )}
-        {topTab === 'plantillas' && <TemplatesTab createWorkflow={data.createWorkflow} />}
+        {topTab === 'plantillas' && <TemplatesTab createWorkflow={data.createWorkflow} webhookConfigured={webhookConfigured} />}
         {topTab === 'actividad' && <ActivityTab workflows={data.workflows} />}
         {topTab === 'contenido-ig' && <ContentIGTab />}
         {topTab === 'configuracion' && (

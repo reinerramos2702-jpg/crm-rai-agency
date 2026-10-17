@@ -1,0 +1,9 @@
+/* Editor de flujo — rejilla adaptable (columna lateral de ejecuciones debajo en pantallas estrechas) */
+.bd-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
+@media (max-width: 960px) { .bd-grid { grid-template-columns: minmax(0, 1fr); } }
+.bd-head { flex-wrap: wrap; gap: 12px; }
+.bd-actions { flex-wrap: wrap; }
+@media (max-width: 640px) {
+  .bd-head > div { width: 100%; }
+  .bd-actions { width: 100%; }
+}

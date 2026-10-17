@@ -3,6 +3,7 @@
 export type FlowSort = 'recientes' | 'nombre' | 'ejecuciones';
 export type DisplayZone = 'America/Caracas' | 'local';
 export type AutoRefreshSeconds = 0 | 30 | 60;
+export type RowDensity = 'comfortable' | 'compact';
 
 export interface AutomationPrefs {
   flowSort: FlowSort;
@@ -10,6 +11,9 @@ export interface AutomationPrefs {
   displayZone: DisplayZone;
   activityRefresh: AutoRefreshSeconds;
   nameTemplate: string;
+  /** Pedir confirmación antes de activar un flujo que envía mensajes a clientes. */
+  confirmSend: boolean;
+  density: RowDensity;
 }
 
 export const PREFS_STORAGE_KEY = 'rai-auto-prefs-v1';
@@ -21,11 +25,14 @@ export const DEFAULT_PREFS: AutomationPrefs = {
   displayZone: 'America/Caracas',
   activityRefresh: 0,
   nameTemplate: DEFAULT_NAME_TEMPLATE,
+  confirmSend: true,
+  density: 'comfortable',
 };
 
 const FLOW_SORTS: FlowSort[] = ['recientes', 'nombre', 'ejecuciones'];
 const ZONES: DisplayZone[] = ['America/Caracas', 'local'];
 const REFRESH: AutoRefreshSeconds[] = [0, 30, 60];
+const DENSITIES: RowDensity[] = ['comfortable', 'compact'];
 
 /** Lee el JSON guardado descartando cualquier valor inválido (se usa el predeterminado de ese campo). */
 export function parsePrefs(raw: string | null): AutomationPrefs {
@@ -45,6 +52,8 @@ export function parsePrefs(raw: string | null): AutomationPrefs {
     displayZone: ZONES.find((v) => v === data.displayZone) ?? DEFAULT_PREFS.displayZone,
     activityRefresh: REFRESH.find((v) => v === data.activityRefresh) ?? DEFAULT_PREFS.activityRefresh,
     nameTemplate: template.includes('{nombre}') ? template : DEFAULT_PREFS.nameTemplate,
+    confirmSend: typeof data.confirmSend === 'boolean' ? data.confirmSend : DEFAULT_PREFS.confirmSend,
+    density: DENSITIES.find((v) => v === data.density) ?? DEFAULT_PREFS.density,
   };
 }
 

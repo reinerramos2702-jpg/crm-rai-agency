@@ -39,6 +39,8 @@ export interface WorkflowT {
   lastRunAt: string | null;
   updatedAt: string;
   _count?: { runs: number };
+  /** Cómo terminó la ejecución más reciente (la calcula el servidor). */
+  lastRunStatus?: string | null;
 }
 
 export interface AutomationsPayload {
@@ -69,6 +71,8 @@ export interface RunT {
 export interface RunsPayload {
   runs: RunT[];
   nextCursor: string | null;
+  /** Ejecuciones del periodo por estado (solo en la primera página). */
+  summary?: Record<string, number>;
 }
 
 export interface SettingsT {
@@ -83,5 +87,5 @@ export interface SettingsPayload {
 
 export const AUTOMATIONS_URL = '/api/automations';
 export const SETTINGS_URL = '/api/settings';
-export const RUNS_PAGE_SIZE = 50;
+export const RUNS_PAGE_SIZE = 25;
 export const RUNS_URL = `/api/automations/runs?limit=${RUNS_PAGE_SIZE}`;

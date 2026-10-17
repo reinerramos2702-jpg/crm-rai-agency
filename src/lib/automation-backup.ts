@@ -90,3 +90,37 @@ export function parseBackup(text: string): ParseResult {
   }
   return { ok: true, flows };
 }
+
+export interface ImportPlanItem {
+  flow: ExportableFlow;
+  /** Nombre con el que se creará (los repetidos reciben « (importado)»). */
+  finalName: string;
+  duplicate: boolean;
+  sendsMessages: boolean;
+}
+
+const norm = (value: string) => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+
+/** Prepara la importación: detecta nombres ya existentes (o repetidos en el propio archivo) y flujos que envían mensajes. */
+export function planImport(flows: ExportableFlow[], existingNames: string[]): ImportPlanItem[] {
+  const taken = new Set(existingNames.map(norm));
+  return flows.map((flow) => {
+    const duplicate = taken.has(norm(flow.name));
+    let finalName = flow.name;
+    if (duplicate) {
+      finalName = `${flow.name} (importado)`.slice(0, 120);
+      let n = 2;
+      while (taken.has(norm(finalName))) {
+        finalName = `${flow.name} (importado ${n})`.slice(0, 120);
+        n += 1;
+      }
+    }
+    taken.add(norm(finalName));
+    return {
+      flow,
+      finalName,
+      duplicate,
+      sendsMessages: flow.steps.some((s) => s.type === 'action' && s.config?.action === 'send_webhook'),
+    };
+  });
+}

@@ -1,16 +1,17 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LayoutTemplate, Loader2, Plus, Search, SearchX, X, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { SkeletonLine } from '@/components/ui/Skeleton';
 import { applyNameTemplate, sortFlows } from '@/lib/automation-prefs';
-import { normalizeText } from '@/lib/automation-templates';
-import { TRIGGER_META } from '@/lib/automations/ui-meta';
+import { FLOW_STATUS_FILTERS, countFlowsByStatus, filterFlows, isNewFlowShortcut, type FlowStatusFilter } from '@/lib/automation-flows';
+import { needsActivationConfirm } from '@/lib/automation-safety';
 import { errorMessage } from '../api';
+import { ActivationDialog } from '../components/ActivationDialog';
 import { FlowRow } from '../components/FlowRow';
+import { FlowSkeleton } from '../components/FlowSkeleton';
 import { FolderDialog } from '../components/FolderDialog';
 import { FolderPanel } from '../components/FolderPanel';
 import type { WorkflowT } from '../types';
@@ -25,30 +26,29 @@ interface FlowsTabProps {
   folderFilter: string;
   onFolderFilter: (id: string) => void;
   onGoTemplates: () => void;
+  /** `null` mientras se cargan los ajustes. */
+  webhookConfigured: boolean | null;
 }
 
-function matches(flow: WorkflowT, query: string): boolean {
-  const terms = normalizeText(query).split(/\s+/).filter(Boolean);
-  if (terms.length === 0) return true;
-  const haystack = normalizeText(`${flow.name} ${flow.description ?? ''} ${TRIGGER_META[flow.trigger?.type]?.label ?? ''}`);
-  return terms.every((t) => haystack.includes(t));
-}
-
-export default function FlowsTab({ data, folderFilter, onFolderFilter, onGoTemplates }: FlowsTabProps) {
+export default function FlowsTab({ data, folderFilter, onFolderFilter, onGoTemplates, webhookConfigured }: FlowsTabProps) {
   const router = useRouter();
   const { prefs } = useAutomationPrefs();
   const { folders, workflows, loading, error, pendingIds } = data;
   const [query, setQuery] = useState('');
+  const [status, setStatus] = useState<FlowStatusFilter>('todos');
   const [folderDialog, setFolderDialog] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [confirmFlow, setConfirmFlow] = useState<WorkflowT | null>(null);
 
   const selectedFolder = folders.find((f) => f.id === folderFilter);
-  const visible = useMemo(() => {
-    const inFolder = folderFilter === 'all' ? workflows : workflows.filter((w) => w.folderId === folderFilter);
-    return sortFlows(inFolder.filter((w) => matches(w, query)), prefs.flowSort);
-  }, [workflows, folderFilter, query, prefs.flowSort]);
+  const counts = useMemo(() => countFlowsByStatus(workflows, { query, folderId: folderFilter }), [workflows, query, folderFilter]);
+  const visible = useMemo(
+    () => sortFlows(filterFlows(workflows, { query, folderId: folderFilter, status }), prefs.flowSort),
+    [workflows, query, folderFilter, status, prefs.flowSort]
+  );
+  const filtering = query.trim() !== '' || status !== 'todos';
 
-  async function createBlank() {
+  const createBlank = useCallback(async () => {
     if (creating) return;
     setCreating(true);
     try {
@@ -63,7 +63,19 @@ export default function FlowsTab({ data, folderFilter, onFolderFilter, onGoTempl
       toast.error(errorMessage(e));
       setCreating(false);
     }
-  }
+  }, [creating, data, folderFilter, prefs.nameTemplate, router]);
+
+  // Atajo «N»: flujo nuevo (nunca mientras se escribe ni con un diálogo abierto).
+  const dialogOpen = folderDialog || confirmFlow !== null;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!isNewFlowShortcut(e, e.target, dialogOpen || !!document.querySelector('[aria-modal="true"]'))) return;
+      e.preventDefault();
+      void createBlank();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [createBlank, dialogOpen]);
 
   async function run(action: () => Promise<unknown>, success?: string) {
     try {
@@ -74,11 +86,16 @@ export default function FlowsTab({ data, folderFilter, onFolderFilter, onGoTempl
     }
   }
 
-  const toggle = (flow: WorkflowT) =>
+  const doToggle = (flow: WorkflowT) =>
     run(async () => {
       const next = await data.toggleStatus(flow);
       toast.success(next === 'active' ? 'Flujo activado.' : 'Flujo pausado.');
     });
+
+  const toggle = (flow: WorkflowT) => {
+    if (prefs.confirmSend && needsActivationConfirm(flow)) setConfirmFlow(flow);
+    else void doToggle(flow);
+  };
 
   const remove = (flow: WorkflowT) => {
     if (!confirm('¿Eliminar este flujo permanentemente? Se borrará su historial de ejecuciones.')) return;
@@ -92,23 +109,18 @@ export default function FlowsTab({ data, folderFilter, onFolderFilter, onGoTempl
   };
 
   const createButton = (
-    <button type="button" className="au-btn au-btn--primary" onClick={createBlank} disabled={creating}>
-      {creating ? <Loader2 size={14} className="au-spin" /> : <Plus size={14} />} Nuevo flujo
+    <button type="button" className="au-btn au-btn--primary" onClick={() => void createBlank()} disabled={creating} title="Atajo: N">
+      {creating ? <Loader2 size={14} className="au-spin" /> : <Plus size={14} />} Nuevo flujo <kbd className="fl-kbd" aria-hidden="true">N</kbd>
     </button>
   );
+  const clearFilters = () => {
+    setQuery('');
+    setStatus('todos');
+  };
 
   let body: React.ReactNode;
   if (loading) {
-    body = (
-      <div className="fl-list" aria-busy="true">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="au-skel-row fl-skel">
-            <SkeletonLine width={`${55 + (i % 3) * 12}%`} />
-            <SkeletonLine width="35%" height={10} />
-          </div>
-        ))}
-      </div>
-    );
+    body = <FlowSkeleton />;
   } else if (error && workflows.length === 0) {
     body = (
       <div className="au-error" role="alert">
@@ -116,7 +128,7 @@ export default function FlowsTab({ data, folderFilter, onFolderFilter, onGoTempl
         <button type="button" className="au-btn au-btn--sm" onClick={() => void data.refresh()}>Reintentar</button>
       </div>
     );
-  } else if (workflows.length === 0 || (visible.length === 0 && query === '')) {
+  } else if (workflows.length === 0 || (visible.length === 0 && !filtering)) {
     body = (
       <EmptyState
         icon={Zap}
@@ -137,8 +149,8 @@ export default function FlowsTab({ data, folderFilter, onFolderFilter, onGoTempl
       <EmptyState
         icon={SearchX}
         title="Sin resultados"
-        text="Ningún flujo coincide con tu búsqueda."
-        action={<button type="button" className="au-btn au-btn--soft" onClick={() => setQuery('')}>Limpiar búsqueda</button>}
+        text="Ningún flujo coincide con la búsqueda y el estado elegidos."
+        action={<button type="button" className="au-btn au-btn--soft" onClick={clearFilters}>Limpiar filtros</button>}
       />
     );
   } else {
@@ -151,6 +163,7 @@ export default function FlowsTab({ data, folderFilter, onFolderFilter, onGoTempl
             pending={pendingIds.has(flow.id)}
             showDescription={prefs.showDescriptions}
             zone={prefs.displayZone}
+            compact={prefs.density === 'compact'}
             onToggle={toggle}
             onDuplicate={(f) => void run(() => data.duplicateWorkflow(f), 'Flujo duplicado como borrador.')}
             onDelete={remove}
@@ -185,9 +198,32 @@ export default function FlowsTab({ data, folderFilter, onFolderFilter, onGoTempl
           </div>
           {createButton}
         </div>
+        {!loading && workflows.length > 0 && (
+          <div className="fl-filters">
+            <div className="au-chips" role="group" aria-label="Filtrar por estado">
+              {FLOW_STATUS_FILTERS.map((f) => (
+                <button key={f.id} type="button" className="au-chip" aria-pressed={status === f.id} onClick={() => setStatus(f.id)}>
+                  {f.label} <span className="au-chip-n">{counts[f.id]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {body}
       </section>
       {folderDialog && <FolderDialog onClose={() => setFolderDialog(false)} onCreate={(name) => run(() => data.createFolder(name), 'Carpeta creada.')} />}
+      {confirmFlow && (
+        <ActivationDialog
+          flow={confirmFlow}
+          webhookConfigured={webhookConfigured}
+          onCancel={() => setConfirmFlow(null)}
+          onConfirm={() => {
+            const flow = confirmFlow;
+            setConfirmFlow(null);
+            void doToggle(flow);
+          }}
+        />
+      )}
     </div>
   );
 }

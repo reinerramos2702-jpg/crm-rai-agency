@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { isRoleContext, requireRole } from '@/lib/roles';
+import { redactUrls } from '@/lib/automation-runs';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
+const VALID_STATUS = new Set(['success', 'error', 'skipped', 'pending']);
+const MAX_DETAIL = 400;
 
 interface RunLogEntry {
   step: string;
@@ -17,7 +20,13 @@ interface RunLogEntry {
 function extractLog(result: unknown): RunLogEntry[] | null {
   if (!result || typeof result !== 'object') return null;
   const log = (result as { log?: unknown }).log;
-  return Array.isArray(log) && log.length > 0 ? (log as RunLogEntry[]) : null;
+  if (!Array.isArray(log) || log.length === 0) return null;
+  // Los textos del motor pueden incluir la URL del webhook (a veces con clave): nunca salen del servidor.
+  return (log as RunLogEntry[]).map((e) => ({
+    step: String(e?.step ?? '').slice(0, 120),
+    ok: !!e?.ok,
+    detail: redactUrls(String(e?.detail ?? '')).slice(0, MAX_DETAIL),
+  }));
 }
 
 function extractTriggerType(trigger: unknown): string | null {
@@ -27,7 +36,7 @@ function extractTriggerType(trigger: unknown): string | null {
 }
 
 /**
- * GET /api/automations/runs?workflowId=...&status=...&limit=50&cursor=<runId>
+ * GET /api/automations/runs?workflowId=...&status=...&since=<ISO>&limit=50&cursor=<runId>
  *     Pestaña "Actividad" — historial de ejecuciones de todos los flujos del workspace.
  *     Paginación por cursor (id de la última ejecución recibida); responde `nextCursor`
  *     o `null` cuando no hay más. Devuelve solo lo que la pantalla pinta.
@@ -41,29 +50,42 @@ export async function GET(req: NextRequest) {
   const workflowId = params.get('workflowId');
   const status = params.get('status');
   const cursor = params.get('cursor');
+  const sinceRaw = params.get('since');
   const limit = Math.min(Math.max(Number(params.get('limit')) || DEFAULT_LIMIT, 1), MAX_LIMIT);
 
-  const rows = await prisma.workflowRun.findMany({
-    where: {
-      workflow: { workspaceId: ws.id },
-      ...(workflowId ? { workflowId } : {}),
-      ...(status ? { status } : {}),
-    },
-    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-    take: limit + 1,
-    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-    select: {
-      id: true,
-      workflowId: true,
-      contactId: true,
-      status: true,
-      trigger: true,
-      result: true,
-      error: true,
-      createdAt: true,
-      workflow: { select: { id: true, name: true } },
-    },
-  });
+  if (status && !VALID_STATUS.has(status)) return NextResponse.json({ error: 'status inválido' }, { status: 400 });
+  const since = sinceRaw ? new Date(sinceRaw) : null;
+  if (since && Number.isNaN(since.getTime())) return NextResponse.json({ error: 'since inválido' }, { status: 400 });
+
+  const scope = {
+    workflow: { workspaceId: ws.id },
+    ...(workflowId ? { workflowId } : {}),
+    ...(since ? { createdAt: { gte: since } } : {}),
+  };
+
+  // El resumen del periodo (por estado) se calcula solo en la primera página y en paralelo con la lista.
+  const [rows, grouped] = await Promise.all([
+    prisma.workflowRun.findMany({
+      where: { ...scope, ...(status ? { status } : {}) },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      select: {
+        id: true,
+        workflowId: true,
+        contactId: true,
+        status: true,
+        trigger: true,
+        result: true,
+        error: true,
+        createdAt: true,
+        workflow: { select: { id: true, name: true } },
+      },
+    }),
+    cursor
+      ? Promise.resolve(null)
+      : prisma.workflowRun.groupBy({ by: ['status'], where: scope, _count: { _all: true } }),
+  ]);
 
   if (rows.length === 0 && workflowId && !cursor) {
     const owned = await prisma.workflow.findFirst({ where: { id: workflowId, workspaceId: ws.id }, select: { id: true } });
@@ -92,14 +114,18 @@ export async function GET(req: NextRequest) {
       status: r.status,
       trigger: { type: extractTriggerType(r.trigger) },
       result: log ? { log } : null,
-      error: r.error,
+      error: r.error ? redactUrls(r.error).slice(0, MAX_DETAIL) : null,
       createdAt: r.createdAt,
       workflow: r.workflow,
     };
   });
 
   return NextResponse.json(
-    { runs, nextCursor: hasMore ? page[page.length - 1].id : null },
+    {
+      runs,
+      nextCursor: hasMore ? page[page.length - 1].id : null,
+      ...(grouped ? { summary: Object.fromEntries(grouped.map((g) => [g.status, g._count._all])) } : {}),
+    },
     { headers: { 'Cache-Control': 'private, no-cache', Vary: 'Cookie' } }
   );
 }

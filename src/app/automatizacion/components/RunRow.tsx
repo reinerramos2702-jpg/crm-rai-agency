@@ -2,8 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ChevronDown } from 'lucide-react';
-import { formatDateTime, relativeTime } from '@/lib/automation-runs';
+import { ChevronDown, Copy, ExternalLink } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { formatDateTime, friendlyRunError, humanizeDetail, relativeTime } from '@/lib/automation-runs';
 import { zoneOption, type DisplayZone } from '@/lib/automation-prefs';
 import { RUN_STATUS_LABELS, TRIGGER_META } from '@/lib/automations/ui-meta';
 import type { TriggerType } from '@/lib/automations/types';
@@ -39,6 +40,24 @@ export function RunRow({ run, now, zone, expanded, onToggle }: RunRowProps) {
   const triggerLabel = triggerType ? TRIGGER_META[triggerType as TriggerType]?.label ?? triggerType : null;
   const statusLabel = RUN_STATUS_LABELS[run.status] ?? run.status;
   const sub = [triggerLabel, run.contactName].filter(Boolean).join(' · ');
+  const error = friendlyRunError(run.error);
+  const failedSteps = log.filter((l) => !l.ok).length;
+
+  const copySummary = async () => {
+    const lines = [
+      `Flujo: ${run.workflow.name}`,
+      `Estado: ${statusLabel}`,
+      `Fecha: ${formatDateTime(run.createdAt, zoneOption(zone))}`,
+      ...(error ? [`Error: ${error}`] : []),
+      ...log.map((l, i) => `${i + 1}. ${l.ok ? 'OK' : 'ERROR'} — ${humanizeDetail(l.detail)}`),
+    ];
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'));
+      toast.success('Resumen copiado.');
+    } catch {
+      toast.error('No se pudo copiar. Selecciona el texto manualmente.');
+    }
+  };
 
   return (
     <li className={`ac-row${run.status === 'error' ? ' is-error' : ''}`}>
@@ -68,21 +87,37 @@ export function RunRow({ run, now, zone, expanded, onToggle }: RunRowProps) {
       </div>
       {expanded && hasDetail && (
         <div id={`run-${run.id}`} className="ac-detail fx-field-in">
+          {error && <p className="ac-err" role="alert">{error}</p>}
           {log.length > 0 && (
-            <ul className="ac-log">
-              {log.map((entry, i) => (
-                <li key={i}>
-                  <span className={`fx-dot ${entry.ok ? 'fx-dot--ok' : 'fx-dot--danger'}`} role="img" aria-label={entry.ok ? 'Correcto' : 'Con error'} />
-                  <span>
-                    <span className="ac-log-step">{entry.step}: </span>
-                    <span className="ac-log-detail">{entry.detail}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <>
+              <p className="ac-detail-title">
+                {log.length} {log.length === 1 ? 'paso' : 'pasos'}
+                {failedSteps > 0 ? ` · ${failedSteps} con error` : ' · todos correctos'}
+              </p>
+              <ol className="ac-log">
+                {log.map((entry, i) => (
+                  <li key={i}>
+                    <span className={`fx-dot ${entry.ok ? 'fx-dot--ok' : 'fx-dot--danger'}`} role="img" aria-label={entry.ok ? 'Correcto' : 'Con error'} />
+                    <span>
+                      <span className="ac-log-step">{i + 1}. {entry.step}: </span>
+                      <span className="ac-log-detail" title={entry.detail}>{humanizeDetail(entry.detail)}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </>
           )}
-          {run.error && <p className="ac-err">Error: {run.error}</p>}
-          <p className="ac-exact">{formatDateTime(run.createdAt, zoneOption(zone))}</p>
+          <div className="ac-detail-foot">
+            <span className="ac-exact">{formatDateTime(run.createdAt, zoneOption(zone))}</span>
+            <span className="ac-detail-actions">
+              <button type="button" className="au-btn au-btn--ghost au-btn--sm" onClick={() => void copySummary()}>
+                <Copy size={13} /> Copiar resumen
+              </button>
+              <Link href={`/automatizacion/${run.workflow.id}`} className="au-btn au-btn--soft au-btn--sm">
+                <ExternalLink size={13} /> Abrir flujo
+              </Link>
+            </span>
+          </div>
         </div>
       )}
     </li>

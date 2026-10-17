@@ -1,55 +1,68 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Activity, Loader2, RefreshCw, SearchX } from 'lucide-react';
+import { Activity, Loader2, SearchX } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SkeletonLine } from '@/components/ui/Skeleton';
-import { useCachedJson } from '@/lib/use-cached-json';
 import {
   DEFAULT_RUN_FILTERS,
-  countByStatus,
-  filterRuns,
+  buildRunsCsv,
+  buildRunsUrl,
   groupByDay,
   hasActiveFilters,
-  mergeRuns,
-  type RunRange,
-  type RunStatusFilter,
+  runsCsvFileName,
+  type RunFilters,
 } from '@/lib/automation-runs';
+import { RUN_STATUS_LABELS } from '@/lib/automations/ui-meta';
+import { ActivityFilters } from '../components/ActivityFilters';
+import { ActivitySummary } from '../components/ActivitySummary';
 import { RunRow } from '../components/RunRow';
-import { RUNS_PAGE_SIZE, RUNS_URL, type RunT, type RunsPayload, type WorkflowT } from '../types';
+import { RUNS_PAGE_SIZE, type RunT, type RunsPayload, type WorkflowT } from '../types';
 import { useAutomationPrefs } from '../use-automation-prefs';
+import { useRuns } from '../use-runs';
 import '../activity.css';
 
-const STATUS_CHIPS: { id: RunStatusFilter; label: string }[] = [
-  { id: 'todos', label: 'Todas' },
-  { id: 'success', label: 'Exitosas' },
-  { id: 'error', label: 'Con error' },
-  { id: 'skipped', label: 'Omitidas' },
-  { id: 'pending', label: 'Pendientes' },
-];
-
-const RANGES: { id: RunRange; label: string }[] = [
-  { id: 'todo', label: 'Todo el historial' },
-  { id: 'hoy', label: 'Hoy' },
-  { id: '7d', label: 'Últimos 7 días' },
-  { id: '30d', label: 'Últimos 30 días' },
-];
+const EXPORT_PAGE = 100;
+const EXPORT_MAX_PAGES = 5;
 
 interface ActivityTabProps {
   workflows: WorkflowT[];
 }
 
+async function downloadCsv(filters: RunFilters): Promise<number> {
+  const rows: RunT[] = [];
+  let cursor: string | null = null;
+  for (let page = 0; page < EXPORT_MAX_PAGES; page += 1) {
+    const res: Response = await fetch(buildRunsUrl(filters, { limit: EXPORT_PAGE, cursor }));
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = (await res.json()) as RunsPayload;
+    rows.push(...data.runs);
+    cursor = data.nextCursor;
+    if (!cursor) break;
+  }
+  const url = URL.createObjectURL(new Blob([buildRunsCsv(rows, RUN_STATUS_LABELS)], { type: 'text/csv;charset=utf-8' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = runsCsvFileName();
+  link.click();
+  URL.revokeObjectURL(url);
+  return rows.length;
+}
+
 export default function ActivityTab({ workflows }: ActivityTabProps) {
   const { prefs } = useAutomationPrefs();
-  const first = useCachedJson<RunsPayload>(RUNS_URL, { ttlMs: 15_000 });
-  const { refresh } = first;
-  const [more, setMore] = useState<RunT[]>([]);
-  const [moreCursor, setMoreCursor] = useState<string | null | undefined>(undefined);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [filters, setFilters] = useState(DEFAULT_RUN_FILTERS);
+  const [filters, setFilters] = useState<RunFilters>(DEFAULT_RUN_FILTERS);
+  // El «ahora» de la consulta solo cambia con los filtros: así la URL (y su caché) no cambia cada minuto.
+  const [anchor, setAnchor] = useState(() => new Date());
   const [expanded, setExpanded] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
+  const [exporting, setExporting] = useState(false);
+
+  const url = useMemo(() => buildRunsUrl(filters, { limit: RUNS_PAGE_SIZE, now: anchor }), [filters, anchor]);
+  const moreUrl = useCallback((cursor: string) => buildRunsUrl(filters, { limit: RUNS_PAGE_SIZE, cursor, now: anchor }), [filters, anchor]);
+  const data = useRuns(url, moreUrl);
+  const { refresh } = data;
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 60_000);
@@ -64,34 +77,40 @@ export default function ActivityTab({ workflows }: ActivityTabProps) {
     return () => window.clearInterval(id);
   }, [prefs.activityRefresh, refresh]);
 
-  const runs = useMemo(() => mergeRuns(first.data?.runs ?? [], more), [first.data, more]);
-  const nextCursor = moreCursor !== undefined ? moreCursor : first.data?.nextCursor ?? null;
-  const filtered = useMemo(() => filterRuns(runs, filters, now), [runs, filters, now]);
-  const groups = useMemo(() => groupByDay(filtered, now), [filtered, now]);
-  const counts = useMemo(() => countByStatus(runs), [runs]);
-  const filtering = hasActiveFilters(filters);
+  const change = useCallback((patch: Partial<RunFilters>) => {
+    setFilters((f) => ({ ...f, ...patch }));
+    setAnchor(new Date());
+    setExpanded(null);
+  }, []);
 
-  const loadMore = useCallback(async () => {
-    if (!nextCursor || loadingMore) return;
-    setLoadingMore(true);
+  const groups = useMemo(() => groupByDay(data.runs, now), [data.runs, now]);
+  const filtering = hasActiveFilters(filters);
+  const toggleRow = useCallback((id: string) => setExpanded((cur) => (cur === id ? null : id)), []);
+  const syncing = data.revalidating && !data.loading;
+
+  async function loadMore() {
     try {
-      const res = await fetch(`${RUNS_URL}&cursor=${encodeURIComponent(nextCursor)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const page = (await res.json()) as RunsPayload;
-      setMore((prev) => mergeRuns(prev, page.runs));
-      setMoreCursor(page.nextCursor);
+      await data.loadMore();
     } catch {
       toast.error('No se pudieron cargar más ejecuciones.');
-    } finally {
-      setLoadingMore(false);
     }
-  }, [nextCursor, loadingMore]);
+  }
 
-  const toggleRow = useCallback((id: string) => setExpanded((cur) => (cur === id ? null : id)), []);
-  const syncing = first.revalidating && !first.loading;
+  async function exportCsv() {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const n = await downloadCsv(filters);
+      toast.success(n === 0 ? 'No había ejecuciones que exportar.' : `${n} ${n === 1 ? 'ejecución exportada' : 'ejecuciones exportadas'}.`);
+    } catch {
+      toast.error('No se pudo exportar. Inténtalo de nuevo.');
+    } finally {
+      setExporting(false);
+    }
+  }
 
   let body: React.ReactNode;
-  if (first.loading) {
+  if (data.loading) {
     body = (
       <div aria-busy="true">
         {[0, 1, 2, 3, 4].map((i) => (
@@ -106,37 +125,26 @@ export default function ActivityTab({ workflows }: ActivityTabProps) {
         ))}
       </div>
     );
-  } else if (first.error && runs.length === 0) {
+  } else if (data.error && data.runs.length === 0) {
     body = (
       <div className="au-error" role="alert">
         No se pudo cargar la actividad.
         <button type="button" className="au-btn au-btn--sm" onClick={() => void refresh()}>Reintentar</button>
       </div>
     );
-  } else if (runs.length === 0) {
-    body = (
+  } else if (data.runs.length === 0) {
+    body = filtering ? (
+      <EmptyState
+        icon={SearchX}
+        title="Nada con estos filtros"
+        text="No hay ejecuciones con ese estado, flujo y periodo. Prueba con otros valores."
+        action={<button type="button" className="au-btn au-btn--soft" onClick={() => change(DEFAULT_RUN_FILTERS)}>Limpiar filtros</button>}
+      />
+    ) : (
       <EmptyState
         icon={Activity}
         title="Aún no hay ejecuciones"
         text="Activa un flujo y dispara su evento (o espera la próxima corrida programada) para ver aquí qué pasó y cuándo."
-      />
-    );
-  } else if (filtered.length === 0) {
-    body = (
-      <EmptyState
-        icon={SearchX}
-        title="Nada con estos filtros"
-        text={nextCursor ? 'Los filtros se aplican a las ejecuciones ya cargadas. Carga más o cambia los filtros.' : 'Prueba con otro estado, flujo o periodo.'}
-        action={
-          <>
-            <button type="button" className="au-btn au-btn--soft" onClick={() => setFilters(DEFAULT_RUN_FILTERS)}>Limpiar filtros</button>
-            {nextCursor && (
-              <button type="button" className="au-btn" onClick={() => void loadMore()} disabled={loadingMore}>
-                {loadingMore ? <Loader2 size={14} className="au-spin" /> : null} Cargar más
-              </button>
-            )}
-          </>
-        }
       />
     );
   } else {
@@ -154,12 +162,12 @@ export default function ActivityTab({ workflows }: ActivityTabProps) {
         ))}
         <div className="ac-foot">
           <p className="au-note" role="status">
-            {filtering ? `${filtered.length} de ${runs.length} ejecuciones cargadas` : `${runs.length} ${runs.length === 1 ? 'ejecución' : 'ejecuciones'}`}
-            {nextCursor && filtering ? ' · los filtros usan lo ya cargado' : ''}
+            {data.runs.length} {data.runs.length === 1 ? 'ejecución cargada' : 'ejecuciones cargadas'}
+            {data.nextCursor ? ' · hay más' : ''}
           </p>
-          {nextCursor && (
-            <button type="button" className="au-btn au-btn--soft" onClick={() => void loadMore()} disabled={loadingMore}>
-              {loadingMore ? <Loader2 size={14} className="au-spin" /> : null} Cargar {RUNS_PAGE_SIZE} más
+          {data.nextCursor && (
+            <button type="button" className="au-btn au-btn--soft" onClick={() => void loadMore()} disabled={data.loadingMore}>
+              {data.loadingMore ? <Loader2 size={14} className="au-spin" /> : null} Cargar {RUNS_PAGE_SIZE} más
             </button>
           )}
         </div>
@@ -169,44 +177,18 @@ export default function ActivityTab({ workflows }: ActivityTabProps) {
 
   return (
     <div className={`ac-wrap fx-sync${syncing ? ' is-syncing' : ''}`} data-tour="activity">
-      <div className="ac-filters">
-        <div className="au-chips" role="group" aria-label="Filtrar por estado">
-          {STATUS_CHIPS.map((chip) => (
-            <button
-              key={chip.id}
-              type="button"
-              className="au-chip"
-              aria-pressed={filters.status === chip.id}
-              onClick={() => setFilters((f) => ({ ...f, status: chip.id }))}
-            >
-              {chip.label} <span className="au-chip-n">{counts[chip.id]}</span>
-            </button>
-          ))}
-        </div>
-        <div className="ac-selects">
-          <label className="au-field">
-            <span>Flujo</span>
-            <select className="au-select ac-select-flow" value={filters.workflowId} onChange={(e) => setFilters((f) => ({ ...f, workflowId: e.target.value }))}>
-              <option value="">Todos los flujos</option>
-              {workflows.filter((w) => !w.id.startsWith('tmp-')).map((w) => (
-                <option key={w.id} value={w.id}>{w.name}</option>
-              ))}
-            </select>
-          </label>
-          <label className="au-field">
-            <span>Periodo</span>
-            <select className="au-select" value={filters.range} onChange={(e) => setFilters((f) => ({ ...f, range: e.target.value as RunRange }))}>
-              {RANGES.map((r) => (
-                <option key={r.id} value={r.id}>{r.label}</option>
-              ))}
-            </select>
-          </label>
-          <button type="button" className="au-btn au-btn--ghost au-btn--icon" onClick={() => void refresh()} aria-label="Actualizar actividad" title="Actualizar" disabled={first.revalidating}>
-            <RefreshCw size={15} className={syncing ? 'au-spin' : undefined} />
-          </button>
-        </div>
-      </div>
-      {body}
+      <ActivitySummary summary={data.summary} />
+      <ActivityFilters
+        filters={filters}
+        onChange={change}
+        workflows={workflows}
+        counts={data.summary}
+        syncing={data.revalidating}
+        exporting={exporting}
+        onRefresh={() => void refresh()}
+        onExport={() => void exportCsv()}
+      />
+      <div className={data.stale ? 'ac-stale' : undefined} aria-busy={data.stale}>{body}</div>
     </div>
   );
 }

@@ -6,9 +6,6 @@ import Link from 'next/link';
 import {
   ArrowLeft,
   Zap,
-  Trash2,
-  ChevronUp,
-  ChevronDown,
   GitBranch,
   Clock,
   PlayCircle,
@@ -24,19 +21,11 @@ import toast from 'react-hot-toast';
 import {
   TRIGGER_META,
   TRIGGER_ORDER,
-  ACTION_META,
-  ACTION_ORDER,
-  CONDITION_META,
-  CONDITION_ORDER,
-  PLACEHOLDER_HELP,
   STATUS_LABELS,
   RUN_STATUS_LABELS,
-  type FieldDef,
 } from '@/lib/automations/ui-meta';
 import type {
   TriggerType,
-  ActionType,
-  ConditionCheck,
   StepType,
   WorkflowStep,
 } from '@/lib/automations/types';
@@ -91,286 +80,16 @@ function fmtDate(iso: string | null) {
   });
 }
 
-function uid() {
-  return Math.random().toString(36).slice(2, 10);
-}
-
-function defaultsForFields(fields: FieldDef[]): Record<string, any> {
-  const cfg: Record<string, any> = {};
-  for (const f of fields) {
-    if (f.default !== undefined) cfg[f.key] = f.default;
-    else if (f.type === 'select' && f.options && f.options.length > 0) cfg[f.key] = f.options[0].value;
-    else cfg[f.key] = '';
-  }
-  return cfg;
-}
-
-function newStep(type: StepType): WorkflowStep {
-  if (type === 'condition') {
-    const check = CONDITION_ORDER[0];
-    return { id: uid(), type, config: { check, ...defaultsForFields(CONDITION_META[check].fields) } };
-  }
-  if (type === 'delay') {
-    return { id: uid(), type, config: { amount: 1, unit: 'hours' } };
-  }
-  const action = ACTION_ORDER[0];
-  return { id: uid(), type, config: { action, ...defaultsForFields(ACTION_META[action].fields) } };
-}
-
-// ============================================================
-// Campo genérico (texto / número / select / textarea)
-// ============================================================
-function FieldInput({
-  field,
-  value,
-  onChange,
-}: {
-  field: FieldDef;
-  value: any;
-  onChange: (v: any) => void;
-}) {
-  const showPlaceholderHelp =
-    field.type === 'textarea' || (field.type === 'text' && (field.key === 'title' || field.key === 'message' || field.key === 'body'));
-
-  return (
-    <div style={{ marginBottom: 10 }}>
-      <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-        {field.label}
-      </label>
-      {field.type === 'select' ? (
-        <select className="input" style={{ width: '100%' }} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
-          {(field.options || []).map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      ) : field.type === 'textarea' ? (
-        <textarea
-          className="input"
-          style={{ width: '100%', minHeight: 70, resize: 'vertical' }}
-          value={value ?? ''}
-          placeholder={field.placeholder}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      ) : field.type === 'number' ? (
-        <input
-          className="input"
-          type="number"
-          style={{ width: '100%' }}
-          value={value ?? ''}
-          placeholder={field.placeholder}
-          onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
-        />
-      ) : (
-        <input
-          className="input"
-          type="text"
-          style={{ width: '100%' }}
-          value={value ?? ''}
-          placeholder={field.placeholder}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      )}
-      {field.help && (
-        <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
-          {field.help}
-        </div>
-      )}
-      {showPlaceholderHelp && (
-        <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
-          {PLACEHOLDER_HELP}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ============================================================
-// Tarjeta de un paso del flujo
-// ============================================================
-function StepCard({
-  step,
-  index,
-  total,
-  onChange,
-  onRemove,
-  onMove,
-}: {
-  step: WorkflowStep;
-  index: number;
-  total: number;
-  onChange: (step: WorkflowStep) => void;
-  onRemove: () => void;
-  onMove: (dir: -1 | 1) => void;
-}) {
-  function setConfig(patch: Record<string, any>) {
-    onChange({ ...step, config: { ...step.config, ...patch } });
-  }
-
-  function changeType(type: StepType) {
-    onChange(newStep(type));
-  }
-
-  let icon = <PlayCircle size={15} />;
-  let label = 'Acción';
-  let color = 'var(--rai-gold)';
-  if (step.type === 'condition') {
-    icon = <GitBranch size={15} />;
-    label = 'Condición';
-    color = '#7aa2f7';
-  } else if (step.type === 'delay') {
-    icon = <Clock size={15} />;
-    label = 'Espera';
-    color = '#bb9af7';
-  }
-
-  return (
-    <div className="card" style={{ borderLeft: `3px solid ${color}` }}>
-      <div className="row-between mb-4">
-        <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-          <span
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 26,
-              height: 26,
-              borderRadius: '50%',
-              background: 'rgba(136,136,170,0.1)',
-              fontSize: 12,
-              fontWeight: 700,
-            }}
-          >
-            {index + 1}
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
-            {icon} {label}
-          </span>
-        </div>
-        <div className="row" style={{ gap: 6 }}>
-          <ChevronUp
-            size={15}
-            style={{ cursor: index === 0 ? 'not-allowed' : 'pointer', opacity: index === 0 ? 0.3 : 1 }}
-            onClick={() => index > 0 && onMove(-1)}
-          />
-          <ChevronDown
-            size={15}
-            style={{ cursor: index === total - 1 ? 'not-allowed' : 'pointer', opacity: index === total - 1 ? 0.3 : 1 }}
-            onClick={() => index < total - 1 && onMove(1)}
-          />
-          <Trash2 size={15} style={{ cursor: 'pointer' }} onClick={onRemove} />
-        </div>
-      </div>
-
-      <div className="row" style={{ gap: 8, marginBottom: 12 }}>
-        <button className={step.type === 'condition' ? 'primary' : 'ghost'} style={{ flex: 1 }} onClick={() => changeType('condition')}>
-          <GitBranch size={13} /> Condición
-        </button>
-        <button className={step.type === 'delay' ? 'primary' : 'ghost'} style={{ flex: 1 }} onClick={() => changeType('delay')}>
-          <Clock size={13} /> Espera
-        </button>
-        <button className={step.type === 'action' ? 'primary' : 'ghost'} style={{ flex: 1 }} onClick={() => changeType('action')}>
-          <PlayCircle size={13} /> Acción
-        </button>
-      </div>
-
-      {/* ---- Condición ---- */}
-      {step.type === 'condition' && (
-        <>
-          <div style={{ marginBottom: 10 }}>
-            <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-              Si...
-            </label>
-            <select
-              className="input"
-              style={{ width: '100%' }}
-              value={step.config.check}
-              onChange={(e) => {
-                const check = e.target.value as ConditionCheck;
-                onChange({ ...step, config: { check, ...defaultsForFields(CONDITION_META[check].fields) } });
-              }}
-            >
-              {CONDITION_ORDER.map((c) => (
-                <option key={c} value={c}>
-                  {CONDITION_META[c].label}
-                </option>
-              ))}
-            </select>
-          </div>
-          {CONDITION_META[step.config.check as ConditionCheck]?.fields.map((f) => (
-            <FieldInput key={f.key} field={f} value={step.config[f.key]} onChange={(v) => setConfig({ [f.key]: v })} />
-          ))}
-          <p className="muted" style={{ fontSize: 11 }}>
-            Si la condición NO se cumple, el flujo se detiene aquí (queda como "Omitido").
-          </p>
-        </>
-      )}
-
-      {/* ---- Espera ---- */}
-      {step.type === 'delay' && (
-        <div className="row" style={{ gap: 8 }}>
-          <div style={{ flex: 1 }}>
-            <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-              Esperar
-            </label>
-            <input
-              className="input"
-              type="number"
-              min={1}
-              style={{ width: '100%' }}
-              value={step.config.amount ?? 1}
-              onChange={(e) => setConfig({ amount: Number(e.target.value) || 1 })}
-            />
-          </div>
-          <div style={{ flex: 1 }}>
-            <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-              Unidad
-            </label>
-            <select className="input" style={{ width: '100%' }} value={step.config.unit ?? 'hours'} onChange={(e) => setConfig({ unit: e.target.value })}>
-              <option value="minutes">Minutos</option>
-              <option value="hours">Horas</option>
-              <option value="days">Días</option>
-            </select>
-          </div>
-        </div>
-      )}
-
-      {/* ---- Acción ---- */}
-      {step.type === 'action' && (
-        <>
-          <div style={{ marginBottom: 10 }}>
-            <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-              Hacer...
-            </label>
-            <select
-              className="input"
-              style={{ width: '100%' }}
-              value={step.config.action}
-              onChange={(e) => {
-                const action = e.target.value as ActionType;
-                onChange({ ...step, config: { action, ...defaultsForFields(ACTION_META[action].fields) } });
-              }}
-            >
-              {ACTION_ORDER.map((a) => (
-                <option key={a} value={a}>
-                  {ACTION_META[a].label}
-                </option>
-              ))}
-            </select>
-          </div>
-          {ACTION_META[step.config.action as ActionType]?.fields.map((f) => (
-            <FieldInput key={f.key} field={f} value={step.config[f.key]} onChange={(v) => setConfig({ [f.key]: v })} />
-          ))}
-        </>
-      )}
-    </div>
-  );
-}
-
 // ============================================================
 // Página principal del builder
 // ============================================================
+import { FieldInput, StepCard, defaultsForFields, newStep } from './builder-parts';
+import { ActivationDialog } from '../components/ActivationDialog';
+import { needsActivationConfirm } from '@/lib/automation-safety';
+import { useAutomationPrefs } from '../use-automation-prefs';
+import { useAutomationSettings } from '../use-automation-settings';
+import './builder.css';
+
 export default function AutomationBuilderPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
@@ -379,6 +98,9 @@ export default function AutomationBuilderPage() {
   const [saving, setSaving] = useState(false);
   const [busyStatus, setBusyStatus] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [confirmActivate, setConfirmActivate] = useState(false);
+  const { prefs } = useAutomationPrefs();
+  const { settings: engineSettings } = useAutomationSettings();
 
   const [folders, setFolders] = useState<FolderT[]>([]);
   const [workflow, setWorkflow] = useState<WorkflowDetail | null>(null);
@@ -492,6 +214,12 @@ export default function AutomationBuilderPage() {
     }
   }
 
+  /** Activar un flujo que envía mensajes pide confirmación (si la preferencia está activa). */
+  function requestToggle() {
+    if (prefs.confirmSend && needsActivationConfirm({ status, trigger: { type: triggerType }, steps })) setConfirmActivate(true);
+    else void toggleActive();
+  }
+
   async function toggleActive() {
     // Guarda primero los cambios pendientes, luego cambia el estado.
     const ok = await save(false);
@@ -549,8 +277,8 @@ export default function AutomationBuilderPage() {
   return (
     <div className="container">
       {/* Header */}
-      <div className="row-between mb-6" style={{ alignItems: 'flex-start' }}>
-        <div style={{ flex: 1 }}>
+      <div className="row-between mb-6 bd-head" style={{ alignItems: 'flex-start' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <Link href="/automatizacion" className="muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, textDecoration: 'none', marginBottom: 8 }}>
             <ArrowLeft size={14} /> Automatización
           </Link>
@@ -569,14 +297,14 @@ export default function AutomationBuilderPage() {
             style={{ width: '100%', maxWidth: 520 }}
           />
         </div>
-        <div className="row" style={{ gap: 8, alignItems: 'flex-start' }}>
+        <div className="row bd-actions" style={{ gap: 8, alignItems: 'flex-start' }}>
           <span className={STATUS_BADGE[status] || 'badge-muted'} style={{ marginTop: 6 }}>
             {STATUS_LABELS[status] || status}
           </span>
           <button className="secondary" onClick={() => save(true)} disabled={saving}>
             {saving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />} Guardar
           </button>
-          <button className={status === 'active' ? 'danger' : 'primary'} onClick={toggleActive} disabled={busyStatus || saving}>
+          <button className={status === 'active' ? 'danger' : 'primary'} onClick={requestToggle} disabled={busyStatus || saving}>
             {busyStatus ? (
               <Loader2 className="animate-spin" size={14} />
             ) : status === 'active' ? (
@@ -592,7 +320,7 @@ export default function AutomationBuilderPage() {
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: '1fr 320px', gap: 24, alignItems: 'start' }}>
+      <div className="bd-grid">
         {/* Columna principal: trigger + pasos */}
         <div>
           {/* Carpeta */}
@@ -733,6 +461,18 @@ export default function AutomationBuilderPage() {
           )}
         </div>
       </div>
+      {confirmActivate && (
+        <ActivationDialog
+          flow={{ name: name.trim() || 'Este flujo', status, trigger: { type: triggerType }, steps }}
+          webhookConfigured={engineSettings ? !!engineSettings.n8nWebhookUrl : null}
+          busy={busyStatus || saving}
+          onCancel={() => setConfirmActivate(false)}
+          onConfirm={() => {
+            setConfirmActivate(false);
+            void toggleActive();
+          }}
+        />
+      )}
     </div>
   );
 }

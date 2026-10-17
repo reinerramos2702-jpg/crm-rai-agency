@@ -46,7 +46,7 @@ export function useAutomations() {
   const duplicateWorkflow = useCallback(
     async (wf: WorkflowT) => {
       const tempId = `tmp-${wf.id}-${Date.now()}`;
-      const draft: WorkflowT = { ...wf, id: tempId, name: `${wf.name} (copia)`, status: 'draft', runsCount: 0, lastRunAt: null, _count: { runs: 0 } };
+      const draft: WorkflowT = { ...wf, id: tempId, name: `${wf.name} (copia)`, status: 'draft', runsCount: 0, lastRunAt: null, lastRunStatus: null, _count: { runs: 0 } };
       patch((p) => ({ ...p, workflows: [draft, ...p.workflows] }));
       setPending(tempId, true);
       try {

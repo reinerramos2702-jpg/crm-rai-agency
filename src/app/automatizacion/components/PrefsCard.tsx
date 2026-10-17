@@ -8,6 +8,7 @@ import {
   type AutoRefreshSeconds,
   type DisplayZone,
   type FlowSort,
+  type RowDensity,
 } from '@/lib/automation-prefs';
 import { useAutomationPrefs } from '../use-automation-prefs';
 import '../settings.css';
@@ -49,6 +50,16 @@ export function PrefsCard() {
           <button type="button" role="switch" aria-checked={prefs.showDescriptions} aria-label="Mostrar descripciones" className="au-switch" onClick={() => update({ showDescriptions: !prefs.showDescriptions })}>
             <span className="au-switch-knob" />
           </button>
+        </div>
+        <div className="st-pref">
+          <div className="st-pref-text">
+            <strong>Densidad de la lista</strong>
+            <span>«Compacta» reduce el alto de cada fila para ver más flujos sin desplazarte.</span>
+          </div>
+          <select className="au-select" aria-label="Densidad de la lista" value={prefs.density} onChange={(e) => update({ density: e.target.value as RowDensity })}>
+            <option value="comfortable">Cómoda</option>
+            <option value="compact">Compacta</option>
+          </select>
         </div>
         <div className="st-pref">
           <div className="st-pref-text">

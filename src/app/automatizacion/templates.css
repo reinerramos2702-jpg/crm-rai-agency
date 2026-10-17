@@ -102,8 +102,10 @@ button.tp-open:focus-visible::after { outline: 2px solid var(--rai-gold); outlin
 }
 .tp-tag--kind { color: var(--rai-gold); border-color: color-mix(in srgb, var(--rai-gold) 35%, var(--rai-border)); background: color-mix(in srgb, var(--rai-gold) 8%, transparent); }
 
-.tp-actions { position: relative; z-index: 1; display: flex; gap: 8px; min-height: 36px; }
-.tp-actions > button { flex: 1; }
+.tp-foot { position: relative; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; }
+.tp-actions { display: flex; }
+.tp-ready { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--rai-muted); }
+.tp-ready--warn { color: var(--rai-warning); }
 
 /* Vista previa */
 .tp-preview-lead { margin: 0 0 16px; font-size: 14px; line-height: 1.55; color: var(--rai-muted); }
@@ -155,3 +157,14 @@ button.tp-open:focus-visible::after { outline: 2px solid var(--rai-gold); outlin
   .tp-step { animation: tp-step-in 0.22s ease-out both; animation-delay: calc(var(--i, 0) * 30ms); }
   @keyframes tp-step-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 }
+
+/* Requisitos de la plantilla */
+.tp-reqs { display: grid; gap: 8px; margin: 0 0 18px; padding: 0; list-style: none; }
+.tp-req { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--rai-border); font-size: 13px; }
+.tp-req svg { margin-top: 2px; }
+.tp-req p { margin: 2px 0 0; font-size: 12px; line-height: 1.45; color: var(--rai-muted); }
+.tp-req-state { color: var(--rai-muted); font-size: 12px; }
+.tp-req--ready svg { color: var(--rai-success); }
+.tp-req--missing { border-color: color-mix(in srgb, var(--rai-warning) 50%, var(--rai-border)); background: color-mix(in srgb, var(--rai-warning) 7%, transparent); }
+.tp-req--missing svg { color: var(--rai-warning); }
+.tp-req--manual svg { color: var(--rai-muted); }

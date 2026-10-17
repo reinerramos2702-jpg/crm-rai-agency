@@ -18,6 +18,11 @@ describe('parsePrefs', () => {
     });
   });
 
+  it('valida las preferencias de seguridad y densidad', () => {
+    expect(parsePrefs(JSON.stringify({ confirmSend: false, density: 'compact' }))).toMatchObject({ confirmSend: false, density: 'compact' });
+    expect(parsePrefs(JSON.stringify({ confirmSend: 'no', density: 'enorme' }))).toMatchObject({ confirmSend: true, density: 'comfortable' });
+  });
+
   it('ida y vuelta', () => {
     const prefs = { ...DEFAULT_PREFS, nameTemplate: '{nombre} · {fecha}', displayZone: 'local' as const };
     expect(parsePrefs(serializePrefs(prefs))).toEqual(prefs);

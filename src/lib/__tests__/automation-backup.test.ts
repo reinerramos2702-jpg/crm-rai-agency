@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { WORKFLOW_TEMPLATES } from '../automations/templates';
-import { MAX_IMPORT_FLOWS, backupFileName, buildBackup, parseBackup } from '../automation-backup';
+import { MAX_IMPORT_FLOWS, backupFileName, buildBackup, parseBackup, planImport } from '../automation-backup';
 
 const sample = WORKFLOW_TEMPLATES.slice(0, 3).map((t) => ({ name: t.name, description: t.description, trigger: t.trigger, steps: t.steps }));
 
@@ -50,5 +50,25 @@ describe('buildBackup y parseBackup', () => {
 describe('backupFileName', () => {
   it('incluye la fecha', () => {
     expect(backupFileName(new Date('2026-10-16T10:00:00Z'))).toBe('flujos-automatizacion-2026-10-16.json');
+  });
+});
+
+describe('planImport', () => {
+  const flow = (name: string, send = false) => ({
+    name,
+    description: null,
+    trigger: { type: 'contact.created' as const, config: {} },
+    steps: send ? [{ id: 's', type: 'action' as const, config: { action: 'send_webhook' } }] : [],
+  });
+
+  it('renombra los que ya existen y detecta los que envían mensajes', () => {
+    const plan = planImport([flow('Bienvenida', true), flow('Nuevo')], ['bienvenida']);
+    expect(plan[0]).toMatchObject({ duplicate: true, finalName: 'Bienvenida (importado)', sendsMessages: true });
+    expect(plan[1]).toMatchObject({ duplicate: false, finalName: 'Nuevo', sendsMessages: false });
+  });
+
+  it('no repite nombres dentro del mismo archivo', () => {
+    const plan = planImport([flow('A'), flow('a')], []);
+    expect(plan.map((p) => p.finalName)).toEqual(['A', 'a (importado)']);
   });
 });
