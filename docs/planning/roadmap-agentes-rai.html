@@ -157,7 +157,7 @@ input[type=file]{display:none}
     <h1>Roadmap de Agentes<br>RAI Agency</h1>
     <p class="lead">Mapa de capacidades, madurez y tareas del sistema jerárquico que mantiene CRM RAI Agency. La fuente única del backlog de producto y seguridad es <code>docs/planning/panel-control.html</code>; este documento no lo replica ni lo reemplaza. Además es una <strong>base de conocimiento reutilizable</strong> (efectos, prácticas de ingeniería, marco legal y tecnologías) pensada para pasarla como referencia a proyectos nuevos: ver las secciones <a href="#tech" style="color:var(--cyan)">Tecnologías</a> y <a href="#kb" style="color:var(--cyan)">Base de conocimiento</a>.</p>
     <div class="meta">
-      <div class="pill">ACTUALIZADO: <strong id="updated">17 oct 2026 · fase 11 (arquitectura del ecosistema), tecnologías y base de conocimiento</strong></div>
+      <div class="pill">ACTUALIZADO: <strong id="updated">17 oct 2026 · fase 12 (fiabilidad y mejora premium), arquitectura, tecnologías y base de conocimiento</strong></div>
       <div class="pill">ORQUESTACIÓN: <strong>OpenCode + subagentes especializados</strong></div>
       <div class="pill">CRM: <strong>Next.js + Prisma + Supabase + Vercel</strong></div>
       <div class="pill">ESTADO: <strong>Agentes versionados · rama de seguridad publicada</strong></div>
@@ -353,6 +353,20 @@ input[type=file]{display:none}
           </div>
           <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
         </article>
+
+        <article class="phase" data-phase="12">
+          <div class="phase-top"><div class="phase-number">12</div><div class="phase-title"><h3>Fiabilidad y mejora premium de módulos</h3><p>Arreglos de pantallas que se rompían, verificación de conexión con la base y pulido visual de Multimedia, Marketing, Automatización y Sitios.</p></div><span class="status progress">En curso</span></div>
+          <div class="tasks">
+            <div class="task" data-id="12-1" data-status="done"><button class="state-dot">✓</button><div><h4>Planificador de redes: el calendario ya no desaparece</h4><p>Commit <code>7ef2a05</code>. El 503 por tabla <code>ScheduledPost</code> ausente ya no reemplaza la pantalla: el calendario queda visible con aviso guiado y «Reintentar». DoD: <code>tsc</code> 0 y ESLint 0 advertencias.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="12-2" data-status="pending"><button class="state-dot">·</button><div><h4>Aplicar la tabla <code>ScheduledPost</code> en staging y verificar tablas</h4><p>Reiner aplica <code>docs/planning/staging-scheduledpost.sql</code> (solo esquema <code>staging</code>), ejecuta <code>npx prisma generate</code> y corre <code>node --env-file=.env.staging scripts/check-db-tables.mjs</code>. DoD: «OK: todas las tablas existen».</p></div><span class="owner">REINER</span></div>
+            <div class="task" data-id="12-3" data-status="pending"><button class="state-dot">·</button><div><h4>Marketing premium (8 pestañas)</h4><p>Planificador, correos, fragmentos, cuenta atrás, enlaces, marca, anuncios y prospección: jerarquía visual, estados vacíos y de error que no destruyen la vista, micro-interacciones solo con transform y opacity. DoD: 320–1440 px sin scroll horizontal ni blur.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="12-4" data-status="pending"><button class="state-dot">·</button><div><h4>Contenido multimedia premium</h4><p>Cuadrícula, visor, filtros y estados de carga con esqueletos; subida de archivos sigue a la espera de la decisión de almacenamiento. DoD: igual que 12-3.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="12-5" data-status="pending"><button class="state-dot">·</button><div><h4>Automatización premium (flujos, plantillas, contenido IG, actividad, configuración)</h4><p>Separar <code>ContentIGTab.tsx</code> (~1200 líneas) por responsabilidades y pulir tarjetas, estados y feedback. DoD: sin regresión en 848 pruebas y build correcto.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="12-6" data-status="pending"><button class="state-dot">·</button><div><h4>Sitios premium</h4><p>Registro de sedes con tarjetas, filtros y detalle más claros; sin tocar el modelo <code>Site</code>. DoD: igual que 12-3.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="12-7" data-status="pending"><button class="state-dot">·</button><div><h4>Código por limpiar</h4><p><code>base-conocimiento/[id]</code> (645 líneas), ajustes de voz en <code>localStorage</code>, endpoints de reintento y PATCH de fragmentos y enlaces, «Rainer» en staging, lista «dudoso» de <code>_revisar-obsoletos/LEEME.md</code>. DoD: cada ítem resuelto o aceptado por Reiner.</p></div><span class="owner">CALIDAD</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
       </div>
     </section>
 
@@ -443,6 +457,7 @@ input[type=file]{display:none}
         <div class="human-card"><strong>Limpieza de obsoletos</strong><p><code>_revisar-obsoletos/</code>: 6 componentes sin uso, 1 documento histórico y 49 reglas CSS muertas, sin borrar nada. Dudosos sin mover: ver <code>LEEME.md</code> de esa carpeta.</p></div>
         <div class="human-card"><strong>Calidad tras la limpieza</strong><p><code>tsc</code> 0 errores, ESLint 0 advertencias, Vitest 848/848 (94 archivos) y build correcto, verificado en una copia aparte.</p></div>
         <div class="human-card"><strong>Conocimiento reutilizable</strong><p>Este HTML incorpora 80 efectos, 17 prácticas, 11 puntos legales y 42 tecnologías, con filtros y exportación JSON. Obsidian actualizado como segundo cerebro de consulta.</p></div>
+        <div class="human-card"><strong>Planificador arreglado</strong><p>Commit <code>7ef2a05</code>: si falta la tabla <code>ScheduledPost</code> el calendario sigue visible con un aviso guiado. Nuevo <code>scripts/check-db-tables.mjs</code> (solo lectura) compara modelos de Prisma con tablas reales. Detalle en el panel, sección OLA-4B.</p></div>
       </div>
     </section>
 
