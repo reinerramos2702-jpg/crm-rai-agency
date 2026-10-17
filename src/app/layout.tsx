@@ -12,6 +12,8 @@ export const metadata: Metadata = {
   description:
     'Genera campañas de contenido completas con IA: copy, imágenes, vídeos y publicación automática en Instagram.',
   keywords: ['contenido', 'automatización', 'IA', 'instagram', 'marketing', 'RAI Agency'],
+  // Aplicación privada con sesión: no debe indexarse (evita fugas y contenido duplicado en buscadores).
+  robots: { index: false, follow: false },
 };
 
 /**
