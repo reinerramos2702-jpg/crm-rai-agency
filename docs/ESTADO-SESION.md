@@ -261,3 +261,10 @@ Rama local `rai-feat-dashboard-premium`, commits sin push: `74a8b91` (marketing)
 - Mejora premium: Marketing `c7e8b2c`, Multimedia `bf8c2fe`, Automatización `c7af74e` (`ContentIGTab` dividido), Sitios `3304851`. Estados vacíos con vista previa en Sitios y Multimedia (siguiente commit de docs).
 - Verificación: `tsc` 0, ESLint 0 en `src`, Vitest 848–870 en copias aparte. Falta Vitest/build completo en la PC de Reiner y revisión visual a 320–1440 px.
 - Pendientes y código por limpiar: panel de control, sección OLA-4B.
+
+## Registro del 17 oct 2026 (noche, 2) — seis módulos más y SEO
+
+- Premium: Conversaciones `48f4e90`, Contactos y Clientes Potenciales `22e5377`, Calendarios `8444ae8`, Facturación e Informes `3230978` (kit en `src/components/module-kit/`). Monolitos divididos; 190 pruebas nuevas; `tsc` 0, ESLint 0.
+- Spinner infinito de Conversaciones: la petición a `/api/contacts` no tenía plazo; ahora corta a los 20 s con error y «Reintentar». Causa de fondo del cuelgue en staging sin confirmar.
+- SEO: el CRM no se indexa (`4b0d3a0`).
+- Brechas de API y deuda: panel de control, OLA-4B.

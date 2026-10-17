@@ -1296,7 +1296,7 @@ footer{
   <div class="section-head">
     <span class="phase-num">OLA-4B</span>
     <span class="section-title">Ola 4b — 17 oct (tarde): arquitectura, limpieza, base de conocimiento y arreglo del planificador</span>
-    <span class="section-note">5 hechos — 5 pendientes; commits locales sin push</span>
+    <span class="section-note">8 hechos — 7 pendientes; commits locales sin push</span>
   </div>
   <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:680px;">Registro de lo hecho tras la Ola 3b y de la lista de código por limpiar. Detalle técnico en <code>docs/ARQUITECTURA-ECOSISTEMA-CRM.md</code>, <code>_revisar-obsoletos/LEEME.md</code> y <code>docs/planning/roadmap-agentes-rai.html</code>.</p>
   <div class="check-list">
@@ -1331,6 +1331,46 @@ footer{
         <div class="check-desc">Evidencia: commit <code>7ef2a05</code>. Causa: el error 503 reemplazaba todo el planificador por un estado vacío. Ahora el calendario queda visible con aviso guiado y «Reintentar», y las acciones de escritura se desactivan. Falta que Reiner aplique la tabla (ver siguiente punto).</div>
       </div>
       <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola4b-premium-6-modulos" data-commit="48f4e90">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Mejora premium de Conversaciones, Contactos, Clientes Potenciales, Calendarios, Facturación e Informes</div>
+        <div class="check-desc">Evidencia: commits <code>48f4e90</code>, <code>22e5377</code>, <code>8444ae8</code>, <code>3230978</code>. Seis monolitos (hasta 1440 líneas) divididos en módulos de menos de 300 líneas, sin <code>any</code>, con 190 pruebas nuevas; <code>tsc</code> 0, ESLint 0, Vitest 917–960 y build correcto en copias aparte. Kit reutilizable en <code>src/components/module-kit/</code>.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola4b-spinner-conversaciones" data-commit="48f4e90">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Spinner infinito en Conversaciones corregido</div>
+        <div class="check-desc">Evidencia: commit <code>48f4e90</code>. Causa: <code>GET /api/contacts</code> sin plazo ni abort; ahora corta a los 20 s y la lista acaba en datos, vacío o error con «Reintentar». La causa de fondo del cuelgue en staging (Prisma/Supabase o compilación en frío) sigue sin confirmar.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola4b-seo-noindex" data-commit="4b0d3a0">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">El CRM privado no se indexa en buscadores</div>
+        <div class="check-desc">Evidencia: commit <code>4b0d3a0</code>. Metadata <code>robots</code> en <code>layout.tsx</code> y <code>src/app/robots.ts</code> con <code>disallow: /</code>. Si algún día hay páginas públicas (sitios de clientes), se excluyen de esta regla.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola4b-brechas-api">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Brechas de API halladas al rediseñar</div>
+        <div class="check-desc">No existen <code>/api/opportunities</code> (las oportunidades viven en memoria), facturas, productos ni cupones; Tareas, Empresas y Acciones en lote no tienen endpoint de listado. <code>GET /api/contacts</code> no pagina; <code>POST /api/contacts</code> ignora <code>tags</code>; <code>POST /api/calendars</code> ignora <code>bookingEnabled</code> y no valida <code>durationMins</code> (500); <code>POST /api/activation-links</code> acepta esquemas como <code>javascript:</code>; no hay endpoint para crear una conversación. La lista de conversaciones ordena nulos primero.</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola4b-deuda-ui-6">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Deuda de los 6 módulos nuevos</div>
+        <div class="check-desc">Botón «simular respuesta del cliente» aún en Conversaciones; estrella y adjuntar deshabilitados; calendarios sin color ni zona horaria guardados; <code>ModulePlaceholder</code> sigue en Marketplace y Reputación (migrar al kit); capturas en <code>.tmpwork/</code> (ignoradas por git) por borrar.</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
     </div>
     <div class="check-item" data-status="pending" data-id="ola4b-aplicar-scheduledpost">
       <div class="checkbox"></div>
