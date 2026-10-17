@@ -6,8 +6,13 @@ export function errorMessage(e: unknown): string {
   return e instanceof Error && e.message ? e.message : NETWORK_ERROR;
 }
 
-/** Petición JSON con mensajes de error en español. Lanza `Error` con el texto listo para mostrar. */
-export async function requestJson<T = unknown>(url: string, method: 'POST' | 'PATCH' | 'DELETE', body?: unknown): Promise<T> {
+/**
+ * Petición JSON con mensajes de error en español. Lanza `Error` con el texto listo para mostrar.
+ * Con `guard`, la respuesta se valida antes de devolverla (si no coincide, se lanza un error claro).
+ */
+export async function requestJson<T>(url: string, method: 'POST' | 'PATCH' | 'DELETE', body: unknown, guard: (value: unknown) => value is T): Promise<T>;
+export async function requestJson(url: string, method: 'POST' | 'PATCH' | 'DELETE', body?: unknown): Promise<unknown>;
+export async function requestJson<T>(url: string, method: 'POST' | 'PATCH' | 'DELETE', body?: unknown, guard?: (value: unknown) => value is T): Promise<unknown> {
   let res: Response;
   try {
     res = await fetch(url, {
@@ -21,7 +26,9 @@ export async function requestJson<T = unknown>(url: string, method: 'POST' | 'PA
     const err = (await res.json().catch(() => ({}))) as { error?: string };
     throw new Error(err.error || `Error del servidor (${res.status})`);
   }
-  return (await res.json().catch(() => ({}))) as T;
+  const data: unknown = await res.json().catch(() => ({}));
+  if (guard && !guard(data)) throw new Error('El servidor devolvió una respuesta inesperada.');
+  return data;
 }
 
 /** Cambia lo que hay en la caché de una URL leyendo siempre el valor más reciente (no uno capturado antes). */

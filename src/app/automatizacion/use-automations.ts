@@ -3,11 +3,8 @@
 import { useCallback, useState } from 'react';
 import { useCachedJson } from '@/lib/use-cached-json';
 import { requestJson, updateCached } from './api';
+import { isFolderResponse, isWorkflowResponse } from './guards';
 import { AUTOMATIONS_URL, type AutomationsPayload, type FolderT, type WorkflowT } from './types';
-
-interface WorkflowResponse {
-  workflow: WorkflowT;
-}
 
 export interface NewWorkflowInput {
   name?: string;
@@ -38,7 +35,7 @@ export function useAutomations() {
   }, []);
 
   const createWorkflow = useCallback(async (input: NewWorkflowInput): Promise<WorkflowT> => {
-    const { workflow } = await requestJson<WorkflowResponse>(AUTOMATIONS_URL, 'POST', input);
+    const { workflow } = await requestJson(AUTOMATIONS_URL, 'POST', input, isWorkflowResponse);
     patch((p) => ({ ...p, workflows: [workflow, ...p.workflows] }));
     return workflow;
   }, []);
@@ -50,13 +47,12 @@ export function useAutomations() {
       patch((p) => ({ ...p, workflows: [draft, ...p.workflows] }));
       setPending(tempId, true);
       try {
-        const { workflow } = await requestJson<WorkflowResponse>(AUTOMATIONS_URL, 'POST', {
-          name: draft.name,
-          description: wf.description,
-          folderId: wf.folderId,
-          trigger: wf.trigger,
-          steps: wf.steps,
-        });
+        const { workflow } = await requestJson(
+          AUTOMATIONS_URL,
+          'POST',
+          { name: draft.name, description: wf.description, folderId: wf.folderId, trigger: wf.trigger, steps: wf.steps },
+          isWorkflowResponse
+        );
         patch((p) => ({ ...p, workflows: p.workflows.map((w) => (w.id === tempId ? workflow : w)) }));
       } catch (e) {
         patch((p) => ({ ...p, workflows: p.workflows.filter((w) => w.id !== tempId) }));
@@ -104,7 +100,7 @@ export function useAutomations() {
     const tempId = `tmp-folder-${Date.now()}`;
     patch((p) => ({ ...p, folders: [...p.folders, { id: tempId, name }] }));
     try {
-      const res = await requestJson<{ folder?: FolderT }>(`${AUTOMATIONS_URL}/folders`, 'POST', { name });
+      const res = await requestJson(`${AUTOMATIONS_URL}/folders`, 'POST', { name }, isFolderResponse);
       const folder = res.folder;
       if (folder) patch((p) => ({ ...p, folders: p.folders.map((f) => (f.id === tempId ? folder : f)) }));
       else void refresh();

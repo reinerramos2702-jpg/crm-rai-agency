@@ -168,3 +168,24 @@ button.tp-open:focus-visible::after { outline: 2px solid var(--rai-gold); outlin
 .tp-req--missing { border-color: color-mix(in srgb, var(--rai-warning) 50%, var(--rai-border)); background: color-mix(in srgb, var(--rai-warning) 7%, transparent); }
 .tp-req--missing svg { color: var(--rai-warning); }
 .tp-req--manual svg { color: var(--rai-muted); }
+
+/* Secuencia en miniatura de la tarjeta */
+.tp-track { display: flex; flex-wrap: wrap; align-items: center; gap: 0; margin: 0; padding: 0; list-style: none; }
+.tp-track-node {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--rai-border);
+  background: var(--rai-dark);
+  color: var(--rai-muted);
+}
+.tp-track-node + .tp-track-node { margin-left: 10px; }
+.tp-track-node + .tp-track-node::before { content: ''; position: absolute; right: 100%; top: 50%; width: 10px; height: 1px; background: var(--rai-border); }
+.tp-track-node--trigger { color: var(--rai-gold); border-color: color-mix(in srgb, var(--rai-gold) 50%, var(--rai-border)); }
+.tp-track-node--condition { color: var(--rai-purple); border-color: color-mix(in srgb, var(--rai-purple) 50%, var(--rai-border)); }
+.tp-track-node--delay { color: var(--rai-warning); border-color: color-mix(in srgb, var(--rai-warning) 50%, var(--rai-border)); }
+.tp-track-node--action { color: var(--rai-success); border-color: color-mix(in srgb, var(--rai-success) 50%, var(--rai-border)); }
+.tp-track-more { margin-left: 8px; font-size: 11px; font-weight: 700; color: var(--rai-muted); }

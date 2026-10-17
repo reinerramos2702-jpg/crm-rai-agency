@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { ChevronDown, ChevronUp, Clock, GitBranch, PlayCircle, Trash2 } from 'lucide-react';
+import React, { useEffect, useId, useRef } from 'react';
+import { ArrowDown, ArrowUp, Clock, GitBranch, PlayCircle, Trash2, type LucideIcon } from 'lucide-react';
 import {
   ACTION_META,
   ACTION_ORDER,
@@ -10,97 +10,63 @@ import {
   PLACEHOLDER_HELP,
   type FieldDef,
 } from '@/lib/automations/ui-meta';
-import type { ActionType, ConditionCheck, StepType, WorkflowStep } from '@/lib/automations/types';
+import type { StepType, WorkflowStep } from '@/lib/automations/types';
+import {
+  STEP_LABELS,
+  STEP_TYPES,
+  defaultsForFields,
+  isActionType,
+  isConditionCheck,
+  newStep,
+  summarizeStep,
+  type ConfigMap,
+} from './step-model';
 
-function uid() {
-  return Math.random().toString(36).slice(2, 10);
-}
+const STEP_ICONS: Record<StepType, LucideIcon> = { condition: GitBranch, delay: Clock, action: PlayCircle };
 
-export function defaultsForFields(fields: FieldDef[]): Record<string, any> {
-  const cfg: Record<string, any> = {};
-  for (const f of fields) {
-    if (f.default !== undefined) cfg[f.key] = f.default;
-    else if (f.type === 'select' && f.options && f.options.length > 0) cfg[f.key] = f.options[0].value;
-    else cfg[f.key] = '';
-  }
-  return cfg;
-}
-
-export function newStep(type: StepType): WorkflowStep {
-  if (type === 'condition') {
-    const check = CONDITION_ORDER[0];
-    return { id: uid(), type, config: { check, ...defaultsForFields(CONDITION_META[check].fields) } };
-  }
-  if (type === 'delay') {
-    return { id: uid(), type, config: { amount: 1, unit: 'hours' } };
-  }
-  const action = ACTION_ORDER[0];
-  return { id: uid(), type, config: { action, ...defaultsForFields(ACTION_META[action].fields) } };
+function asText(value: unknown): string {
+  return typeof value === 'string' || typeof value === 'number' ? String(value) : '';
 }
 
 // ============================================================
 // Campo genérico (texto / número / select / textarea)
 // ============================================================
-export function FieldInput({
-  field,
-  value,
-  onChange,
-}: {
-  field: FieldDef;
-  value: any;
-  onChange: (v: any) => void;
-}) {
+export function FieldInput({ field, value, onChange }: { field: FieldDef; value: unknown; onChange: (v: string | number) => void }) {
+  const id = useId();
+  const helpId = `${id}-help`;
   const showPlaceholderHelp =
     field.type === 'textarea' || (field.type === 'text' && (field.key === 'title' || field.key === 'message' || field.key === 'body'));
+  const describedBy = field.help || showPlaceholderHelp ? helpId : undefined;
 
   return (
-    <div style={{ marginBottom: 10 }}>
-      <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-        {field.label}
-      </label>
+    <div className="bd-field">
+      <label className="bd-label" htmlFor={id}>{field.label}</label>
       {field.type === 'select' ? (
-        <select className="input" style={{ width: '100%' }} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+        <select id={id} aria-describedby={describedBy} className="input" value={asText(value)} onChange={(e) => onChange(e.target.value)}>
           {(field.options || []).map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
       ) : field.type === 'textarea' ? (
-        <textarea
-          className="input"
-          style={{ width: '100%', minHeight: 70, resize: 'vertical' }}
-          value={value ?? ''}
-          placeholder={field.placeholder}
-          onChange={(e) => onChange(e.target.value)}
-        />
+        <textarea id={id} aria-describedby={describedBy} className="input bd-textarea" value={asText(value)} placeholder={field.placeholder} onChange={(e) => onChange(e.target.value)} />
       ) : field.type === 'number' ? (
         <input
+          id={id}
+          aria-describedby={describedBy}
           className="input"
           type="number"
-          style={{ width: '100%' }}
-          value={value ?? ''}
+          value={asText(value)}
           placeholder={field.placeholder}
           onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
         />
       ) : (
-        <input
-          className="input"
-          type="text"
-          style={{ width: '100%' }}
-          value={value ?? ''}
-          placeholder={field.placeholder}
-          onChange={(e) => onChange(e.target.value)}
-        />
+        <input id={id} aria-describedby={describedBy} className="input" type="text" value={asText(value)} placeholder={field.placeholder} onChange={(e) => onChange(e.target.value)} />
       )}
-      {field.help && (
-        <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
+      {(field.help || showPlaceholderHelp) && (
+        <div className="bd-help" id={helpId}>
           {field.help}
-        </div>
-      )}
-      {showPlaceholderHelp && (
-        <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
-          {PLACEHOLDER_HELP}
+          {field.help && showPlaceholderHelp ? ' ' : ''}
+          {showPlaceholderHelp ? PLACEHOLDER_HELP : ''}
         </div>
       )}
     </div>
@@ -110,145 +76,109 @@ export function FieldInput({
 // ============================================================
 // Tarjeta de un paso del flujo
 // ============================================================
-export function StepCard({
-  step,
-  index,
-  total,
-  onChange,
-  onRemove,
-  onMove,
-}: {
+interface StepCardProps {
   step: WorkflowStep;
   index: number;
   total: number;
+  autoFocus: boolean;
+  onFocused: () => void;
   onChange: (step: WorkflowStep) => void;
   onRemove: () => void;
   onMove: (dir: -1 | 1) => void;
-}) {
-  function setConfig(patch: Record<string, any>) {
-    onChange({ ...step, config: { ...step.config, ...patch } });
-  }
+}
 
-  function changeType(type: StepType) {
-    onChange(newStep(type));
-  }
+export function StepCard({ step, index, total, autoFocus, onFocused, onChange, onRemove, onMove }: StepCardProps) {
+  const id = useId();
+  const Icon = STEP_ICONS[step.type];
+  const label = STEP_LABELS[step.type];
+  const setConfig = (patch: ConfigMap) => onChange({ ...step, config: { ...step.config, ...patch } });
+  const changeType = (type: StepType) => {
+    if (type !== step.type) onChange({ ...newStep(type), id: step.id });
+  };
+  const rootRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!autoFocus) return;
+    rootRef.current?.querySelector<HTMLElement>('select, input, textarea')?.focus();
+    rootRef.current?.scrollIntoView({ block: 'nearest' });
+    onFocused();
+  }, [autoFocus, onFocused]);
 
-  let icon = <PlayCircle size={15} />;
-  let label = 'Acción';
-  let color = 'var(--rai-gold)';
-  if (step.type === 'condition') {
-    icon = <GitBranch size={15} />;
-    label = 'Condición';
-    color = '#7aa2f7';
-  } else if (step.type === 'delay') {
-    icon = <Clock size={15} />;
-    label = 'Espera';
-    color = '#bb9af7';
-  }
+  const check = isConditionCheck(step.config.check) ? step.config.check : null;
+  const action = isActionType(step.config.action) ? step.config.action : null;
 
   return (
-    <div className="card" style={{ borderLeft: `3px solid ${color}` }}>
-      <div className="row-between mb-4">
-        <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-          <span
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 26,
-              height: 26,
-              borderRadius: '50%',
-              background: 'rgba(136,136,170,0.1)',
-              fontSize: 12,
-              fontWeight: 700,
-            }}
-          >
-            {index + 1}
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
-            {icon} {label}
-          </span>
+    <section ref={rootRef} className={`card bd-step bd-step--${step.type}`} aria-labelledby={`${id}-title`}>
+      <header className="bd-step-head">
+        <span className="bd-step-n" aria-hidden="true">{index + 1}</span>
+        <div className="bd-step-title">
+          <h3 id={`${id}-title`}><Icon size={15} aria-hidden="true" /> {label}</h3>
+          <p>{summarizeStep(step)}</p>
         </div>
-        <div className="row" style={{ gap: 6 }}>
-          <ChevronUp
-            size={15}
-            style={{ cursor: index === 0 ? 'not-allowed' : 'pointer', opacity: index === 0 ? 0.3 : 1 }}
-            onClick={() => index > 0 && onMove(-1)}
-          />
-          <ChevronDown
-            size={15}
-            style={{ cursor: index === total - 1 ? 'not-allowed' : 'pointer', opacity: index === total - 1 ? 0.3 : 1 }}
-            onClick={() => index < total - 1 && onMove(1)}
-          />
-          <Trash2 size={15} style={{ cursor: 'pointer' }} onClick={onRemove} />
+        <div className="bd-step-tools">
+          <button type="button" className="au-btn au-btn--ghost au-btn--icon au-btn--sm" onClick={() => onMove(-1)} disabled={index === 0} aria-label={`Subir el paso ${index + 1}`} title="Subir">
+            <ArrowUp size={14} aria-hidden="true" />
+          </button>
+          <button type="button" className="au-btn au-btn--ghost au-btn--icon au-btn--sm" onClick={() => onMove(1)} disabled={index === total - 1} aria-label={`Bajar el paso ${index + 1}`} title="Bajar">
+            <ArrowDown size={14} aria-hidden="true" />
+          </button>
+          <button type="button" className="au-btn au-btn--ghost au-btn--icon au-btn--sm" onClick={onRemove} aria-label={`Eliminar el paso ${index + 1}`} title="Eliminar">
+            <Trash2 size={14} aria-hidden="true" />
+          </button>
         </div>
+      </header>
+
+      <div className="bd-seg" role="group" aria-label={`Tipo del paso ${index + 1}`}>
+        {STEP_TYPES.map((type) => {
+          const TypeIcon = STEP_ICONS[type];
+          return (
+            <button key={type} type="button" className="bd-seg-btn" aria-pressed={step.type === type} onClick={() => changeType(type)}>
+              <TypeIcon size={13} aria-hidden="true" /> {STEP_LABELS[type]}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="row" style={{ gap: 8, marginBottom: 12 }}>
-        <button className={step.type === 'condition' ? 'primary' : 'ghost'} style={{ flex: 1 }} onClick={() => changeType('condition')}>
-          <GitBranch size={13} /> Condición
-        </button>
-        <button className={step.type === 'delay' ? 'primary' : 'ghost'} style={{ flex: 1 }} onClick={() => changeType('delay')}>
-          <Clock size={13} /> Espera
-        </button>
-        <button className={step.type === 'action' ? 'primary' : 'ghost'} style={{ flex: 1 }} onClick={() => changeType('action')}>
-          <PlayCircle size={13} /> Acción
-        </button>
-      </div>
-
-      {/* ---- Condición ---- */}
       {step.type === 'condition' && (
         <>
-          <div style={{ marginBottom: 10 }}>
-            <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-              Si...
-            </label>
+          <div className="bd-field">
+            <label className="bd-label" htmlFor={`${id}-check`}>Si…</label>
             <select
+              id={`${id}-check`}
               className="input"
-              style={{ width: '100%' }}
-              value={step.config.check}
+              value={check ?? ''}
               onChange={(e) => {
-                const check = e.target.value as ConditionCheck;
-                onChange({ ...step, config: { check, ...defaultsForFields(CONDITION_META[check].fields) } });
+                const next = e.target.value;
+                if (isConditionCheck(next)) onChange({ ...step, config: { check: next, ...defaultsForFields(CONDITION_META[next].fields) } });
               }}
             >
               {CONDITION_ORDER.map((c) => (
-                <option key={c} value={c}>
-                  {CONDITION_META[c].label}
-                </option>
+                <option key={c} value={c}>{CONDITION_META[c].label}</option>
               ))}
             </select>
           </div>
-          {CONDITION_META[step.config.check as ConditionCheck]?.fields.map((f) => (
+          {check && CONDITION_META[check].fields.map((f) => (
             <FieldInput key={f.key} field={f} value={step.config[f.key]} onChange={(v) => setConfig({ [f.key]: v })} />
           ))}
-          <p className="muted" style={{ fontSize: 11 }}>
-            Si la condición NO se cumple, el flujo se detiene aquí (queda como "Omitido").
-          </p>
+          <p className="bd-help">Si la condición NO se cumple, el flujo se detiene aquí (queda como «Omitido»).</p>
         </>
       )}
 
-      {/* ---- Espera ---- */}
       {step.type === 'delay' && (
-        <div className="row" style={{ gap: 8 }}>
-          <div style={{ flex: 1 }}>
-            <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-              Esperar
-            </label>
+        <div className="bd-pair">
+          <div className="bd-field">
+            <label className="bd-label" htmlFor={`${id}-amount`}>Esperar</label>
             <input
+              id={`${id}-amount`}
               className="input"
               type="number"
               min={1}
-              style={{ width: '100%' }}
-              value={step.config.amount ?? 1}
+              value={asText(step.config.amount ?? 1)}
               onChange={(e) => setConfig({ amount: Number(e.target.value) || 1 })}
             />
           </div>
-          <div style={{ flex: 1 }}>
-            <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-              Unidad
-            </label>
-            <select className="input" style={{ width: '100%' }} value={step.config.unit ?? 'hours'} onChange={(e) => setConfig({ unit: e.target.value })}>
+          <div className="bd-field">
+            <label className="bd-label" htmlFor={`${id}-unit`}>Unidad</label>
+            <select id={`${id}-unit`} className="input" value={asText(step.config.unit) || 'hours'} onChange={(e) => setConfig({ unit: e.target.value })}>
               <option value="minutes">Minutos</option>
               <option value="hours">Horas</option>
               <option value="days">Días</option>
@@ -257,35 +187,29 @@ export function StepCard({
         </div>
       )}
 
-      {/* ---- Acción ---- */}
       {step.type === 'action' && (
         <>
-          <div style={{ marginBottom: 10 }}>
-            <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-              Hacer...
-            </label>
+          <div className="bd-field">
+            <label className="bd-label" htmlFor={`${id}-action`}>Hacer…</label>
             <select
+              id={`${id}-action`}
               className="input"
-              style={{ width: '100%' }}
-              value={step.config.action}
+              value={action ?? ''}
               onChange={(e) => {
-                const action = e.target.value as ActionType;
-                onChange({ ...step, config: { action, ...defaultsForFields(ACTION_META[action].fields) } });
+                const next = e.target.value;
+                if (isActionType(next)) onChange({ ...step, config: { action: next, ...defaultsForFields(ACTION_META[next].fields) } });
               }}
             >
               {ACTION_ORDER.map((a) => (
-                <option key={a} value={a}>
-                  {ACTION_META[a].label}
-                </option>
+                <option key={a} value={a}>{ACTION_META[a].label}</option>
               ))}
             </select>
           </div>
-          {ACTION_META[step.config.action as ActionType]?.fields.map((f) => (
+          {action && ACTION_META[action].fields.map((f) => (
             <FieldInput key={f.key} field={f} value={step.config[f.key]} onChange={(v) => setConfig({ [f.key]: v })} />
           ))}
         </>
       )}
-    </div>
+    </section>
   );
 }
-

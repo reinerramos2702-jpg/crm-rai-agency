@@ -1,7 +1,34 @@
 /* Configuración — tarjetas por tema, preferencias y «Próximamente» */
 
-.st-grid { display: grid; gap: 20px; max-width: 880px; }
-.st-section-title { margin: 8px 0 -8px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--rai-muted); }
+.st-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (min-width: 1024px) { .st-layout { grid-template-columns: 200px minmax(0, 880px); } }
+.st-index { display: none; }
+@media (min-width: 1024px) {
+  .st-index { display: block; position: sticky; top: 16px; padding: 10px; border-radius: 14px; border: 1px solid var(--rai-border); background: var(--rai-card); }
+}
+.st-index ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.st-index a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  color: var(--rai-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.st-index a:focus-visible { outline: 2px solid var(--rai-gold); outline-offset: 1px; }
+@media (hover: hover) { .st-index a:hover { color: var(--rai-gold); background: color-mix(in srgb, var(--rai-gold) 8%, transparent); } }
+
+.st-grid { display: grid; gap: 32px; min-width: 0; }
+.st-section { scroll-margin-top: 16px; }
+.st-section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.st-section-ico { display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px; color: var(--rai-gold); background: color-mix(in srgb, var(--rai-gold) 11%, transparent); border: 1px solid color-mix(in srgb, var(--rai-gold) 28%, transparent); }
+.st-section-title { margin: 0; font-size: 16px; font-weight: 700; }
+.st-section-text { margin: 2px 0 0; font-size: 12px; color: var(--rai-muted); }
+.st-section-body { display: grid; gap: 16px; min-width: 0; }
 
 .st-card { padding: 18px 20px; border-radius: 16px; border: 1px solid var(--rai-border); background: var(--rai-card); }
 .st-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
@@ -55,3 +82,6 @@
 /* Importación: lista previa */
 .st-import-list { display: grid; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; max-height: none; }
 .st-import-item { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 13px; overflow-wrap: anywhere; }
+
+.st-saved { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--rai-success); }
+@media (prefers-reduced-motion: no-preference) { .st-saved { animation: fx-pop 0.22s ease-out both; } }

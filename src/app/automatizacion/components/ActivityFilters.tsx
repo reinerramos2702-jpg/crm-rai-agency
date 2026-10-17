@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Download, Loader2, RefreshCw } from 'lucide-react';
+import { Download, FilterX, Loader2, RefreshCw } from 'lucide-react';
 import type { RunFilters, RunRange, RunStatusFilter } from '@/lib/automation-runs';
+import { pickOption } from '../guards';
 import type { WorkflowT } from '../types';
 import '../activity.css';
 
@@ -28,11 +29,13 @@ interface ActivityFiltersProps {
   counts: Record<string, number> | undefined;
   syncing: boolean;
   exporting: boolean;
+  filtering: boolean;
+  onClear: () => void;
   onRefresh: () => void;
   onExport: () => void;
 }
 
-export function ActivityFilters({ filters, onChange, workflows, counts, syncing, exporting, onRefresh, onExport }: ActivityFiltersProps) {
+export function ActivityFilters({ filters, onChange, workflows, counts, syncing, exporting, filtering, onClear, onRefresh, onExport }: ActivityFiltersProps) {
   const total = counts ? Object.values(counts).reduce((a, b) => a + b, 0) : null;
   return (
     <div className="ac-filters">
@@ -58,12 +61,20 @@ export function ActivityFilters({ filters, onChange, workflows, counts, syncing,
         </label>
         <label className="au-field">
           <span>Periodo</span>
-          <select className="au-select" value={filters.range} onChange={(e) => onChange({ range: e.target.value as RunRange })}>
+          <select className="au-select" value={filters.range} onChange={(e) => {
+              const range = pickOption(RANGES.map((r) => r.id), e.target.value);
+              if (range) onChange({ range });
+            }}>
             {RANGES.map((r) => (
               <option key={r.id} value={r.id}>{r.label}</option>
             ))}
           </select>
         </label>
+        {filtering && (
+          <button type="button" className="au-btn au-btn--ghost" onClick={onClear}>
+            <FilterX size={14} aria-hidden="true" /> Limpiar filtros
+          </button>
+        )}
         <button type="button" className="au-btn au-btn--ghost au-btn--icon" onClick={onRefresh} aria-label="Actualizar actividad" title="Actualizar" disabled={syncing}>
           <RefreshCw size={15} className={syncing ? 'au-spin' : undefined} />
         </button>

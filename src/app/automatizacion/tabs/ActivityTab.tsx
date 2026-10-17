@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Activity, Loader2, SearchX } from 'lucide-react';
+import { Activity, AlertTriangle, Loader2, SearchX } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SkeletonLine } from '@/components/ui/Skeleton';
@@ -18,7 +18,8 @@ import { RUN_STATUS_LABELS } from '@/lib/automations/ui-meta';
 import { ActivityFilters } from '../components/ActivityFilters';
 import { ActivitySummary } from '../components/ActivitySummary';
 import { RunRow } from '../components/RunRow';
-import { RUNS_PAGE_SIZE, type RunT, type RunsPayload, type WorkflowT } from '../types';
+import { isRunsPayload } from '../guards';
+import { RUNS_PAGE_SIZE, type RunT, type WorkflowT } from '../types';
 import { useAutomationPrefs } from '../use-automation-prefs';
 import { useRuns } from '../use-runs';
 import '../activity.css';
@@ -36,7 +37,8 @@ async function downloadCsv(filters: RunFilters): Promise<number> {
   for (let page = 0; page < EXPORT_MAX_PAGES; page += 1) {
     const res: Response = await fetch(buildRunsUrl(filters, { limit: EXPORT_PAGE, cursor }));
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = (await res.json()) as RunsPayload;
+    const data: unknown = await res.json();
+    if (!isRunsPayload(data)) throw new Error('Respuesta inesperada');
     rows.push(...data.runs);
     cursor = data.nextCursor;
     if (!cursor) break;
@@ -185,9 +187,18 @@ export default function ActivityTab({ workflows }: ActivityTabProps) {
         counts={data.summary}
         syncing={data.revalidating}
         exporting={exporting}
+        filtering={filtering}
+        onClear={() => change(DEFAULT_RUN_FILTERS)}
         onRefresh={() => void refresh()}
         onExport={() => void exportCsv()}
       />
+      {data.error && data.runs.length > 0 && (
+        <div className="fl-banner" role="alert">
+          <AlertTriangle size={16} aria-hidden="true" style={{ color: 'var(--rai-warning)' }} />
+          <span>No se pudo actualizar la actividad; ves la última versión conocida.</span>
+          <button type="button" className="au-btn au-btn--sm" onClick={() => void refresh()}>Reintentar</button>
+        </div>
+      )}
       <div className={data.stale ? 'ac-stale' : undefined} aria-busy={data.stale}>{body}</div>
     </div>
   );

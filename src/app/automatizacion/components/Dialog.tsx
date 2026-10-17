@@ -34,7 +34,7 @@ export function Dialog({ title, titleId, onClose, size = 'md', icon, footer, chi
   }, [onClose]);
 
   useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const node = dialogRef.current;
     const first = node?.querySelector<HTMLElement>('[data-autofocus]') ?? node?.querySelector<HTMLElement>(FOCUSABLE) ?? node;
     first?.focus();

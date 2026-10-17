@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Bell, Loader2 } from 'lucide-react';
+import { Bell, CheckCircle2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { checkNotifyEmail } from '@/lib/automation-settings';
 import { errorMessage } from '../api';
@@ -17,12 +17,19 @@ export function NotifyCard({ settings, save }: NotifyCardProps) {
   const [email, setEmail] = useState('');
   const [saving, setSaving] = useState(false);
   const [touched, setTouched] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const hasSettings = settings !== null;
   const savedEmail = settings?.automationNotifyEmail ?? '';
   useEffect(() => {
     if (hasSettings) setEmail(savedEmail);
   }, [hasSettings, savedEmail]);
+
+  useEffect(() => {
+    if (!saved) return;
+    const t = window.setTimeout(() => setSaved(false), 2500);
+    return () => window.clearTimeout(t);
+  }, [saved]);
 
   const check = checkNotifyEmail(email);
   const error = touched && !check.ok ? check.error : null;
@@ -35,6 +42,7 @@ export function NotifyCard({ settings, save }: NotifyCardProps) {
     try {
       await save({ automationNotifyEmail: check.value });
       toast.success(check.value ? 'Correo de avisos guardado.' : 'Correo de avisos quitado.');
+      setSaved(true);
     } catch (e: unknown) {
       toast.error(errorMessage(e));
     } finally {
@@ -73,6 +81,7 @@ export function NotifyCard({ settings, save }: NotifyCardProps) {
         </button>
       </form>
       {error && <p id="st-email-error" className="st-field-error" role="alert">{error}</p>}
+      {saved && !error && <p className="st-saved" role="status"><CheckCircle2 size={13} aria-hidden="true" /> Guardado</p>}
     </div>
   );
 }

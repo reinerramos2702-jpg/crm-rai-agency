@@ -10,6 +10,7 @@ import ActivityTab from './tabs/ActivityTab';
 import FlowsTab from './tabs/FlowsTab';
 import SettingsTab from './tabs/SettingsTab';
 import TemplatesTab from './tabs/TemplatesTab';
+import { handleTabKeys } from './tab-keys';
 import { PAGE_TOUR_KEY, PAGE_TOUR_STEPS } from './tour-steps';
 import { RUNS_URL, TOP_TABS, isTopTab, type TopTab } from './types';
 import { useAutomationSettings } from './use-automation-settings';
@@ -21,6 +22,8 @@ const ContentIGTab = dynamic(() => import('@/components/pipeline-ig/ContentIGTab
   loading: () => <SkeletonCard lines={4} />,
 });
 const ProductTour = dynamic(() => import('@/components/pipeline-ig/ProductTour'), { ssr: false });
+
+const TAB_IDS = TOP_TABS.map((t) => t.id);
 
 export default function AutomatizacionPage() {
   const [topTab, setTopTab] = useState<TopTab>('flujos');
@@ -112,7 +115,7 @@ export default function AutomatizacionPage() {
         </div>
       )}
 
-      <div className="au-tabs rai-toptabs" role="tablist" aria-label="Áreas de Automatización" data-tour="auto-tabs">
+      <div className="au-tabs rai-toptabs" role="tablist" aria-label="Áreas de Automatización" data-tour="auto-tabs" onKeyDown={(e) => handleTabKeys(e, TAB_IDS, topTab, selectTab, (id) => `au-tab-${id}`)}>
         {TOP_TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -121,6 +124,7 @@ export default function AutomatizacionPage() {
             id={`au-tab-${id}`}
             aria-selected={topTab === id}
             aria-controls="au-panel"
+            tabIndex={topTab === id ? 0 : -1}
             data-tour={`tab-${id}`}
             className="au-tab"
             onClick={() => selectTab(id)}

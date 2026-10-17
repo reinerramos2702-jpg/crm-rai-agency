@@ -1,475 +1,202 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import {
-  ArrowLeft,
-  Zap,
-  GitBranch,
-  Clock,
-  PlayCircle,
-  Loader2,
-  Save,
-  Play,
-  Pause,
-  Activity,
-  Info,
-  ChevronsDown,
-} from 'lucide-react';
-import toast from 'react-hot-toast';
-import {
-  TRIGGER_META,
-  TRIGGER_ORDER,
-  STATUS_LABELS,
-  RUN_STATUS_LABELS,
-} from '@/lib/automations/ui-meta';
-import type {
-  TriggerType,
-  StepType,
-  WorkflowStep,
-} from '@/lib/automations/types';
-
-interface FolderT {
-  id: string;
-  name: string;
-}
-
-interface RunT {
-  id: string;
-  status: string;
-  contactName: string | null;
-  trigger: any;
-  result: { log?: { step: string; ok: boolean; detail: string }[] } | null;
-  error: string | null;
-  createdAt: string;
-}
-
-interface WorkflowDetail {
-  id: string;
-  name: string;
-  description: string | null;
-  folderId: string | null;
-  status: string;
-  trigger: { type: TriggerType; config: Record<string, any> };
-  steps: WorkflowStep[];
-  runs: RunT[];
-}
-
-const STATUS_BADGE: Record<string, string> = {
-  draft: 'badge-muted',
-  active: 'badge-success',
-  paused: 'badge-warning',
-};
-
-const RUN_STATUS_BADGE: Record<string, string> = {
-  success: 'badge-success',
-  error: 'badge-error',
-  skipped: 'badge-muted',
-  pending: 'badge-gold',
-};
-
-function fmtDate(iso: string | null) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleString('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-// ============================================================
-// Página principal del builder
-// ============================================================
-import { FieldInput, StepCard, defaultsForFields, newStep } from './builder-parts';
-import { ActivationDialog } from '../components/ActivationDialog';
+import { useParams } from 'next/navigation';
+import { AlertTriangle, ArrowLeft, Clock, GitBranch, Info, Loader2, Pause, Play, PlayCircle, RefreshCw, Save, Zap } from 'lucide-react';
 import { needsActivationConfirm } from '@/lib/automation-safety';
+import { STATUS_LABELS, TRIGGER_META, TRIGGER_ORDER } from '@/lib/automations/ui-meta';
+import type { StepType } from '@/lib/automations/types';
+import { ActivationDialog } from '../components/ActivationDialog';
 import { useAutomationPrefs } from '../use-automation-prefs';
 import { useAutomationSettings } from '../use-automation-settings';
+import { BuilderSkeleton } from './BuilderSkeleton';
+import { FieldInput, StepCard } from './builder-parts';
+import { RunsPanel } from './RunsPanel';
+import { STEP_LABELS, isTriggerType } from './step-model';
+import { useWorkflowEditor } from './use-workflow-editor';
 import './builder.css';
+
+const ADD_BUTTONS: Array<{ type: StepType; icon: typeof Clock }> = [
+  { type: 'condition', icon: GitBranch },
+  { type: 'delay', icon: Clock },
+  { type: 'action', icon: PlayCircle },
+];
 
 export default function AutomationBuilderPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
-
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [busyStatus, setBusyStatus] = useState(false);
-  const [notFound, setNotFound] = useState(false);
-  const [confirmActivate, setConfirmActivate] = useState(false);
+  const ed = useWorkflowEditor(id);
   const { prefs } = useAutomationPrefs();
   const { settings: engineSettings } = useAutomationSettings();
+  const [confirmActivate, setConfirmActivate] = useState(false);
 
-  const [folders, setFolders] = useState<FolderT[]>([]);
-  const [workflow, setWorkflow] = useState<WorkflowDetail | null>(null);
+  const { load, status, triggerType, steps } = ed;
+  const trigMeta = TRIGGER_META[triggerType];
+  const active = status === 'active';
 
-  // Campos editables
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [folderId, setFolderId] = useState<string>('');
-  const [status, setStatus] = useState('draft');
-  const [triggerType, setTriggerType] = useState<TriggerType>('contact.created');
-  const [triggerConfig, setTriggerConfig] = useState<Record<string, any>>({});
-  const [steps, setSteps] = useState<WorkflowStep[]>([]);
-
-  async function fetchAll() {
-    setLoading(true);
-    try {
-      const [wfRes, foldersRes] = await Promise.all([fetch(`/api/automations/${id}`), fetch('/api/automations/folders')]);
-
-      if (wfRes.status === 404) {
-        setNotFound(true);
-        return;
-      }
-      if (wfRes.ok) {
-        const data = await wfRes.json();
-        const wf: WorkflowDetail = data.workflow;
-        setWorkflow(wf);
-        setName(wf.name);
-        setDescription(wf.description || '');
-        setFolderId(wf.folderId || '');
-        setStatus(wf.status);
-        setTriggerType(wf.trigger?.type || 'contact.created');
-        setTriggerConfig(wf.trigger?.config || {});
-        setSteps(Array.isArray(wf.steps) ? wf.steps : []);
-      } else {
-        toast.error(`Error del servidor (${wfRes.status})`);
-      }
-      if (foldersRes.ok) {
-        const fdata = await foldersRes.json();
-        setFolders(fdata.folders || []);
-      }
-    } catch {
-      toast.error('Error de red: no se pudo contactar al servidor.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    if (id) fetchAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  function handleTriggerTypeChange(type: TriggerType) {
-    setTriggerType(type);
-    setTriggerConfig(defaultsForFields(TRIGGER_META[type].fields));
-  }
-
-  function addStep(type: StepType) {
-    setSteps((prev) => [...prev, newStep(type)]);
-  }
-
-  function updateStep(index: number, step: WorkflowStep) {
-    setSteps((prev) => prev.map((s, i) => (i === index ? step : s)));
-  }
-
-  function removeStep(index: number) {
-    setSteps((prev) => prev.filter((_, i) => i !== index));
-  }
-
-  function moveStep(index: number, dir: -1 | 1) {
-    setSteps((prev) => {
-      const next = [...prev];
-      const target = index + dir;
-      if (target < 0 || target >= next.length) return prev;
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
-  }
-
-  async function save(showToast = true) {
-    if (!name.trim()) {
-      toast.error('El nombre del flujo es requerido.');
-      return false;
-    }
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/automations/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          description: description.trim() || null,
-          folderId: folderId || null,
-          trigger: { type: triggerType, config: triggerConfig },
-          steps,
-        }),
-      });
-      if (res.ok) {
-        if (showToast) toast.success('Flujo guardado.');
-        return true;
-      } else {
-        const err = await res.json().catch(() => ({}));
-        toast.error(err.error || `Error del servidor (${res.status})`);
-        return false;
-      }
-    } catch {
-      toast.error('Error de red: no se pudo contactar al servidor.');
-      return false;
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  /** Activar un flujo que envía mensajes pide confirmación (si la preferencia está activa). */
   function requestToggle() {
     if (prefs.confirmSend && needsActivationConfirm({ status, trigger: { type: triggerType }, steps })) setConfirmActivate(true);
-    else void toggleActive();
+    else void ed.toggleActive();
   }
 
-  async function toggleActive() {
-    // Guarda primero los cambios pendientes, luego cambia el estado.
-    const ok = await save(false);
-    if (!ok) return;
-    const next = status === 'active' ? 'paused' : 'active';
-    setBusyStatus(true);
-    try {
-      const res = await fetch(`/api/automations/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: next }),
-      });
-      if (res.ok) {
-        setStatus(next);
-        toast.success(next === 'active' ? 'Flujo activado y guardado.' : 'Flujo pausado.');
-      } else {
-        const err = await res.json().catch(() => ({}));
-        toast.error(err.error || `Error del servidor (${res.status})`);
-      }
-    } catch {
-      toast.error('Error de red: no se pudo contactar al servidor.');
-    } finally {
-      setBusyStatus(false);
-    }
-  }
-
-  if (loading) {
+  if (load.kind === 'notfound') {
     return (
-      <div className="container">
-        <div className="row" style={{ justifyContent: 'center', padding: 60 }}>
-          <Loader2 className="animate-spin" size={28} />
+      <div className="container rai-page bd-page">
+        <div className="card bd-notice">
+          <Zap size={32} aria-hidden="true" className="bd-notice-ico" />
+          <h1 className="bd-notice-title">Este flujo no existe</h1>
+          <p className="bd-help">Puede que se haya eliminado. Vuelve a la lista para ver tus flujos.</p>
+          <Link href="/automatizacion" className="au-btn au-btn--primary"><ArrowLeft size={14} aria-hidden="true" /> Volver a Automatización</Link>
         </div>
       </div>
     );
   }
 
-  if (notFound || !workflow) {
-    return (
-      <div className="container">
-        <div className="card" style={{ textAlign: 'center', padding: 40 }}>
-          <Zap size={32} className="muted" style={{ marginBottom: 8 }} />
-          <p className="muted">Este flujo no existe o fue eliminado.</p>
-          <Link href="/automatizacion">
-            <button className="primary" style={{ marginTop: 12 }}>
-              <ArrowLeft size={14} /> Volver a Automatización
-            </button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const trigMeta = TRIGGER_META[triggerType];
+  const ready = load.kind === 'ready';
 
   return (
-    <div className="container">
-      {/* Header */}
-      <div className="row-between mb-6 bd-head" style={{ alignItems: 'flex-start' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <Link href="/automatizacion" className="muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, textDecoration: 'none', marginBottom: 8 }}>
-            <ArrowLeft size={14} /> Automatización
-          </Link>
-          <input
-            className="input"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Nombre del flujo"
-            style={{ fontSize: 22, fontWeight: 800, padding: '8px 12px', width: '100%', maxWidth: 520, marginBottom: 8 }}
-          />
-          <input
-            className="input"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Descripción breve (opcional)"
-            style={{ width: '100%', maxWidth: 520 }}
-          />
-        </div>
-        <div className="row bd-actions" style={{ gap: 8, alignItems: 'flex-start' }}>
-          <span className={STATUS_BADGE[status] || 'badge-muted'} style={{ marginTop: 6 }}>
-            {STATUS_LABELS[status] || status}
-          </span>
-          <button className="secondary" onClick={() => save(true)} disabled={saving}>
-            {saving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />} Guardar
-          </button>
-          <button className={status === 'active' ? 'danger' : 'primary'} onClick={requestToggle} disabled={busyStatus || saving}>
-            {busyStatus ? (
-              <Loader2 className="animate-spin" size={14} />
-            ) : status === 'active' ? (
-              <>
-                <Pause size={14} /> Pausar
-              </>
-            ) : (
-              <>
-                <Play size={14} /> Activar
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-      <div className="bd-grid">
-        {/* Columna principal: trigger + pasos */}
-        <div>
-          {/* Carpeta */}
-          <div className="card mb-4">
-            <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-              Carpeta
-            </label>
-            <select className="input" style={{ width: '100%', maxWidth: 320 }} value={folderId} onChange={(e) => setFolderId(e.target.value)}>
-              <option value="">Sin carpeta</option>
-              {folders.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Disparador */}
-          <div className="card mb-4" style={{ borderLeft: '3px solid var(--rai-gold)' }}>
-            <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 12 }}>
-              <Zap size={16} color="var(--rai-gold)" />
-              <span style={{ fontWeight: 700, fontSize: 15 }}>Cuando ocurre...</span>
-            </div>
-            <div style={{ marginBottom: 10 }}>
-              <select
-                className="input"
-                style={{ width: '100%' }}
-                value={triggerType}
-                onChange={(e) => handleTriggerTypeChange(e.target.value as TriggerType)}
-              >
-                <optgroup label="Eventos en tiempo real">
-                  {TRIGGER_ORDER.filter((t) => TRIGGER_META[t].category === 'evento').map((t) => (
-                    <option key={t} value={t}>
-                      {TRIGGER_META[t].label}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Revisiones periódicas (cron)">
-                  {TRIGGER_ORDER.filter((t) => TRIGGER_META[t].category === 'tiempo').map((t) => (
-                    <option key={t} value={t}>
-                      {TRIGGER_META[t].label}
-                    </option>
-                  ))}
-                </optgroup>
-              </select>
-            </div>
-            <p className="muted" style={{ fontSize: 13, marginBottom: trigMeta.fields.length ? 12 : 0 }}>
-              {trigMeta.description}
-            </p>
-            {trigMeta.fields.map((f) => (
-              <FieldInput key={f.key} field={f} value={triggerConfig[f.key]} onChange={(v) => setTriggerConfig((c) => ({ ...c, [f.key]: v }))} />
-            ))}
-            {trigMeta.category === 'tiempo' && (
-              <div className="row" style={{ gap: 6, alignItems: 'flex-start', marginTop: 8 }}>
-                <Info size={13} className="muted" style={{ marginTop: 2, flexShrink: 0 }} />
-                <p className="muted" style={{ fontSize: 11, margin: 0 }}>
-                  Este disparador se evalúa en cada corrida automática (cron), no al instante.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Pasos */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {steps.map((step, i) => (
-              <React.Fragment key={step.id}>
-                <StepCard
-                  step={step}
-                  index={i}
-                  total={steps.length}
-                  onChange={(s) => updateStep(i, s)}
-                  onRemove={() => removeStep(i)}
-                  onMove={(dir) => moveStep(i, dir)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'center' }}>
-                  <ChevronsDown size={16} className="muted" />
-                </div>
-              </React.Fragment>
-            ))}
-
-            {steps.length === 0 && (
-              <div className="card" style={{ textAlign: 'center', padding: '32px 16px' }}>
-                <p className="muted" style={{ marginBottom: 0 }}>
-                  Este flujo todavía no tiene pasos. Agrega condiciones, esperas y acciones para definir qué pasa
-                  cuando se dispara.
-                </p>
-              </div>
-            )}
-
-            {/* Agregar paso */}
-            <div className="card" style={{ background: 'rgba(136,136,170,0.04)' }}>
-              <div className="row" style={{ gap: 8 }}>
-                <button className="ghost" style={{ flex: 1 }} onClick={() => addStep('condition')}>
-                  <GitBranch size={13} /> + Condición
-                </button>
-                <button className="ghost" style={{ flex: 1 }} onClick={() => addStep('delay')}>
-                  <Clock size={13} /> + Espera
-                </button>
-                <button className="ghost" style={{ flex: 1 }} onClick={() => addStep('action')}>
-                  <PlayCircle size={13} /> + Acción
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Columna lateral: ejecuciones recientes */}
-        <div className="card">
-          <div className="row" style={{ gap: 6, alignItems: 'center', marginBottom: 12 }}>
-            <Activity size={15} />
-            <span style={{ fontWeight: 600 }}>Ejecuciones recientes</span>
-          </div>
-          {workflow.runs.length === 0 ? (
-            <p className="muted" style={{ fontSize: 13 }}>
-              Aún no hay ejecuciones para este flujo.
-            </p>
+    <div className="container rai-page bd-page">
+      <header className="bd-head">
+        <div className="bd-head-main">
+          <Link href="/automatizacion" className="bd-back"><ArrowLeft size={14} aria-hidden="true" /> Automatización</Link>
+          {ready ? (
+            <>
+              <h1 className="fx-sr-only">Editor de flujo</h1>
+              <input
+                className="input bd-name"
+                value={ed.name}
+                onChange={(e) => ed.setName(e.target.value)}
+                placeholder="Nombre del flujo"
+                aria-label="Nombre del flujo"
+                maxLength={120}
+              />
+              <input
+                className="input bd-desc"
+                value={ed.description}
+                onChange={(e) => ed.setDescription(e.target.value)}
+                placeholder="Descripción breve (opcional)"
+                aria-label="Descripción del flujo"
+              />
+            </>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {workflow.runs.map((r) => (
-                <div key={r.id} style={{ borderBottom: '1px solid var(--rai-border)', paddingBottom: 8 }}>
-                  <div className="row-between" style={{ marginBottom: 2 }}>
-                    <span className={RUN_STATUS_BADGE[r.status] || 'badge-muted'} style={{ fontSize: 10 }}>
-                      {RUN_STATUS_LABELS[r.status] || r.status}
-                    </span>
-                    <span className="muted" style={{ fontSize: 11 }}>
-                      {fmtDate(r.createdAt)}
-                    </span>
-                  </div>
-                  {r.contactName && <div style={{ fontSize: 12 }}>{r.contactName}</div>}
-                  {r.error && (
-                    <div style={{ fontSize: 11, color: 'var(--rai-error)', marginTop: 2 }}>
-                      {r.error}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+            <h1 className="h1 bd-loading-title">{load.kind === 'error' ? 'No se pudo abrir el flujo' : 'Cargando flujo…'}</h1>
           )}
         </div>
-      </div>
+
+        {ready && (
+          <div className="bd-actions">
+            <span className={`bd-pill bd-pill--${status}`}>
+              <span className={`fx-dot ${active ? 'fx-dot--ok' : status === 'paused' ? 'fx-dot--warn' : ''}`} aria-hidden="true" />
+              {STATUS_LABELS[status] ?? status}
+            </span>
+            {ed.dirty && <span className="bd-dirty" role="status">Cambios sin guardar</span>}
+            <button type="button" className="au-btn" onClick={() => void ed.save(true)} disabled={ed.saving || !ed.dirty}>
+              {ed.saving ? <Loader2 size={14} className="au-spin" aria-hidden="true" /> : <Save size={14} aria-hidden="true" />} Guardar
+            </button>
+            <button type="button" className={`au-btn ${active ? 'au-btn--danger' : 'au-btn--primary'}`} onClick={requestToggle} disabled={ed.busyStatus || ed.saving}>
+              {ed.busyStatus ? <Loader2 size={14} className="au-spin" aria-hidden="true" /> : active ? <Pause size={14} aria-hidden="true" /> : <Play size={14} aria-hidden="true" />}
+              {active ? ' Pausar' : ' Activar'}
+            </button>
+          </div>
+        )}
+      </header>
+
+      {load.kind === 'loading' && <BuilderSkeleton />}
+
+      {load.kind === 'error' && (
+        <div className="au-error" role="alert">
+          <AlertTriangle size={16} aria-hidden="true" /> {load.message}
+          <button type="button" className="au-btn au-btn--sm" onClick={() => void ed.reload()}><RefreshCw size={13} aria-hidden="true" /> Reintentar</button>
+        </div>
+      )}
+
+      {ready && (
+        <div className="bd-grid">
+          <div className="bd-col">
+            <section className="card bd-card" aria-labelledby="bd-folder-label">
+              <label id="bd-folder-label" className="bd-label" htmlFor="bd-folder">Carpeta</label>
+              <select id="bd-folder" className="input bd-folder" value={ed.folderId} onChange={(e) => ed.setFolderId(e.target.value)}>
+                <option value="">Sin carpeta</option>
+                {ed.folders.map((f) => (
+                  <option key={f.id} value={f.id}>{f.name}</option>
+                ))}
+              </select>
+            </section>
+
+            <section className="card bd-card bd-trigger" aria-labelledby="bd-trigger-title">
+              <h2 id="bd-trigger-title" className="bd-block-title"><Zap size={16} aria-hidden="true" /> Cuando ocurre…</h2>
+              <div className="bd-field">
+                <label className="bd-label" htmlFor="bd-trigger-type">Disparador</label>
+                <select id="bd-trigger-type" className="input" value={triggerType} onChange={(e) => {
+                    const next = e.target.value;
+                    if (isTriggerType(next)) ed.changeTriggerType(next);
+                  }}>
+                  <optgroup label="Eventos en tiempo real">
+                    {TRIGGER_ORDER.filter((t) => TRIGGER_META[t].category === 'evento').map((t) => (
+                      <option key={t} value={t}>{TRIGGER_META[t].label}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Revisiones periódicas (cron)">
+                    {TRIGGER_ORDER.filter((t) => TRIGGER_META[t].category === 'tiempo').map((t) => (
+                      <option key={t} value={t}>{TRIGGER_META[t].label}</option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+              <p className="bd-help">{trigMeta.description}</p>
+              {trigMeta.fields.map((f) => (
+                <FieldInput key={f.key} field={f} value={ed.triggerConfig[f.key]} onChange={(v) => ed.setTriggerField(f.key, v)} />
+              ))}
+              {trigMeta.category === 'tiempo' && (
+                <p className="bd-help bd-help--icon"><Info size={13} aria-hidden="true" /> Este disparador se evalúa en cada corrida automática (cron), no al instante.</p>
+              )}
+            </section>
+
+            <ol className="bd-steps" aria-label="Pasos del flujo">
+              {steps.map((step, i) => (
+                <li key={step.id} className="bd-step-item">
+                  <span className="bd-conn" aria-hidden="true" />
+                  <StepCard
+                    step={step}
+                    index={i}
+                    total={steps.length}
+                    autoFocus={ed.lastAdded === step.id}
+                    onFocused={ed.clearLastAdded}
+                    onChange={(s) => ed.updateStep(i, s)}
+                    onRemove={() => ed.removeStep(i)}
+                    onMove={(dir) => ed.moveStep(i, dir)}
+                  />
+                </li>
+              ))}
+            </ol>
+
+            {steps.length === 0 && (
+              <p className="bd-empty">Este flujo todavía no tiene pasos. Agrega condiciones, esperas y acciones para definir qué pasa cuando se dispara.</p>
+            )}
+
+            <div className="card bd-add" role="group" aria-label="Agregar un paso">
+              {ADD_BUTTONS.map(({ type, icon: Icon }) => (
+                <button key={type} type="button" className="au-btn au-btn--soft" onClick={() => ed.addStep(type)}>
+                  <Icon size={14} aria-hidden="true" /> Agregar {STEP_LABELS[type].toLowerCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <RunsPanel runs={ed.runs} zone={prefs.displayZone} />
+        </div>
+      )}
+
       {confirmActivate && (
         <ActivationDialog
-          flow={{ name: name.trim() || 'Este flujo', status, trigger: { type: triggerType }, steps }}
+          flow={{ name: ed.name.trim() || 'Este flujo', status, trigger: { type: triggerType }, steps }}
           webhookConfigured={engineSettings ? !!engineSettings.n8nWebhookUrl : null}
-          busy={busyStatus || saving}
+          busy={ed.busyStatus || ed.saving}
           onCancel={() => setConfirmActivate(false)}
           onConfirm={() => {
             setConfirmActivate(false);
-            void toggleActive();
+            void ed.toggleActive();
           }}
         />
       )}

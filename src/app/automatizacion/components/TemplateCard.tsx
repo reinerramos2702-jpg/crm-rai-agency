@@ -1,14 +1,22 @@
 'use client';
 
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
-import { templateTags, triggerKindLabel } from '@/lib/automation-templates';
+import { ArrowRight, Clock, GitBranch, Send, Zap, type LucideIcon } from 'lucide-react';
+import { buildFlowPreview, templateTags, triggerKindLabel, type PreviewKind } from '@/lib/automation-templates';
 import { CATEGORY_LABELS, categoryOf, readinessOf, type Requirement } from '@/lib/automation-template-gallery';
 import { TRIGGER_META } from '@/lib/automations/ui-meta';
 import { CATEGORY_ICONS, NICHE_META, type TemplateT } from '../templates-data';
 import '../templates.css';
 
 const MAX_TAGS = 2;
+const MAX_TRACK = 6;
+
+const KIND_ICON: Record<PreviewKind, { icon: LucideIcon; label: string }> = {
+  trigger: { icon: Zap, label: 'Disparador' },
+  condition: { icon: GitBranch, label: 'Condición' },
+  delay: { icon: Clock, label: 'Espera' },
+  action: { icon: Send, label: 'Acción' },
+};
 
 interface TemplateCardProps {
   template: TemplateT;
@@ -22,6 +30,8 @@ export function TemplateCard({ template, requirements, onOpen }: TemplateCardPro
   const tags = templateTags(template);
   const extra = tags.length - MAX_TAGS;
   const ready = readinessOf(requirements);
+  const track = buildFlowPreview(template);
+  const shown = track.slice(0, MAX_TRACK);
 
   return (
     <article className="tp-card fx-reveal" aria-label={template.name}>
@@ -36,6 +46,19 @@ export function TemplateCard({ template, requirements, onOpen }: TemplateCardPro
         </button>
       </h3>
       <p className="tp-desc">{template.description}</p>
+      <ol className="tp-track" aria-label="Secuencia del flujo">
+        {shown.map((step, i) => {
+          const meta = KIND_ICON[step.kind];
+          const KindIcon = meta.icon;
+          return (
+            <li key={i} className={`tp-track-node tp-track-node--${step.kind}`} title={`${meta.label}: ${step.title}`}>
+              <KindIcon size={12} aria-hidden="true" />
+              <span className="fx-sr-only">{meta.label}: {step.title}</span>
+            </li>
+          );
+        })}
+        {track.length > MAX_TRACK && <li className="tp-track-more" aria-hidden="true">+{track.length - MAX_TRACK}</li>}
+      </ol>
       <div className="tp-tags">
         <span className="tp-tag tp-tag--kind" title={TRIGGER_META[template.trigger.type]?.label}>{triggerKindLabel(template)}</span>
         {tags.slice(0, MAX_TAGS).map((tag) => (

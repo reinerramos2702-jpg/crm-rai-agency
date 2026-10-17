@@ -10,8 +10,14 @@ import {
   type FlowSort,
   type RowDensity,
 } from '@/lib/automation-prefs';
+import { pickOption } from '../guards';
 import { useAutomationPrefs } from '../use-automation-prefs';
 import '../settings.css';
+
+const FLOW_SORTS: readonly FlowSort[] = ['recientes', 'nombre', 'ejecuciones'];
+const ZONES: readonly DisplayZone[] = ['America/Caracas', 'local'];
+const DENSITIES: readonly RowDensity[] = ['comfortable', 'compact'];
+const REFRESH: readonly AutoRefreshSeconds[] = [0, 30, 60];
 
 export function PrefsCard() {
   const { prefs, update, reset } = useAutomationPrefs();
@@ -36,7 +42,10 @@ export function PrefsCard() {
             <strong>Orden de los flujos</strong>
             <span>Cómo se ordena la lista en la pestaña Flujos.</span>
           </div>
-          <select className="au-select" aria-label="Orden de los flujos" value={prefs.flowSort} onChange={(e) => update({ flowSort: e.target.value as FlowSort })}>
+          <select className="au-select" aria-label="Orden de los flujos" value={prefs.flowSort} onChange={(e) => {
+            const flowSort = pickOption(FLOW_SORTS, e.target.value);
+            if (flowSort) update({ flowSort });
+          }}>
             <option value="recientes">Modificados recientemente</option>
             <option value="nombre">Nombre (A–Z)</option>
             <option value="ejecuciones">Más ejecutados</option>
@@ -56,7 +65,10 @@ export function PrefsCard() {
             <strong>Densidad de la lista</strong>
             <span>«Compacta» reduce el alto de cada fila para ver más flujos sin desplazarte.</span>
           </div>
-          <select className="au-select" aria-label="Densidad de la lista" value={prefs.density} onChange={(e) => update({ density: e.target.value as RowDensity })}>
+          <select className="au-select" aria-label="Densidad de la lista" value={prefs.density} onChange={(e) => {
+            const density = pickOption(DENSITIES, e.target.value);
+            if (density) update({ density });
+          }}>
             <option value="comfortable">Cómoda</option>
             <option value="compact">Compacta</option>
           </select>
@@ -66,7 +78,10 @@ export function PrefsCard() {
             <strong>Zona horaria de las fechas exactas</strong>
             <span>Se usa al pasar el cursor sobre una hora relativa y en el detalle de cada ejecución.</span>
           </div>
-          <select className="au-select" aria-label="Zona horaria" value={prefs.displayZone} onChange={(e) => update({ displayZone: e.target.value as DisplayZone })}>
+          <select className="au-select" aria-label="Zona horaria" value={prefs.displayZone} onChange={(e) => {
+            const displayZone = pickOption(ZONES, e.target.value);
+            if (displayZone) update({ displayZone });
+          }}>
             <option value="America/Caracas">Caracas (UTC−4)</option>
             <option value="local">La de mi dispositivo</option>
           </select>
@@ -76,7 +91,10 @@ export function PrefsCard() {
             <strong>Actualizar Actividad automáticamente</strong>
             <span>Mientras la pestaña esté visible, recarga el historial por detrás.</span>
           </div>
-          <select className="au-select" aria-label="Actualización automática" value={prefs.activityRefresh} onChange={(e) => update({ activityRefresh: Number(e.target.value) as AutoRefreshSeconds })}>
+          <select className="au-select" aria-label="Actualización automática" value={prefs.activityRefresh} onChange={(e) => {
+            const activityRefresh = REFRESH.find((n) => String(n) === e.target.value);
+            if (activityRefresh !== undefined) update({ activityRefresh });
+          }}>
             <option value={0}>No actualizar</option>
             <option value={30}>Cada 30 segundos</option>
             <option value={60}>Cada minuto</option>

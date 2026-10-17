@@ -287,3 +287,21 @@ button.au-switch:active { transform: none; }
 .au-note { margin: 0; font-size: 12px; color: var(--rai-muted); }
 .au-error { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--rai-error) 40%, var(--rai-border)); color: var(--rai-error); font-size: 13px; }
 
+
+/* ---------- Pestañas de la página sin scroller horizontal ---------- */
+.au-tabs.rai-toptabs { flex-wrap: wrap; overflow: visible; }
+@media (max-width: 640px) {
+  .au-tabs.rai-toptabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; margin-bottom: 20px; }
+  .au-tabs.rai-toptabs > button.au-tab {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 4px !important;
+    font-size: 12px !important;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .au-tabs.rai-toptabs > button.au-tab::after { left: 8px; right: 8px; }
+}
+button.au-tab:focus-visible { outline: 2px solid var(--rai-gold); outline-offset: -2px; }

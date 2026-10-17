@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { formatDateTime, friendlyRunError, humanizeDetail, relativeTime } from '@/lib/automation-runs';
 import { zoneOption, type DisplayZone } from '@/lib/automation-prefs';
 import { RUN_STATUS_LABELS, TRIGGER_META } from '@/lib/automations/ui-meta';
-import type { TriggerType } from '@/lib/automations/types';
+import { isTriggerType } from '../guards';
 import type { RunT } from '../types';
 import '../activity.css';
 
@@ -37,7 +37,7 @@ export function RunRow({ run, now, zone, expanded, onToggle }: RunRowProps) {
   const log = run.result?.log ?? [];
   const hasDetail = log.length > 0 || !!run.error;
   const triggerType = run.trigger?.type ?? null;
-  const triggerLabel = triggerType ? TRIGGER_META[triggerType as TriggerType]?.label ?? triggerType : null;
+  const triggerLabel = triggerType ? (isTriggerType(triggerType) ? TRIGGER_META[triggerType].label : triggerType) : null;
   const statusLabel = RUN_STATUS_LABELS[run.status] ?? run.status;
   const sub = [triggerLabel, run.contactName].filter(Boolean).join(' · ');
   const error = friendlyRunError(run.error);

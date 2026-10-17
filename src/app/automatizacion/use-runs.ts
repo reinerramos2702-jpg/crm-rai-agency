@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchJson, getCached, isFresh, subscribe } from '@/lib/swr-cache';
 import { mergeRuns } from '@/lib/automation-runs';
+import { isRunsPayload } from './guards';
 import type { RunT, RunsPayload } from './types';
 
 const TTL_MS = 15_000;
@@ -57,7 +58,9 @@ export function useRuns(url: string, buildMoreUrl: (cursor: string) => string) {
     try {
       const res = await fetch(buildMoreUrl(nextCursor));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const page = (await res.json()) as RunsPayload;
+      const body: unknown = await res.json();
+      if (!isRunsPayload(body)) throw new Error('Respuesta inesperada');
+      const page = body;
       setMore((prev) => ({ url, runs: mergeRuns(prev && prev.url === url ? prev.runs : [], page.runs), cursor: page.nextCursor }));
     } finally {
       setLoadingMore(false);

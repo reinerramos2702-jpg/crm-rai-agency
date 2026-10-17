@@ -15,12 +15,15 @@ import {
 import { applyNameTemplate } from '@/lib/automation-prefs';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { errorMessage } from '../api';
+import { pickOption } from '../guards';
 import { CATEGORY_FILTERS, NICHE_FILTERS, TEMPLATES, type TemplateT } from '../templates-data';
 import { TemplateCard } from '../components/TemplateCard';
 import { TemplatePreview } from '../components/TemplatePreview';
 import { useAutomationPrefs } from '../use-automation-prefs';
 import type { NewWorkflowInput } from '../use-automations';
 import '../templates.css';
+
+const SORT_KEYS: readonly TemplateSort[] = ['recomendado', 'nombre', 'pasos-asc', 'pasos-desc'];
 
 interface TemplatesTabProps {
   createWorkflow: (input: NewWorkflowInput) => Promise<{ id: string }>;
@@ -84,7 +87,10 @@ export default function TemplatesTab({ createWorkflow, webhookConfigured }: Temp
           </div>
           <label className="au-field">
             <span>Negocio</span>
-            <select className="au-select" value={filters.niche} onChange={(e) => set({ niche: e.target.value as GalleryFilters['niche'] })}>
+            <select className="au-select" value={filters.niche} onChange={(e) => {
+                const niche = pickOption(NICHE_FILTERS.map((n) => n.id), e.target.value);
+                if (niche) set({ niche });
+              }}>
               {NICHE_FILTERS.map((n) => (
                 <option key={n.id} value={n.id}>{n.label}</option>
               ))}
@@ -92,8 +98,11 @@ export default function TemplatesTab({ createWorkflow, webhookConfigured }: Temp
           </label>
           <label className="au-field">
             <span>Ordenar</span>
-            <select className="au-select" value={sort} onChange={(e) => setSort(e.target.value as TemplateSort)}>
-              {(Object.keys(TEMPLATE_SORT_LABELS) as TemplateSort[]).map((key) => (
+            <select className="au-select" value={sort} onChange={(e) => {
+                const next = pickOption(SORT_KEYS, e.target.value);
+                if (next) setSort(next);
+              }}>
+              {SORT_KEYS.map((key) => (
                 <option key={key} value={key}>{TEMPLATE_SORT_LABELS[key]}</option>
               ))}
             </select>
