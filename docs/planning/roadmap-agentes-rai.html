@@ -121,7 +121,7 @@ input[type=file]{display:none}
     <h1>Roadmap de Agentes<br>RAI Agency</h1>
     <p class="lead">Mapa de capacidades, madurez y tareas del sistema jerárquico que mantiene CRM RAI Agency. La fuente única del backlog de producto y seguridad es <code>docs/planning/panel-control.html</code>; este documento no lo replica ni lo reemplaza.</p>
     <div class="meta">
-      <div class="pill">ACTUALIZADO: <strong id="updated">25 sep 2026 · verificado 10 oct (sin cambios)</strong></div>
+      <div class="pill">ACTUALIZADO: <strong id="updated">17 oct 2026 · fase 10 añadida (Agentes IA del CRM)</strong></div>
       <div class="pill">ORQUESTACIÓN: <strong>OpenCode + subagentes especializados</strong></div>
       <div class="pill">CRM: <strong>Next.js + Prisma + Supabase + Vercel</strong></div>
       <div class="pill">ESTADO: <strong>Agentes versionados · rama de seguridad publicada</strong></div>
@@ -284,6 +284,22 @@ input[type=file]{display:none}
           </div>
           <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
         </article>
+
+        <article class="phase" data-phase="10">
+          <div class="phase-top"><div class="phase-number">10</div><div class="phase-title"><h3>Agentes IA del CRM (producto)</h3><p>Agentes de chat y voz que forman parte del producto, con activación gradual, tope de gasto y control humano.</p></div><span class="status progress">En curso</span></div>
+          <div class="tasks">
+            <div class="task" data-id="10-1" data-status="done"><button class="state-dot">✓</button><div><h4>Agentes de chat con asistente propio</h4><p>Los agentes de chat tienen un asistente propio («Nuevo agente») separado del de voz; commit <code>1ed71c1</code>. DoD: chat y voz configurables por separado, sin compartir ajustes.</p></div><span class="owner">AGENTES IA</span></div>
+            <div class="task" data-id="10-2" data-status="done"><button class="state-dot">✓</button><div><h4>Agente de voz entrante con Retell</h4><p>Código, webhook firmado e idempotente, herramienta de búsqueda en la base de conocimiento y centro <code>/agentes-ia/voz</code>; modo simulado por defecto y cero gasto; commit <code>4c49cb8</code>. DoD: flujo completo probado en modo simulado sin llamadas reales.</p></div><span class="owner">BACKEND + QA</span></div>
+            <div class="task" data-id="10-3" data-status="pending"><button class="state-dot">·</button><div><h4>Activar la voz real</h4><p>Pasos manuales de Reiner: cuenta Retell con crédito solo del tope, número de Venezuela por Telnyx/SIP, variables de entorno y <code>VOICE_MODE=live</code>. Tope recomendado: US$ 100 en 2 semanas; requiere revisión legal previa. DoD: una llamada real de prueba dentro del tope y con la revisión legal aprobada.</p></div><span class="owner">REINER</span></div>
+            <div class="task" data-id="10-4" data-status="pending"><button class="state-dot">·</button><div><h4>Base de conocimiento con búsqueda semántica (RAG)</h4><p>Hoy la búsqueda es por palabras clave; falta la búsqueda semántica y un probador de recuperación. DoD: probador que muestre los fragmentos recuperados y su relevancia en casos reales en español.</p></div><span class="owner">BACKEND</span></div>
+            <div class="task" data-id="10-5" data-status="pending"><button class="state-dot">·</button><div><h4>Conversation AI en producción</h4><p>Activarla primero en modo «Sugerido», donde la IA propone y una persona aprueba. DoD: sugerencias revisadas por un humano antes de pasar a respuesta automática.</p></div><span class="owner">AGENTES IA + QA</span></div>
+            <div class="task" data-id="10-6" data-status="pending"><button class="state-dot">·</button><div><h4>Traspaso a humano y seguimiento automático</h4><p>Definir cuándo el agente cede la conversación a una persona y qué seguimiento se programa solo. DoD: traspaso con contexto completo y sin conversaciones sin responsable.</p></div><span class="owner">AGENTES IA</span></div>
+            <div class="task" data-id="10-7" data-status="done"><button class="state-dot">✓</button><div><h4>Orquestación por subagentes con propiedad de archivos disjunta</h4><p>Ola 3 (Voz, Inicio, Campaña, Generador) y Ola 3b (Marketing, Multimedia, Automatización), con verificación independiente en una copia aparte. DoD: ningún archivo con dos propietarios y revisión ajena al autor.</p></div><span class="owner">ORQUESTADOR</span></div>
+            <div class="task" data-id="10-8" data-status="done"><button class="state-dot">✓</button><div><h4>Spec cerrada y prompt maestro de la Ola 4</h4><p><code>docs/SPEC-ola4-entorno-sesion-configuracion-modulos.md</code> y <code>docs/planning/PROMPT-MAESTRO-OLA4.md</code>; commit <code>85dc085</code>. DoD: spec sin decisiones abiertas y prompt listo para ejecución autónoma.</p></div><span class="owner">DOCUMENTACIÓN</span></div>
+            <div class="task" data-id="10-9" data-status="pending"><button class="state-dot">·</button><div><h4>Script de entorno seguro <code>run-staging</code></h4><p>Slice S0 de la Ola 4: evita la fuga de <code>.env.production</code> y el choque de <code>.next</code> entre <code>dev</code> y <code>build</code>. DoD: staging arranca con <code>.env.staging</code> sin tocar producción y con prueba de no regresión.</p></div><span class="owner">PLATAFORMA</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
       </div>
     </section>
 
@@ -306,6 +322,22 @@ input[type=file]{display:none}
         <div class="human-card"><strong><code>9e3d3aa</code> · Lint limpio</strong><p>ESLint pasó de 67 a 0 warnings sin cambio funcional. La rama fue publicada con aprobación; no fue fusionada ni desplegada.</p></div>
         <div class="human-card"><strong>QA final</strong><p>189/189 tests, <code>tsc --noEmit</code> limpio, ESLint 0 errores/0 warnings y build exitoso de 62 páginas. Warning no bloqueante: paquete opcional <code>@valkey/valkey-glide</code> de BullMQ.</p></div>
         <div class="human-card"><strong><code>36eaaf3</code> · Jerarquía y guardrails</strong><p>Orquestador, backend, frontend y QA quedaron versionados después de trabajar con scopes separados y revisión QA posterior al autor. Los permisos exigen aprobación para Vercel, migraciones, push/merge y comandos destructivos.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><span class="section-code">CORRIDA</span><h2>Bitácora verificable · 16–17 oct 2026</h2><span class="section-note">Agentes IA y Olas 3/3b · sin secretos</span></div>
+      <div class="human-grid">
+        <div class="human-card"><strong><code>1ed71c1</code> · Agentes de chat</strong><p>Agentes de chat con asistente propio («Nuevo agente»), separado del de voz.</p></div>
+        <div class="human-card"><strong><code>4c49cb8</code> · Voz entrante con Retell</strong><p>Webhook firmado e idempotente, búsqueda en la base de conocimiento y centro de voz; modo simulado por defecto y cero gasto.</p></div>
+        <div class="human-card"><strong><code>5e75580</code> · Inicio</strong><p>Pantalla de Inicio real, entregada por su subagente con archivos propios.</p></div>
+        <div class="human-card"><strong><code>11e03e9</code> · Campaña</strong><p>Módulo Campaña completado en la Ola 3.</p></div>
+        <div class="human-card"><strong><code>9938a33</code> · Generador</strong><p>Módulo Generador completado en la Ola 3.</p></div>
+        <div class="human-card"><strong><code>74a8b91</code> · Marketing</strong><p>Marketing real: planificador, fragmentos, enlaces, cuenta atrás, marca, correos locales, UTM/anuncios y prospección. Envío masivo, anuncios de plataformas y búsqueda de leads siguen limitados.</p></div>
+        <div class="human-card"><strong><code>0f62089</code> · Multimedia</strong><p>Multimedia real, sin subida de archivos hasta decidir el almacenamiento.</p></div>
+        <div class="human-card"><strong><code>a481ecd</code> · Automatización</strong><p>Automatización completada: 19 plantillas, actividad en servidor y exportación CSV.</p></div>
+        <div class="human-card"><strong><code>85dc085</code> · Spec y prompt de la Ola 4</strong><p>Spec cerrada y prompt maestro de la Ola 4 (entorno, sesión, configuración y módulos).</p></div>
+        <div class="human-card"><strong>Calidad de la jornada</strong><p><code>tsc</code> 0 errores, ESLint 0, Vitest 848/848 y build correcto de 72 páginas. Sin push: todo queda en commits locales.</p></div>
       </div>
     </section>
 

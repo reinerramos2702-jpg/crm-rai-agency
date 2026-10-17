@@ -65,3 +65,7 @@ Sin efectos nuevos de desenfoque: ninguno entró en esta ola y la regla 1 sigue 
 - **Anillos de progreso**: por categoría en la Guía de Inicio, sutiles y sin animación llamativa; solo comunican avance.
 - **Generador `[id]`**: wizard sin scrollers anidados (14 archivos).
 - Pendiente de verificar a simple vista: las cuatro pantallas de la ola entre 320 y 1440 px.
+
+## Registro de la Ola 3b (17 oct 2026)
+
+Marketing, Multimedia y Automatización: sin blur (regla 1 vigente), un solo scroll por pantalla, esqueletos con las medidas reales del contenido y visor de Multimedia sin blur.
