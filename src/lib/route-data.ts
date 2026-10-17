@@ -12,6 +12,12 @@ import { prefetchJson } from './swr-cache';
  * importa desde `app/`. Hay una prueba que impide duplicados y rutas mutantes.
  */
 export const ROUTE_DATA: Record<string, string[]> = {
+  // Contactos comparte su petición con esta caché.
+  '/contactos': ['/api/contacts'],
+  // Conversaciones tiene un cargador con timeout y deduplicación propios;
+  // no se precarga aquí para evitar una segunda petición en clics rápidos.
+  // Biblioteca multimedia (el módulo usa useCachedJson con esta URL exacta).
+  '/contenido-multimedia': ['/api/media'],
   '/launchpad': ['/api/launchpad'],
   '/generador-imagenes': ['/api/content-grids', '/api/workspace/brand-doc'],
   // Lista de pagos (LIST_URL de pagos/payments-client.ts).

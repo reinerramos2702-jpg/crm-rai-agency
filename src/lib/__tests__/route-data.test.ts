@@ -40,10 +40,15 @@ describe('route-data', () => {
     }
   });
 
-  it('precarga los módulos nuevos (pagos, automatización, agentes, ajustes)', async () => {
-    for (const href of ['/pagos', '/automatizacion', '/agentes-ia', '/settings']) prefetchRouteData(href);
+  it('precarga datos compartidos de CRM y los módulos con caché', async () => {
+    for (const href of ['/contactos', '/contenido-multimedia', '/pagos', '/automatizacion', '/agentes-ia', '/settings']) {
+      prefetchRouteData(href);
+    }
     await Promise.resolve();
+    expect(fetch).toHaveBeenCalledWith('/api/contacts', expect.anything());
+    expect(fetch).toHaveBeenCalledWith('/api/media', expect.anything());
     expect(fetch).toHaveBeenCalledWith('/api/payments?limit=300', expect.anything());
     expect(fetch).toHaveBeenCalledWith('/api/automations/runs?limit=50', expect.anything());
+    expect(fetch).toHaveBeenCalledWith('/api/settings', expect.anything());
   });
 });
