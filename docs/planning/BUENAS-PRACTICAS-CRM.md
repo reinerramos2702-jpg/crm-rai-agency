@@ -67,7 +67,7 @@ Exploración → Planificación → Ejecución → Verificación → Fin. Siempr
 ## 4. Memoria del proyecto
 - `CLAUDE.md` corto — solo lo esencial (rol, reglas fijas de la sección 0, stack, contexto de negocio). Uno gigante penaliza cada ejecución.
 - Reglas secundarias específicas (branding visual, convenciones JS, accesibilidad) van en `.claude/rules/`, no en el `CLAUDE.md` principal — se cargan solo cuando la tarea las necesita.
-- `MEMORY.md` / `CONTEXT.md` / `ESTADO.md` (dentro del repo real, no en esta carpeta) — historial de sesiones, se leen primero en cada sesión nueva. Ya confirmado como fuente de verdad en `COWORK-BRIEFING.md`.
+- `MEMORY.md` / `CONTEXT.md` / `ESTADO.md` (dentro del repo real, no en esta carpeta) — historial de sesiones, se leen primero en cada sesión nueva. Ya confirmado como fuente de verdad en el briefing histórico de Cowork (archivado en `_revisar-obsoletos/docs/planning/COWORK-BRIEFING.md`).
 
 ## 5. Modelos y esfuerzo
 - **Sonnet**: día a día. **Opus**: tareas complejas — default para trabajo serio de este proyecto (ver master prompt v2.0: "Abre Claude Code (Opus) DENTRO del worktree"). **Fable**: solo si hace falta lo máximo.

@@ -1,0 +1,152 @@
+/* Reglas CSS retiradas de src/app/globals.css por no tener ningún uso (auditoría del 17 oct 2026).
+   Para restaurar: pegar la regla en globals.css. */
+
+[data-theme="light"] .lp-checkbox-done {
+  color: #FFFFFF;
+}
+
+.lp-progress-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--rai-border);
+  overflow: hidden;
+}
+
+.lp-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #C9A84C, #E8B923);
+  transition: width 0.3s ease;
+}
+
+.lp-checkbox {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  border: 1px solid var(--rai-border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 1px;
+  transition: var(--transition);
+}
+
+.lp-checkbox:hover {
+  border-color: var(--rai-gold);
+}
+
+.lp-checkbox-done {
+  background: var(--rai-success);
+  border-color: var(--rai-success);
+  color: #0A0A0F;
+}
+
+.lp-check-icon {
+  animation: check-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.lp-ring-pct {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--rai-muted);
+  min-width: 36px;
+  text-align: right;
+}
+
+.lp-ring-pct.done { color: var(--rai-success); }
+
+.rai-sync-status {margin-top:16px;font-size:12px;color:var(--rai-muted)}
+
+.rai-sync-status.is-error {color:var(--rai-error,#ef4444)}
+
+.rai-progress {height:6px;margin-top:14px;border-radius:999px;background:var(--rai-border);overflow:hidden}
+
+.rai-progress span {display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--rai-gold-dim),var(--rai-gold-br));transition:width .4s ease}
+
+.rai-cfg-pct {font-size:28px;font-weight:800;color:var(--rai-gold);line-height:1}
+
+/* dentro de @media (prefers-reduced-motion: reduce) */
+/* .rai-progress span  /* selector retirado de un grupo */ */
+
+.rai-cfg-pct,.rai-progress {display:none}
+
+.dash-duo {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:stretch}
+
+/* .dash-pulse  /* selector retirado de un grupo */ */
+
+.dash-pulse-head,.dash-auto-head {display:flex;align-items:center;gap:12px}
+
+.dash-pulse-head > div,.dash-auto-head > div {flex:1;min-width:0}
+
+/* .dash-pulse h3  /* selector retirado de un grupo */ */
+
+.dash-pulse-head p,.dash-auto-head p {margin:2px 0 0;font-size:12px;color:var(--rai-muted);overflow-wrap:anywhere}
+
+.dash-pulse-nums {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+
+.dash-pulse-nums > div {display:grid;gap:1px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--sc) 8%,transparent);border:1px solid color-mix(in srgb,var(--sc) 24%,var(--rai-border));min-width:0}
+
+.dash-pulse-nums strong {font-size:22px;font-weight:800;line-height:1.1;color:var(--sc)}
+
+.dash-pulse-nums span {font-size:11px;color:var(--rai-muted)}
+
+.dash-pulse-empty {display:grid;gap:12px;justify-items:start}
+
+.dash-pulse-empty p {margin:0;font-size:13px;color:var(--rai-muted);line-height:1.5}
+
+.dash-empty-ico {display:grid;place-items:center;width:68px;height:68px;border-radius:50%;color:var(--rai-gold);background:color-mix(in srgb,var(--rai-gold) 12%,transparent);border:1px solid color-mix(in srgb,var(--rai-gold) 34%,var(--rai-border))}
+
+.dash-empty-steps {list-style:none;margin:6px 0 0;padding:0;display:flex;gap:8px 18px;flex-wrap:wrap;justify-content:center;font-size:13px;color:var(--rai-muted)}
+
+.dash-empty-steps li {display:inline-flex;align-items:center;gap:8px}
+
+.dash-empty-steps b {display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;font-size:11px;color:var(--rai-gold);background:color-mix(in srgb,var(--rai-gold) 14%,transparent)}
+
+.dash-empty-cta {display:grid;justify-items:center;gap:12px;margin-top:8px}
+
+/* dentro de @media (prefers-reduced-motion:no-preference) */
+/* .dash-duo > *  /* selector retirado de un grupo */ */
+
+/* dentro de @media (prefers-reduced-motion:no-preference) */
+.dash-duo > *:nth-child(2) {animation-delay:.06s}
+
+/* dentro de @media (max-width:820px) */
+.dash-duo {grid-template-columns:minmax(0,1fr)}
+
+.cn-chips {padding:8px 24px;border-top:1px solid var(--rai-border);display:flex;flex-wrap:wrap;gap:6px;background:rgba(123,94,167,.04)}
+
+.cn-input {padding:16px 24px;display:flex;gap:8px;align-items:flex-end;background:var(--rai-dark)}
+
+.cn-input textarea {flex:1;min-width:0}
+
+.cn-starters {display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+
+.cn-starters button {background:transparent !important;border:1px solid var(--rai-border) !important;color:var(--rai-muted) !important;border-radius:999px !important;padding:5px 11px !important;font-size:12px !important;line-height:1.4;cursor:pointer;text-align:left;transition:color .2s ease,border-color .2s ease}
+
+/* dentro de @media (hover:hover) */
+.cn-starters button:hover {color:var(--rai-gold) !important;border-color:var(--rai-gold) !important}
+
+/* dentro de @media (max-width:640px) */
+/* .cn-chips  /* selector retirado de un grupo */ */
+
+/* dentro de @media (max-width:640px) */
+.cn-input {padding:12px 14px}
+
+/* dentro de @media (max-width:640px) */
+/* .cn-input textarea  /* selector retirado de un grupo */ */
+
+.lp-next-cta {flex-shrink:0;padding:8px 16px !important}
+
+/* dentro de @media (max-width:560px) */
+.lp-next-cta {width:100%}
+
+/* dentro de @media (prefers-reduced-motion:no-preference) */
+/* .lp-progress-fill  /* selector retirado de un grupo */ */
+
+/* dentro de @media (prefers-reduced-motion:no-preference) */
+.lp-checkbox-done {animation:fx-pop .28s ease-out}
+
