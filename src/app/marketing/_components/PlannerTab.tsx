@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { CalendarDays, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 import { useCachedJson } from '@/lib/use-cached-json';
 import { EmptyState } from '@/components/ui/EmptyState';
 import {
@@ -61,17 +61,8 @@ function PlannerBody({ canWrite, anchor, setAnchor, tzGuess }: { canWrite: boole
   const fallbackKey = keys.includes(todayKey) ? todayKey : view === 'month' ? `${month.year}-${String(month.month + 1).padStart(2, '0')}-01` : keys[0];
   const sel = selected && keys.includes(selected) ? selected : fallbackKey;
 
-  if (error && !data) {
-    const schema = error.includes('503');
-    return (
-      <EmptyState
-        icon={schema ? CalendarDays : Lock}
-        title={schema ? 'Requiere aplicar la tabla de publicaciones' : 'No se pudo cargar el calendario'}
-        text={schema ? 'La base de datos aún no tiene la tabla ScheduledPost. Cuando se aplique la migración pendiente, tus publicaciones aparecerán aquí.' : `El servidor respondió con un error (${error}). Intenta de nuevo en unos segundos.`}
-        action={<button type="button" className="mkt-btn" onClick={() => void refresh()}>Reintentar</button>}
-      />
-    );
-  }
+  const failed = error !== null && !data;
+  const schemaPending = failed && error.includes('503');
 
   const step = (dir: -1 | 1) => {
     if (view === 'week') return setAnchor(addDaysKey(anchor, 7 * dir));
@@ -82,6 +73,20 @@ function PlannerBody({ canWrite, anchor, setAnchor, tzGuess }: { canWrite: boole
 
   return (
     <div className="mkt-panel">
+      {failed && (
+        <Note tone="warn">
+          {schemaPending ? (
+            <>
+              <strong>Falta aplicar la tabla de publicaciones.</strong> El calendario funciona, pero todavía no hay dónde guardar publicaciones (tabla ScheduledPost). Aplica <code>docs/planning/staging-scheduledpost.sql</code> en Supabase y reinicia el servidor.
+            </>
+          ) : (
+            <>
+              <strong>No se pudieron cargar las publicaciones.</strong> El servidor respondió con un error ({error}).
+            </>
+          )}{' '}
+          <button type="button" className="mkt-btn" onClick={() => void refresh()}>Reintentar</button>
+        </Note>
+      )}
       {data?.mode === 'simulated' && (
         <Note tone="info"><strong>Modo simulado.</strong> Las publicaciones se procesan sin enviarse a Instagram; las verás como «Simulada». {data.igHandle ? `Cuenta configurada: ${data.igHandle}.` : 'Aún no hay cuenta de Instagram configurada.'}</Note>
       )}
@@ -119,7 +124,7 @@ function PlannerBody({ canWrite, anchor, setAnchor, tzGuess }: { canWrite: boole
         {data && <p className="muted" style={{ fontSize: 12, margin: '8px 0 0' }}>{inRange.length} {inRange.length === 1 ? 'publicación' : 'publicaciones'} en esta vista · {monthGaps} {monthGaps === 1 ? 'día' : 'días'} por cubrir desde hoy · zona horaria {tz}</p>}
       </section>
 
-      {data && <PlannerDetail dayKey={sel} posts={grouped[sel] ?? []} isGap={gaps.has(sel)} tz={tz} canWrite={canWrite} onChanged={() => void refresh()} />}
+      {(data || failed) && <PlannerDetail dayKey={sel} posts={grouped[sel] ?? []} isGap={gaps.has(sel)} tz={tz} canWrite={canWrite && !failed} onChanged={() => void refresh()} />}
       <Note>Hoy el planificador publica solo en Instagram. Facebook y TikTok requieren conectar sus cuentas (aún no integradas). Las publicaciones se crean desde el Generador de imágenes.</Note>
     </div>
   );
