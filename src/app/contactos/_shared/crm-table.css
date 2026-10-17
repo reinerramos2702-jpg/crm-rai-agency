@@ -1,0 +1,81 @@
+/* CRM · tabla, tarjetas móviles, esqueletos, paginador y barra de selección. */
+.crm-card { background: var(--rai-card); border: 1px solid var(--rai-border); border-radius: var(--radius-md); overflow: hidden; }
+.crm-tablewrap { width: 100%; overflow: auto; overscroll-behavior: contain; max-height: clamp(320px, calc(100dvh - 360px), 900px); }
+.crm-table { width: 100%; min-width: 880px; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+.crm-table--wide { min-width: 1180px; }
+.crm-table th {
+  position: sticky; top: 0; z-index: 2; padding: 10px 12px; text-align: left; white-space: nowrap;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--rai-muted);
+  background: var(--rai-dark); border-bottom: 1px solid var(--rai-border);
+}
+.crm-table td { height: 56px; font-size: 13px; padding: 8px 12px; vertical-align: middle; border-bottom: 1px solid var(--rai-border); overflow-wrap: anywhere; }
+.crm-table tbody tr:last-child td { border-bottom: 0; }
+.crm-table .col-check { width: 44px; padding-right: 0; }
+.crm-table .col-name { min-width: 200px; }
+.crm-table .col-date { white-space: nowrap; }
+.crm-table .col-tags { min-width: 160px; }
+.crm-table tr.is-selected td { background: color-mix(in srgb, var(--rai-gold) 8%, transparent); }
+.crm-table input[type="checkbox"], .crm-select-all input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--rai-gold); cursor: pointer; }
+.crm-table input[type="checkbox"]:focus-visible { outline: 2px solid var(--rai-gold); outline-offset: 2px; }
+.crm-cell-person { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.crm-cell-person strong { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.crm-cell-person small { display: none; color: var(--rai-muted); }
+.crm-cell-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.crm-dash { color: var(--rai-muted); }
+.crm-link { color: var(--rai-text); text-decoration: none; overflow-wrap: anywhere; }
+.crm-select-all { display: none; align-items: center; gap: 8px; padding: 10px 12px; font-size: 12px; color: var(--rai-muted); }
+.crm-zone { cursor: help; text-decoration: underline dotted; text-underline-offset: 3px; }
+
+/* Esqueletos con la medida final (CLS≈0) */
+.crm-skel { display: block; height: 10px; border-radius: 999px; }
+.crm-skel--avatar { width: 32px; height: 32px; border-radius: 50%; flex: 0 0 auto; }
+.crm-skel--box { width: 16px; height: 16px; border-radius: 4px; }
+.crm-skel--pill { height: 18px; width: 56px; }
+
+/* Paginador */
+.crm-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 4px; font-size: 12px; color: var(--rai-muted); min-height: 44px; }
+.crm-pager-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.crm-pager-size { display: inline-flex; align-items: center; gap: 6px; }
+.crm-pager-size .input { height: 30px; padding: 0 8px; font-size: 12px; width: auto; }
+
+/* Selección múltiple */
+.crm-bulk {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--rai-gold) 45%, var(--rai-border)); border-radius: var(--radius-md); background: color-mix(in srgb, var(--rai-gold) 9%, var(--rai-dark));
+}
+.crm-bulk-count { margin: 0; font-size: 13px; }
+.crm-bulk-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 auto; }
+.crm-bulk-inline { display: inline-flex; align-items: center; gap: 6px; }
+.crm-bulk-inline .input { height: 30px; width: 150px; font-size: 12px; }
+
+/* Resumen "sin resultados" de una búsqueda */
+.crm-noresults { display: grid; justify-items: center; gap: 6px; padding: 40px 16px; text-align: center; color: var(--rai-muted); font-size: 13px; }
+.crm-noresults strong { color: var(--rai-text); font-size: 15px; }
+
+@media (hover: hover) {
+  .crm-table tbody tr:hover td { background: color-mix(in srgb, var(--rai-gold) 5%, transparent); }
+  .crm-link:hover { color: var(--rai-gold-br); text-decoration: underline; }
+}
+
+/* Móvil: la tabla se convierte en lista de tarjetas (sin scroller propio) */
+@media (max-width: 640px) {
+  .crm-tablewrap { max-height: none; overflow: visible; }
+  .crm-table, .crm-table tbody { display: block; min-width: 0; }
+  .crm-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .crm-table tbody { display: grid; gap: 10px; padding: 10px; }
+  .crm-table tr.crm-row {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 10px; padding: 12px;
+    border: 1px solid var(--rai-border); border-radius: 12px; background: var(--rai-card);
+  }
+  .crm-table tr.crm-row.is-selected { border-color: color-mix(in srgb, var(--rai-gold) 55%, var(--rai-border)); }
+  .crm-table td { display: block; height: auto; padding: 0; border: 0; }
+  .crm-table tr.is-selected td, .crm-table tbody tr:hover td { background: transparent; }
+  .crm-table td.col-check { grid-row: 1; grid-column: 1; width: auto; padding-top: 2px; }
+  .crm-table td.col-name { grid-row: 1; grid-column: 2; min-width: 0; }
+  .crm-table td[data-label] { grid-column: 1 / -1; display: flex; gap: 8px; align-items: baseline; font-size: 13px; }
+  .crm-table td[data-label]::before { content: attr(data-label); flex: 0 0 92px; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--rai-muted); }
+  .crm-table td.is-empty { display: none; }
+  .crm-cell-person small { display: block; }
+  .crm-select-all { display: flex; border-bottom: 1px solid var(--rai-border); }
+  .crm-pager { justify-content: center; }
+}
