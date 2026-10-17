@@ -21,6 +21,10 @@
 | Requisitos de un bloque en curso | `docs/SPEC-<bloque>.md` | Hoy: `docs/SPEC-login-registro-ui.md` |
 | Stack, convenciones, modelos, módulos | `docs/MEMORY.md` | Solo cambia si cambia la arquitectura |
 | Historia anterior (jun-sep 2026) | `docs/CONTEXT.md` | Solo lectura histórica; no refleja el estado actual |
+| Arquitectura del ecosistema (Generador, Automatización, Multimedia, Sitios Web), ADR y hoja de ruta | `docs/ARQUITECTURA-ECOSISTEMA-CRM.md` | Todo modelo nuevo es *Propuesta* hasta que Reiner lo apruebe |
+| Mapa de agentes, tecnologías y base de conocimiento reutilizable (efectos, prácticas, legal) | `docs/planning/roadmap-agentes-rai.html` | Se actualiza al adoptar o descubrir una técnica; es la referencia que se pasa a proyectos nuevos |
+| Efectos adoptados y rechazados del CRM | `docs/DISENO-EFECTOS.md` | Reglas duras: sin desenfoque, solo `transform`/`opacity` |
+| Código y documentos sin uso, pendientes de revisión | `_revisar-obsoletos/` | Nada se borra sin el «sí» de Reiner; ver su `LEEME.md` |
 
 ## 1. Inicio de sesión — protocolo obligatorio
 
@@ -74,6 +78,7 @@ Al terminar cualquier sesión con cambios significativos:
 
 ### Organización de archivos
 - Sin duplicar archivos. Sin crear READMEs no solicitados.
+- Código o documentación sin uso: se mueve a `_revisar-obsoletos/` conservando su ruta (con `LEEME.md`), nunca se deja como código muerto ni se borra sin autorización. Clean code, sin `TODO` ni parches temporales, y fronteras claras entre módulos (ver `docs/ARQUITECTURA-ECOSISTEMA-CRM.md` §2).
 - Archivos temporales de trabajo → `/tmp/` (sandbox), no al proyecto.
 - Logs, builds: ignorados (`.next/`, `node_modules/`, `*.log`, `*.tsbuildinfo`).
 

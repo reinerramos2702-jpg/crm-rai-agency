@@ -69,3 +69,7 @@ Sin efectos nuevos de desenfoque: ninguno entró en esta ola y la regla 1 sigue 
 ## Registro de la Ola 3b (17 oct 2026)
 
 Marketing, Multimedia y Automatización: sin blur (regla 1 vigente), un solo scroll por pantalla, esqueletos con las medidas reales del contenido y visor de Multimedia sin blur.
+
+## Catálogo completo reutilizable (17 oct 2026)
+
+El catálogo ampliado de 80 efectos (CRM, scroll inmersivo y sitio de agencia IA), con costo de rendimiento, si requieren desenfoque y su estado en el CRM, vive en `docs/planning/roadmap-agentes-rai.html` (sección «Base de conocimiento reutilizable»). Este documento sigue siendo el registro canónico de lo adoptado y rechazado en el CRM.

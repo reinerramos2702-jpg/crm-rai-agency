@@ -245,3 +245,12 @@ Rama local `rai-feat-dashboard-premium`, commits sin push: `74a8b91` (marketing)
 - **Decisiones pendientes de Reiner**: almacenamiento multimedia (`MediaAsset` y R2 con URL firmada; ver `docs/DECISION-ALMACENAMIENTO-MULTIMEDIA.md`); verificación visual de las 7 pantallas; pasos manuales de la voz real (Retell, número de Venezuela, tope de US$ 100 en 2 semanas, revisión legal); orden de la Ola 4.
 - **Incidente de entorno**: `npm run dev` no carga `.env.staging`. Para arrancar contra staging usar `node --env-file=.env.staging node_modules/next/dist/bin/next dev`. No correr `next build` con `next dev` abierto sobre la misma carpeta `.next`. `next build` y `next start` cargan `.env.production`, así que hay que cuidar que no se usen con datos de producción por error. El script `run-staging` (slice S0 de la Ola 4) cubrirá estos casos.
 - **Bloqueado hasta autorización de Reiner**: push, merge, migraciones remotas, producción y `IG_PUBLISH_MODE=live`.
+
+## Registro del 17 oct 2026 (tarde) — arquitectura, limpieza y conocimiento
+
+- **Arquitectura:** `docs/ARQUITECTURA-ECOSISTEMA-CRM.md` (4 módulos, 16 diagramas, 14 ADR, hoja de ruta en 4 fases, KPIs). Todo modelo nuevo es propuesta; nada de esquema ni dependencias sin aprobación de Reiner. «Sitios» hoy administra sedes; el constructor de páginas es un contexto nuevo (`web`).
+- **Limpieza:** `_revisar-obsoletos/` con 6 componentes sin uso, 1 documento histórico y 49 reglas CSS muertas (nada borrado). Dudosos sin mover, listados en su `LEEME.md`. `tsconfig.json` excluye la carpeta.
+- **Conocimiento reutilizable:** `docs/planning/roadmap-agentes-rai.html` ahora incluye fase 11, registro de tecnologías y base de conocimiento (80 efectos, 17 prácticas, 11 puntos legales, 42 tecnologías; exportable en JSON).
+- **Obsidian:** bóveda actualizada como segundo cerebro de consulta (cierre del 17 oct, estado, pendientes, arquitectura y base de conocimiento).
+- **Verificación (copia aparte):** `tsc` 0, ESLint 0 advertencias, Vitest 848/848 (94 archivos), `next build` correcto.
+- **Siguiente:** Reiner revisa `_revisar-obsoletos/` y decide la compuerta de la Fase 2 (esquema, dependencias, hosting del worker); Ola 4 sigue lista para ejecutarse con «dale».
