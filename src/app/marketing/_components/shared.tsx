@@ -1,8 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import { AlertTriangle, Check, Copy, Info } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/client-api';
 import { fetchJson } from '@/lib/swr-cache';
 
@@ -18,6 +16,12 @@ export interface MarketingSummary {
 }
 
 export const SUMMARY_URL = '/api/marketing/summary';
+
+/** Mensaje de estado de una acción (guardar, crear, borrar…). */
+export interface Msg {
+  kind: 'ok' | 'error';
+  text: string;
+}
 
 /** Refresca los indicadores del encabezado tras crear o borrar algo. */
 export function refreshSummary(): void {
@@ -62,26 +66,6 @@ export function useCopy() {
   return { copied, copy };
 }
 
-interface CopyButtonProps {
-  id: string;
-  text: string;
-  copied: string | null;
-  onCopy: (id: string, text: string) => void;
-  label?: string;
-  disabled?: boolean;
-}
-
-export function CopyButton({ id, text, copied, onCopy, label = 'Copiar', disabled }: CopyButtonProps) {
-  const done = copied === id;
-  const failed = copied === `${id}:error`;
-  return (
-    <button type="button" className={`mkt-btn${done ? ' is-done' : ''}`} disabled={disabled} onClick={() => onCopy(id, text)}>
-      {done ? <Check size={14} /> : <Copy size={14} />}
-      <span aria-live="polite">{done ? 'Copiado' : failed ? 'No se pudo copiar' : label}</span>
-    </button>
-  );
-}
-
 /** Reloj que se actualiza cada `ms`; arranca en null para no desajustar la hidratación. */
 export function useNow(ms = 1000): number | null {
   const [now, setNow] = useState<number | null>(null);
@@ -93,11 +77,41 @@ export function useNow(ms = 1000): number | null {
   return now;
 }
 
+/** Segundos transcurridos mientras `running` es true (para tareas largas con cancelación). */
+export function useElapsed(running: boolean): number {
+  const [secs, setSecs] = useState(0);
+  useEffect(() => {
+    if (!running) return;
+    setSecs(0);
+    const h = setInterval(() => setSecs((s) => s + 1), 1000);
+    return () => clearInterval(h);
+  }, [running]);
+  return secs;
+}
+
 /** Origen público (https://…) solo en el navegador. */
 export function useOrigin(): string {
   const [origin, setOrigin] = useState('');
   useEffect(() => setOrigin(window.location.origin), []);
   return origin;
+}
+
+/** Comportamiento de desplazamiento que respeta «reducir movimiento». Solo en el navegador. */
+export function scrollBehavior(): ScrollBehavior {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+}
+
+/** Texto en español para un error de carga del tipo «HTTP 500» o un fallo de red. */
+export function loadErrorText(error: string): string {
+  const status = /^HTTP (\d{3})$/.exec(error)?.[1];
+  if (!status) return 'Revisa tu conexión a internet e inténtalo de nuevo.';
+  if (status === '401' || status === '403') return 'Tu rol no tiene permiso para ver esta información.';
+  if (status.startsWith('5')) return 'El servidor tuvo un problema. Inténtalo de nuevo en unos segundos.';
+  return `El servidor respondió con un error (${status}).`;
+}
+
+export function errorText(e: unknown, fallback: string): string {
+  return e instanceof Error && e.message ? e.message : fallback;
 }
 
 export async function readError(res: Response, fallback: string): Promise<string> {
@@ -116,38 +130,4 @@ export async function sendJson<T = unknown>(url: string, method: 'POST' | 'DELET
   const res = await apiFetch(url, { method, body: body === undefined ? undefined : JSON.stringify(body), signal });
   if (!res.ok) throw new Error(await readError(res, 'No se pudo completar la acción.'));
   return (await res.json()) as T;
-}
-
-type NoteTone = 'info' | 'warn';
-
-export function Note({ tone = 'info', children }: { tone?: NoteTone; children: React.ReactNode }) {
-  const Icon = tone === 'warn' ? AlertTriangle : Info;
-  return (
-    <div className={`mkt-note is-${tone}`} role="note">
-      <Icon size={16} aria-hidden="true" />
-      <div>{children}</div>
-    </div>
-  );
-}
-
-export function NeedKeyNote({ provider, why }: { provider: string; why: string }) {
-  return (
-    <Note tone="warn">
-      <strong>Requiere clave de {provider}.</strong> {why}{' '}
-      <Link href="/keys">Agregar clave en Claves API</Link> (solo administradores).
-    </Note>
-  );
-}
-
-export function SectionSkeleton({ rows = 4 }: { rows?: number }) {
-  return (
-    <div className="card mkt-skel-panel" aria-busy="true" role="status">
-      <span className="fx-sr-only">Cargando…</span>
-      <div style={{ display: 'grid', gap: 14 }}>
-        {Array.from({ length: rows }, (_, i) => (
-          <span key={i} className="fx-shimmer fx-skel-line" style={{ width: i % 2 ? '86%' : '100%', height: 16 }} aria-hidden="true" />
-        ))}
-      </div>
-    </div>
-  );
 }

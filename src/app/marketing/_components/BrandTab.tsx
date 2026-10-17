@@ -2,10 +2,12 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Check, Circle, FileText, Palette } from 'lucide-react';
+import { Check, Circle, FileText, ListChecks, Palette } from 'lucide-react';
 import { useCachedJson } from '@/lib/use-cached-json';
 import { readableOn, type ChecklistItem, type ParsedBrandProfile } from '@/lib/marketing-brand';
-import { Note, SectionSkeleton, useCopy } from './shared';
+import { loadErrorText, useCopy } from './shared';
+import { CardTitle, InlineError, Meter, Note } from './ui';
+import { SplitSkeleton } from './skeletons';
 
 export interface BrandData {
   configured: boolean;
@@ -33,19 +35,35 @@ function Row({ k, v }: { k: string; v: string }) {
 }
 
 export default function BrandTab() {
-  const { data, error, loading } = useCachedJson<{ brand: BrandData }>(BRAND_URL);
+  const { data, error, loading, refresh, revalidating } = useCachedJson<{ brand: BrandData }>(BRAND_URL);
   const { copied, copy } = useCopy();
-  if (loading) return <SectionSkeleton rows={6} />;
-  if (!data) return <p className="mkt-error" role="alert">No se pudo cargar la ficha de marca ({error}).</p>;
+  if (loading) {
+    return (
+      <div className="mkt-panel" aria-busy="true">
+        <SplitSkeleton fields={5} />
+        <SplitSkeleton fields={3} />
+      </div>
+    );
+  }
+  if (!data) {
+    return (
+      <div className="mkt-panel">
+        <InlineError title="No se pudo cargar la ficha de marca." detail={loadErrorText(error ?? '')} onRetry={() => void refresh()} retrying={revalidating} />
+        <div className="mkt-idle"><SplitSkeleton idle fields={5} /></div>
+      </div>
+    );
+  }
   const b = data.brand;
   const pending = b.checklist.filter((c) => !c.done);
+  const scoreTone = b.score >= 100 ? 'ok' : b.score >= 60 ? 'warn' : 'danger';
 
   return (
     <div className="mkt-panel">
+      {error !== null && <InlineError title="No se pudo actualizar la ficha." detail={`${loadErrorText(error)} Se muestra lo último guardado.`} onRetry={() => void refresh()} retrying={revalidating} />}
       <div className="mkt-split">
         <section className="card" aria-labelledby="br-id">
-          <h2 id="br-id" className="mkt-card-title"><Palette size={16} aria-hidden="true" />{b.businessName.trim() || 'Tu marca'}<small>Completa al {b.score} %</small></h2>
-          <div className="mkt-meter" role="progressbar" aria-valuenow={b.score} aria-valuemin={0} aria-valuemax={100} aria-label="Avance de la ficha de marca"><span style={{ width: `${b.score}%` }} /></div>
+          <CardTitle id="br-id" icon={Palette} meta={`Completa al ${b.score} %`}>{b.businessName.trim() || 'Tu marca'}</CardTitle>
+          <Meter value={b.score} tone={scoreTone} label="Avance de la ficha de marca" />
           <dl className="mkt-kv" style={{ marginTop: 14 }}>
             <Row k="Tipo de negocio" v={b.businessType} />
             <Row k="Ubicación" v={b.businessLocation} />
@@ -63,14 +81,14 @@ export default function BrandTab() {
         </section>
 
         <section className="card" aria-labelledby="br-pal">
-          <h2 id="br-pal" className="mkt-card-title">Paleta de colores<small>{b.palette.length}</small></h2>
+          <CardTitle id="br-pal" icon={Palette} meta={b.palette.length}>Paleta de colores</CardTitle>
           {b.palette.length === 0 ? (
             <Note>Aún no hay colores con código. Escribe tus colores con su código hexadecimal (por ejemplo, #C9A84C) en la configuración de marca y aparecerán aquí.</Note>
           ) : (
             <div className="mkt-swatches">
               {b.palette.map((c) => (
                 <button key={c} type="button" className="mkt-swatch" style={{ background: c, color: readableOn(c) }} onClick={() => copy(`sw-${c}`, c)} aria-label={`Copiar color ${c}`}>
-                  {c}<small>{copied === `sw-${c}` ? 'Copiado' : 'Tocar para copiar'}</small>
+                  {c}<small aria-live="polite">{copied === `sw-${c}` ? 'Copiado' : copied === `sw-${c}:error` ? 'No se pudo copiar' : 'Tocar para copiar'}</small>
                 </button>
               ))}
             </div>
@@ -84,7 +102,7 @@ export default function BrandTab() {
 
       <div className="mkt-split">
         <section className="card" aria-labelledby="br-doc">
-          <h2 id="br-doc" className="mkt-card-title"><FileText size={16} aria-hidden="true" />Documento de marca</h2>
+          <CardTitle id="br-doc" icon={FileText}>Documento de marca</CardTitle>
           {b.doc.hasDoc ? (
             <>
               <dl className="mkt-kv">
@@ -100,10 +118,10 @@ export default function BrandTab() {
         </section>
 
         <section className="card" aria-labelledby="br-todo">
-          <h2 id="br-todo" className="mkt-card-title">Para completarla<small>{pending.length === 0 ? 'Todo listo' : `${pending.length} pendientes`}</small></h2>
+          <CardTitle id="br-todo" icon={ListChecks} meta={pending.length === 0 ? 'Todo listo' : `${pending.length} pendientes`}>Para completarla</CardTitle>
           {b.checklist.map((c) => (
             <div key={c.id} className="mkt-check">
-              {c.done ? <Check size={16} className="is-ok" aria-label="Completado" /> : <Circle size={16} className="is-todo" aria-label="Pendiente" />}
+              {c.done ? <Check size={16} className="is-ok" role="img" aria-label="Completado" /> : <Circle size={16} className="is-pending" role="img" aria-label="Pendiente" />}
               <div><strong>{c.label}</strong><span>{c.hint}</span></div>
               {!c.done && <Link className="mkt-btn" href={c.href}>Completar</Link>}
             </div>
