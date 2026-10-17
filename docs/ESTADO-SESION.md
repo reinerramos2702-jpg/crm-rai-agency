@@ -254,3 +254,10 @@ Rama local `rai-feat-dashboard-premium`, commits sin push: `74a8b91` (marketing)
 - **Obsidian:** bóveda actualizada como segundo cerebro de consulta (cierre del 17 oct, estado, pendientes, arquitectura y base de conocimiento).
 - **Verificación (copia aparte):** `tsc` 0, ESLint 0 advertencias, Vitest 848/848 (94 archivos), `next build` correcto.
 - **Siguiente:** Reiner revisa `_revisar-obsoletos/` y decide la compuerta de la Fase 2 (esquema, dependencias, hosting del worker); Ola 4 sigue lista para ejecutarse con «dale».
+
+## Registro del 17 oct 2026 (noche) — fiabilidad y mejora premium (Ola 4b)
+
+- Arreglado el Planificador de Marketing (`7ef2a05`): sin la tabla `ScheduledPost` el calendario sigue visible con aviso guiado. Falta que Reiner aplique `docs/planning/staging-scheduledpost.sql` (solo esquema `staging`), `npx prisma generate` y reinicie con `.env.staging`; luego `node --env-file=.env.staging scripts/check-db-tables.mjs`.
+- Mejora premium: Marketing `c7e8b2c`, Multimedia `bf8c2fe`, Automatización `c7af74e` (`ContentIGTab` dividido), Sitios `3304851`. Estados vacíos con vista previa en Sitios y Multimedia (siguiente commit de docs).
+- Verificación: `tsc` 0, ESLint 0 en `src`, Vitest 848–870 en copias aparte. Falta Vitest/build completo en la PC de Reiner y revisión visual a 320–1440 px.
+- Pendientes y código por limpiar: panel de control, sección OLA-4B.

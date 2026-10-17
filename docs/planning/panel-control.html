@@ -1296,7 +1296,7 @@ footer{
   <div class="section-head">
     <span class="phase-num">OLA-4B</span>
     <span class="section-title">Ola 4b — 17 oct (tarde): arquitectura, limpieza, base de conocimiento y arreglo del planificador</span>
-    <span class="section-note">4 hechos — 6 pendientes; commits locales sin push</span>
+    <span class="section-note">5 hechos — 5 pendientes; commits locales sin push</span>
   </div>
   <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:680px;">Registro de lo hecho tras la Ola 3b y de la lista de código por limpiar. Detalle técnico en <code>docs/ARQUITECTURA-ECOSISTEMA-CRM.md</code>, <code>_revisar-obsoletos/LEEME.md</code> y <code>docs/planning/roadmap-agentes-rai.html</code>.</p>
   <div class="check-list">
@@ -1348,13 +1348,13 @@ footer{
       </div>
       <span class="tag tag-open">pendiente — corre Reiner</span>
     </div>
-    <div class="check-item" data-status="pending" data-id="ola4b-premium-modulos">
+        <div class="check-item done" data-status="done" data-id="ola4b-premium-modulos" data-commit="c7e8b2c">
       <div class="checkbox"></div>
       <div class="check-body">
-        <div class="check-title">Mejora premium de Contenido multimedia, Marketing (8 pestañas), Automatización (5 pestañas) y Sitios</div>
-        <div class="check-desc">Sin blur, solo transform y opacity, 100 % responsive, efectos informativos. Reiner pidió esta ola el 17 oct. Se ejecuta por módulos con archivos disjuntos y verificación de tsc, eslint, Vitest y build en copia propia.</div>
+        <div class="check-title">Mejora premium de Marketing, Contenido multimedia, Automatización y Sitios</div>
+        <div class="check-desc">Evidencia: commits <code>c7e8b2c</code> (Marketing), <code>bf8c2fe</code> (Multimedia), <code>c7af74e</code> (Automatización; <code>ContentIGTab</code> de ~1200 a 115 líneas) y <code>3304851</code> (Sitios). Sin blur, solo transform y opacity, errores en línea que no reemplazan la pantalla, estados vacíos con vista previa. <code>tsc</code> 0, ESLint 0 en <code>src</code>, Vitest 848–870 en copias aparte y build correcto. Falta la revisión visual de Reiner a 320–1440 px.</div>
       </div>
-      <span class="tag tag-open">pendiente — siguiente ola</span>
+      <span class="tag tag-decided">hecho local (sin push)</span>
     </div>
     <div class="check-item" data-status="pending" data-id="ola4b-revisar-obsoletos">
       <div class="checkbox"></div>
@@ -1376,7 +1376,7 @@ footer{
       <div class="checkbox"></div>
       <div class="check-body">
         <div class="check-title">Código por limpiar (deuda registrada)</div>
-        <div class="check-desc"><code>ContentIGTab.tsx</code> (~1200 líneas, dividir por responsabilidad); <code>base-conocimiento/[id]</code> (645 líneas); ajustes de voz en <code>localStorage</code> (mover al servidor); endpoint de reintento de ejecuciones y PATCH de fragmentos y enlaces; <code>ad-research</code> depende de Playwright en servidor; «Rainer» en <code>User.displayName</code> de staging (debe ser «Reiner»); aviso previo de <code>panel-check</code> por tareas hechas sin evidencia.</div>
+        <div class="check-desc"><code>ContentIGTab.tsx</code> (~1200 líneas, dividir por responsabilidad); <code>base-conocimiento/[id]</code> (645 líneas); ajustes de voz en <code>localStorage</code> (mover al servidor); endpoint de reintento de ejecuciones y PATCH de fragmentos y enlaces; <code>ad-research</code> depende de Playwright en servidor; «Rainer» en <code>User.displayName</code> de staging (debe ser «Reiner»); aviso previo de <code>panel-check</code> por tareas hechas sin evidencia; 15 avisos de <code>no-console</code> en <code>scripts/e2e-automations.ts</code>; permisos: <code>/api/snippets</code> y <code>/api/activation-links</code> excluyen <code>staff</code> pero la interfaz le muestra formularios, <code>/api/research/competitors</code> exige <code>CAMPAIGN_ROLES</code>, <code>tours.ts</code> describe Sitios como «páginas web y embudos»; <code>BrandCard</code> lee PDF/DOC con <code>readAsText</code>; tipos <code>Record&lt;string, any&gt;</code> en pasos de flujo; <code>test-results/sitios-bundle.tgz</code> por borrar.</div>
       </div>
       <span class="tag tag-open">pendiente</span>
     </div>

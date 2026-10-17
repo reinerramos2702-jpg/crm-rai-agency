@@ -73,3 +73,7 @@ Marketing, Multimedia y Automatización: sin blur (regla 1 vigente), un solo scr
 ## Catálogo completo reutilizable (17 oct 2026)
 
 El catálogo ampliado de 80 efectos (CRM, scroll inmersivo y sitio de agencia IA), con costo de rendimiento, si requieren desenfoque y su estado en el CRM, vive en `docs/planning/roadmap-agentes-rai.html` (sección «Base de conocimiento reutilizable»). Este documento sigue siendo el registro canónico de lo adoptado y rechazado en el CRM.
+
+## Estados vacíos con vista previa (17 oct 2026)
+
+Patrón usado en Sitios (`SitesEmpty`) y Contenido multimedia (`LibraryEmpty`): tarjetas «fantasma» con borde punteado y degradado de máscara hacia abajo (sin desenfoque), arranque rápido por tipo, pasos numerados y entrada escalonada con transform y opacity (260 ms, solo con `prefers-reduced-motion: no-preference`). Los errores de carga se muestran en línea con «Reintentar» y nunca reemplazan la estructura de la pantalla (ver Planificador de Marketing).
