@@ -25,6 +25,8 @@ export async function GET(req: NextRequest) {
   const links = await prisma.activationLink.findMany({
     where: { workspaceId: ws.id },
     orderBy: { createdAt: 'desc' },
+    take: 500,
+    select: { id: true, label: true, slug: true, destination: true, clicks: true, createdAt: true },
   });
   return NextResponse.json({ links });
 }

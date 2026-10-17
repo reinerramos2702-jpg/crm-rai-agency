@@ -1,172 +1,117 @@
 'use client';
 
-import React, { useState } from 'react';
-import {
-  Calendar,
-  Mail,
-  FileText,
-  Timer,
-  Link2,
-  Palette,
-  Megaphone,
-  Users,
-  Plus,
-  ExternalLink,
-} from 'lucide-react';
+import React, { Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Calendar, FileText, Link2, Mail, Megaphone, Palette, Timer, Users, type LucideIcon } from 'lucide-react';
+import { useCachedJson } from '@/lib/use-cached-json';
+import { prefetchJson } from '@/lib/swr-cache';
+import { MARKETING_TABS, marketingTabHref, parseMarketingTab, type MarketingTabId } from '@/lib/marketing-tabs';
+import { KpiStrip } from './_components/KpiStrip';
+import { MarketingSkeleton } from './_components/MarketingSkeleton';
+import { SUMMARY_URL, type MarketingSummary } from './_components/shared';
+import PlannerTab from './_components/PlannerTab';
+import EmailsTab from './_components/EmailsTab';
+import SnippetsTab from './_components/SnippetsTab';
+import CountdownTab from './_components/CountdownTab';
+import LinksTab from './_components/LinksTab';
+import BrandTab from './_components/BrandTab';
+import AdsTab from './_components/AdsTab';
+import ProspectingTab from './_components/ProspectingTab';
+import './marketing.css';
 
-interface TabItem {
-  id: string;
-  label: string;
-  icon: any;
-  description: string;
-  cards: { title: string; subtitle: string; status: string; statusLabel: string }[];
-}
+const ICONS: Record<MarketingTabId, LucideIcon> = {
+  social: Calendar,
+  emails: Mail,
+  snippets: FileText,
+  countdown: Timer,
+  links: Link2,
+  brand: Palette,
+  ads: Megaphone,
+  prospecting: Users,
+};
 
-const TABS: TabItem[] = [
-  {
-    id: 'social',
-    label: 'Planificador de Redes',
-    icon: Calendar,
-    description: 'Programa y organiza publicaciones para Instagram, TikTok, Facebook y más desde un solo calendario.',
-    cards: [],
-  },
-  {
-    id: 'emails',
-    label: 'Correos Electrónicos',
-    icon: Mail,
-    description: 'Crea y envía campañas de email marketing, newsletters y secuencias automáticas.',
-    cards: [],
-  },
-  {
-    id: 'snippets',
-    label: 'Fragmentos',
-    icon: FileText,
-    description: 'Guarda textos, captions, hashtags y respuestas frecuentes para reutilizar al instante.',
-    cards: [],
-  },
-  {
-    id: 'countdown',
-    label: 'Cuenta Atrás',
-    icon: Timer,
-    description: 'Crea temporizadores de urgencia para lanzamientos, ofertas flash y eventos.',
-    cards: [],
-  },
-  {
-    id: 'links',
-    label: 'Enlaces de Activación',
-    icon: Link2,
-    description: 'Enlaces cortos rastreables para bio de Instagram, anuncios y campañas.',
-    cards: [],
-  },
-  {
-    id: 'brand',
-    label: 'Paneles de Marca',
-    icon: Palette,
-    description: 'Centraliza colores, logos, tipografías y guías de voz de cada marca gestionada.',
-    cards: [],
-  },
-  {
-    id: 'ads',
-    label: 'Administrador de Anuncios',
-    icon: Megaphone,
-    description: 'Supervisa campañas de Meta Ads, TikTok Ads y Google Ads desde un panel unificado.',
-    cards: [],
-  },
-  {
-    id: 'prospecting',
-    label: 'Prospección',
-    icon: Users,
-    description: 'Encuentra y organiza leads potenciales para tus campañas de outreach.',
-    cards: [],
-  },
-];
+/** Datos que cada pestaña pide al abrirse: se precargan al pasar el cursor o enfocar la pestaña. */
+const TAB_PREFETCH: Partial<Record<MarketingTabId, string[]>> = {
+  snippets: ['/api/snippets'],
+  links: ['/api/activation-links'],
+  brand: ['/api/marketing/brand'],
+  emails: ['/api/marketing/brand'],
+};
 
-export default function MarketingPage() {
-  const [activeTab, setActiveTab] = useState(TABS[0].id);
-  const tab = TABS.find((t) => t.id === activeTab) ?? TABS[0];
+function MarketingInner() {
+  const params = useSearchParams();
+  const router = useRouter();
+  const tab = parseMarketingTab(params.get('tab'));
+  const { data: summary } = useCachedJson<MarketingSummary>(SUMMARY_URL, { ttlMs: 15_000 });
+  const canWrite = summary?.canWrite ?? true;
+  const active = MARKETING_TABS.find((t) => t.id === tab) ?? MARKETING_TABS[0];
+
+  const go = (id: MarketingTabId) => router.replace(marketingTabHref(id), { scroll: false });
+  const onKey = (e: React.KeyboardEvent, i: number) => {
+    const n = MARKETING_TABS.length;
+    const next = e.key === 'ArrowRight' ? (i + 1) % n : e.key === 'ArrowLeft' ? (i - 1 + n) % n : e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : -1;
+    if (next < 0) return;
+    e.preventDefault();
+    go(MARKETING_TABS[next].id);
+    requestAnimationFrame(() => document.getElementById(`mkt-tab-${MARKETING_TABS[next].id}`)?.focus());
+  };
 
   return (
-    <div className="container">
-      <div className="row-between mb-6">
+    <div className="container mkt-page">
+      <div className="mkt-head">
         <div>
-          <h1 className="h1">Marketing</h1>
-          <p className="muted mt-2">Gestiona contenido, campañas, anuncios y prospección desde un solo lugar.</p>
+          <h1>Marketing</h1>
+          <p className="muted">Planifica publicaciones, mide enlaces y cuida tu marca desde un solo lugar.</p>
         </div>
-        <button className="primary">
-          <Plus size={16} />
-          Nuevo
-        </button>
       </div>
 
-      <div
-        className="row"
-        style={{
-          gap: 8,
-          flexWrap: 'wrap',
-          borderBottom: '1px solid var(--rai-border)',
-          paddingBottom: 16,
-          marginBottom: 24,
-        }}
-      >
-        {TABS.map(({ id, label, icon: Icon }) => {
-          const isActive = id === activeTab;
+      <KpiStrip summary={summary} />
+
+      <div className="mkt-tabs" role="tablist" aria-label="Herramientas de marketing" data-tour="marketing-tabs">
+        {MARKETING_TABS.map((t, i) => {
+          const Icon = ICONS[t.id];
+          const selected = t.id === tab;
           return (
             <button
-              key={id}
-              className={isActive ? 'primary' : 'ghost'}
-              onClick={() => setActiveTab(id)}
-              style={{ fontSize: 13 }}
+              key={t.id}
+              id={`mkt-tab-${t.id}`}
+              type="button"
+              role="tab"
+              className="mkt-tab"
+              aria-selected={selected}
+              aria-controls="mkt-tabpanel"
+              tabIndex={selected ? 0 : -1}
+              onClick={() => go(t.id)}
+              onPointerEnter={() => TAB_PREFETCH[t.id]?.forEach((u) => prefetchJson(u))}
+              onFocus={() => TAB_PREFETCH[t.id]?.forEach((u) => prefetchJson(u))}
+              onKeyDown={(e) => onKey(e, i)}
             >
-              <Icon size={14} />
-              {label}
+              <Icon size={14} aria-hidden="true" />
+              {t.label}
             </button>
           );
         })}
       </div>
+      <p className="mkt-tab-desc">{active.description}</p>
 
-      <div className="card mb-6">
-        <p className="muted">{tab.description}</p>
-      </div>
-
-      {tab.cards.length === 0 && (
-        <div className="card mb-4" style={{ textAlign: 'center', color: 'var(--rai-muted)', fontSize: 13, padding: 32 }}>
-          Todavía no hay datos en esta sección. Crea el primero para empezar.
-        </div>
-      )}
-
-      <div className="grid grid-3">
-        {tab.cards.map((c, i) => (
-          <div key={i} className="card">
-            <div className="card-header" style={{ marginBottom: 8, paddingBottom: 8 }}>
-              <h3 style={{ fontSize: 14 }}>{c.title}</h3>
-              <span className={`badge ${c.status}`}>{c.statusLabel}</span>
-            </div>
-            <p className="muted" style={{ fontSize: 13 }}>{c.subtitle}</p>
-          </div>
-        ))}
-        <div
-          className="card"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '1px dashed var(--rai-border)',
-            color: 'var(--rai-muted)',
-            cursor: 'pointer',
-            minHeight: 90,
-          }}
-        >
-          <div className="row" style={{ gap: 6 }}>
-            <Plus size={16} />
-            Agregar
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-6 muted" style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-        <ExternalLink size={12} />
-        Sección en construcción — próximamente conexión con Meta Business Suite, Google Ads y proveedores de email.
+      <div id="mkt-tabpanel" role="tabpanel" aria-labelledby={`mkt-tab-${tab}`}>
+        {tab === 'social' && <PlannerTab canWrite={canWrite} canManageContent={summary?.canManageContent} />}
+        {tab === 'emails' && <EmailsTab canWrite={canWrite} />}
+        {tab === 'snippets' && <SnippetsTab canWrite={canWrite} />}
+        {tab === 'countdown' && <CountdownTab />}
+        {tab === 'links' && <LinksTab canWrite={canWrite} />}
+        {tab === 'brand' && <BrandTab />}
+        {tab === 'ads' && <AdsTab canWrite={canWrite} google={summary?.providers.google} />}
+        {tab === 'prospecting' && <ProspectingTab anthropic={summary?.providers.anthropic} />}
       </div>
     </div>
+  );
+}
+
+export default function MarketingPage() {
+  return (
+    <Suspense fallback={<MarketingSkeleton />}>
+      <MarketingInner />
+    </Suspense>
   );
 }

@@ -1,6 +1,7 @@
-import { PageSkeleton } from '@/components/ui/PageSkeleton';
+import { MarketingSkeleton } from './_components/MarketingSkeleton';
+import './marketing.css';
 
 /** Esqueleto instantáneo mientras se resuelve la ruta (Next lo muestra al hacer clic en el menú). */
 export default function Loading() {
-  return <PageSkeleton title="Marketing" cards={3} rows={5} />;
+  return <MarketingSkeleton />;
 }

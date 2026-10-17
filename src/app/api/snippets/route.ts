@@ -18,6 +18,8 @@ export async function GET(req: NextRequest) {
   const snippets = await prisma.snippet.findMany({
     where: { workspaceId: ws.id },
     orderBy: { createdAt: 'desc' },
+    take: 500,
+    select: { id: true, title: true, body: true, createdAt: true },
   });
   return NextResponse.json({ snippets });
 }
