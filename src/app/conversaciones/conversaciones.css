@@ -1,0 +1,15 @@
+/* ============================================================================
+   MÓDULO CONVERSACIONES (/conversaciones)
+   Reglas de diseño: sin desenfoque; animaciones solo con transform/opacity de
+   150–250 ms ease-out dentro de prefers-reduced-motion:no-preference; hover bajo
+   (hover:hover); colores con tokens var(--rai-*) (el tema claro entra por los
+   mismos tokens). Responsive 320–1440 px: lista → hilo → panel como vistas
+   apiladas por debajo de 700 px. Los botones propios llevan !important para
+   vencer los estilos globales de `button` (ver docs/DISENO-EFECTOS.md, regla 8).
+   Archivos: layout · lista · hilo · panel derecho · pestañas y diálogo.
+   ============================================================================ */
+@import './cv-layout.css';
+@import './cv-list.css';
+@import './cv-thread.css';
+@import './cv-rail.css';
+@import './cv-panels.css';

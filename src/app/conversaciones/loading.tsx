@@ -1,6 +1,7 @@
-import { PageSkeleton } from '@/components/ui/PageSkeleton';
+import { ChatSkeleton } from './_components/ChatSkeleton';
+import './conversaciones.css';
 
-/** Esqueleto instantáneo mientras se resuelve la ruta (Next lo muestra al hacer clic en el menú). */
+/** Estructura real de la pantalla (cabecera, pestañas y lista) mientras se resuelve la ruta, sin saltos al cargar. */
 export default function Loading() {
-  return <PageSkeleton title="Conversaciones" cards={0} rows={8} />;
+  return <ChatSkeleton />;
 }
