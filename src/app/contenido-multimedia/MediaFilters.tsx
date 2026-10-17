@@ -41,6 +41,7 @@ export function MediaFilters({
 }: MediaFiltersProps) {
   const [name, setName] = useState('');
   const origins = MEDIA_ORIGINS.filter((o) => originCounts[o] > 0 || view.origin === o);
+  const activeTag = view.tag.toLowerCase();
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,10 +51,10 @@ export function MediaFilters({
   }
 
   return (
-    <div className="mm-panel" id="mm-filters">
+    <div className="mm-panel fx-field-in" id="mm-filters">
       <div className="mm-panel-row">
-        <span className="mm-panel-label">Origen</span>
-        <div className="mm-chips" role="group" aria-label="Filtrar por origen">
+        <span className="mm-panel-label" id="mm-lbl-origin">Origen</span>
+        <div className="mm-chips" role="group" aria-labelledby="mm-lbl-origin">
           <button type="button" className="mm-chip" aria-pressed={view.origin === 'all'} onClick={() => onOrigin('all')}>
             Todos <span className="mm-count">{originCounts.all}</span>
           </button>
@@ -66,8 +67,8 @@ export function MediaFilters({
       </div>
 
       <div className="mm-panel-row">
-        <span className="mm-panel-label">Fecha</span>
-        <div className="mm-chips" role="group" aria-label="Filtrar por fecha">
+        <span className="mm-panel-label" id="mm-lbl-range">Fecha</span>
+        <div className="mm-chips" role="group" aria-labelledby="mm-lbl-range">
           {RANGES.map((r) => (
             <button
               key={r.value}
@@ -83,18 +84,18 @@ export function MediaFilters({
       </div>
 
       <div className="mm-panel-row">
-        <span className="mm-panel-label">Etiquetas (solo en este navegador)</span>
+        <span className="mm-panel-label" id="mm-lbl-tags">Etiquetas · solo en este navegador</span>
         {tags.length === 0 ? (
-          <p className="muted">Aún no hay etiquetas. Ábrelas desde el visor o selecciona varios activos y etiquétalos en lote.</p>
+          <p className="muted mm-panel-hint">Aún no hay etiquetas. Ábrelas desde el visor o selecciona varios activos y etiquétalos en lote.</p>
         ) : (
-          <div className="mm-chips" role="group" aria-label="Filtrar por etiqueta">
+          <div className="mm-chips" role="group" aria-labelledby="mm-lbl-tags">
             {tags.map(({ tag, count }) => (
               <button
                 key={tag}
                 type="button"
                 className="mm-chip"
-                aria-pressed={view.tag.toLowerCase() === tag.toLowerCase()}
-                onClick={() => onTag(view.tag.toLowerCase() === tag.toLowerCase() ? '' : tag)}
+                aria-pressed={activeTag === tag.toLowerCase()}
+                onClick={() => onTag(activeTag === tag.toLowerCase() ? '' : tag)}
               >
                 {tag} <span className="mm-count">{count}</span>
               </button>
@@ -104,11 +105,12 @@ export function MediaFilters({
       </div>
 
       <div className="mm-panel-row">
-        <span className="mm-panel-label">Vistas guardadas (solo en este navegador)</span>
+        <span className="mm-panel-label">Vistas guardadas · solo en este navegador</span>
         <div className="mm-saved">
+          {savedViews.length === 0 && <p className="muted mm-panel-hint">Guarda la búsqueda, el orden y los filtros actuales para volver a ellos en un clic.</p>}
           {savedViews.map((sv) => (
             <span key={sv.name} className="mm-saved-item">
-              <button type="button" className="mm-chip is-plain" aria-pressed="false" onClick={() => onApplyView(sv.view)}>
+              <button type="button" className="mm-chip is-plain" onClick={() => onApplyView(sv.view)}>
                 <Bookmark size={13} aria-hidden="true" /> {sv.name}
               </button>
               <button type="button" className="mm-saved-del" aria-label={`Eliminar la vista ${sv.name}`} onClick={() => onDeleteView(sv.name)}>
@@ -133,7 +135,7 @@ export function MediaFilters({
       </div>
 
       {hasFilters && (
-        <div>
+        <div className="mm-panel-foot">
           <button type="button" className="btn-ghost btn-sm" onClick={onClear}>
             <X size={14} /> Quitar filtros
           </button>

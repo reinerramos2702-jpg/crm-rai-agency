@@ -4,12 +4,16 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { ChevronLeft, ChevronRight, Copy, Download, ExternalLink, Plus, Share2, X } from 'lucide-react';
+import { Copy, Download, ExternalLink, X } from 'lucide-react';
+import { Spinner } from '@/components/ui/Spinner';
 import { formatMediaDate, stepIndex, suggestFileName, usageTargets, type UseInTarget } from '@/lib/media-actions';
 import { KIND_SINGULAR, ORIGIN_LABELS, type MediaItem } from '@/lib/media-types';
-import { copyText, downloadBrandText, downloadRemote } from './browser-actions';
+import { copyText, downloadBrandText, downloadRemote, isTypingTarget } from './browser-actions';
 import { KIND_ICONS } from './kind-icons';
+import { UseInMenu } from './UseInMenu';
 import { useDialog } from './use-dialog';
+import { ViewerStage } from './ViewerStage';
+import { ViewerTags } from './ViewerTags';
 
 interface MediaViewerProps {
   items: MediaItem[];
@@ -21,160 +25,109 @@ interface MediaViewerProps {
   onRemoveTag: (id: string, tag: string) => void;
 }
 
-function isTyping(target: EventTarget | null): boolean {
-  const el = target as HTMLElement | null;
-  return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable);
+/** Descarga en segundo plano la imagen vecina para que al navegar aparezca al instante. */
+function preload(item: MediaItem | undefined): void {
+  if (!item || item.kind !== 'image' || !item.url) return;
+  const img = new Image();
+  img.referrerPolicy = 'no-referrer';
+  img.src = item.url;
 }
 
-/** Visor a pantalla completa: ←/→ para navegar, Esc para cerrar, sin desenfoque de fondo. */
+/** Visor a pantalla completa: ←/→ navegan, Inicio/Fin saltan a los extremos, Esc cierra; sin desenfoque de fondo. */
 export function MediaViewer({ items, index, tags, onIndex, onClose, onAddTag, onRemoveTag }: MediaViewerProps) {
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [tagDraft, setTagDraft] = useState('');
-  const [failed, setFailed] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   const item = items[index];
+  useDialog(rootRef, onClose);
 
-  const handleClose = useCallback(() => {
-    if (menuOpen) setMenuOpen(false);
-    else onClose();
-  }, [menuOpen, onClose]);
-  useDialog(rootRef, handleClose);
-
-  const go = useCallback(
-    (delta: 1 | -1) => {
-      setMenuOpen(false);
-      onIndex(stepIndex(index, delta, items.length));
-    },
-    [index, items.length, onIndex],
-  );
+  const goTo = useCallback((target: number) => onIndex(target), [onIndex]);
+  const go = useCallback((delta: 1 | -1) => goTo(stepIndex(index, delta, items.length)), [goTo, index, items.length]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (isTyping(e.target)) return;
-      if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        go(1);
-      } else if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        go(-1);
-      }
+      if (isTypingTarget(e.target) || e.altKey || e.ctrlKey || e.metaKey) return;
+      if (e.key === 'ArrowRight') go(1);
+      else if (e.key === 'ArrowLeft') go(-1);
+      else if (e.key === 'Home') goTo(0);
+      else if (e.key === 'End') goTo(items.length - 1);
+      else return;
+      e.preventDefault();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [go]);
+  }, [go, goTo, items.length]);
+
+  useEffect(() => {
+    preload(items[stepIndex(index, 1, items.length)]);
+    preload(items[stepIndex(index, -1, items.length)]);
+  }, [index, items]);
 
   if (!item) return null;
 
   const Icon = KIND_ICONS[item.kind];
-  const itemTags = tags[item.id] ?? [];
+  const url = item.url;
   const targets = usageTargets(item);
   const isBrand = item.origin === 'brand';
   const external = /^https?:\/\//.test(item.sourceHref);
 
   async function download() {
-    if (isBrand) {
-      await downloadBrandText(item.title);
-      return;
+    setDownloading(true);
+    try {
+      if (isBrand) {
+        await downloadBrandText(item.title);
+      } else if (url) {
+        const result = await downloadRemote(url, suggestFileName(item));
+        if (result === 'opened') toast('Se abrió en otra pestaña: guárdalo desde allí.');
+      }
+    } finally {
+      setDownloading(false);
     }
-    if (!item.url) return;
-    const result = await downloadRemote(item.url, suggestFileName(item));
-    if (result === 'opened') toast('Se abrió en otra pestaña: guárdalo desde allí.');
   }
 
   async function useIn(target: UseInTarget) {
-    setMenuOpen(false);
-    if (item.url) await copyText(item.url, `Enlace copiado. Pégalo en «${target.label}».`);
+    if (url) await copyText(url, `Enlace copiado. Pégalo en «${target.label}».`);
     onClose();
     router.push(target.href);
   }
 
-  function submitTag(e: React.FormEvent) {
-    e.preventDefault();
-    if (!tagDraft.trim()) return;
-    onAddTag(item.id, tagDraft);
-    setTagDraft('');
-  }
-
   return (
-    <div className="mm-viewer" role="dialog" aria-modal="true" aria-label={`Visor: ${item.title}`} ref={rootRef} tabIndex={-1}>
-      <div className="mm-viewer-head">
+    <div className="mm-viewer" role="dialog" aria-modal="true" aria-labelledby="mm-viewer-title" ref={rootRef} tabIndex={-1}>
+      <header className="mm-viewer-head">
         <div className="mm-viewer-title">
-          <h2>{item.title}</h2>
-          <p>
-            {KIND_SINGULAR[item.kind]} · {ORIGIN_LABELS[item.origin]}
-            {item.detail ? ` · ${item.detail}` : ''} · {formatMediaDate(item.date)}
-          </p>
-        </div>
-        <button type="button" className="btn-ghost btn-icon" onClick={onClose} aria-label="Cerrar visor" data-autofocus>
-          <X size={18} />
-        </button>
-      </div>
-
-      <div className="mm-stage">
-        {items.length > 1 && (
-          <button type="button" className="mm-nav is-prev" onClick={() => go(-1)} aria-label="Anterior (flecha izquierda)">
-            <ChevronLeft size={22} />
-          </button>
-        )}
-        {item.kind === 'image' && item.url && failed !== item.id ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={item.id} src={item.url} alt={item.title} referrerPolicy="no-referrer" onError={() => setFailed(item.id)} />
-        ) : item.kind === 'video' && item.url ? (
-          <video key={item.id} src={item.url} controls preload="metadata" playsInline />
-        ) : item.kind === 'audio' && item.url ? (
-          <audio key={item.id} src={item.url} controls preload="metadata" />
-        ) : (
-          <div className="mm-stage-doc">
-            <Icon size={44} aria-hidden="true" />
-            {isBrand ? (
-              <p>
-                El documento de marca se guarda como texto extraído del .docx. Puedes descargar ese texto o
-                reemplazar el archivo desde el Generador de imágenes.
-              </p>
-            ) : failed === item.id ? (
-              <p>No se pudo cargar la vista previa. Prueba a abrirla en otra pestaña o a descargarla.</p>
-            ) : (
-              <p>Este tipo de archivo no tiene vista previa. Ábrelo o descárgalo.</p>
-            )}
+          <div className="mm-viewer-chips">
+            <span className="mm-vchip"><Icon size={12} aria-hidden="true" /> {KIND_SINGULAR[item.kind]}</span>
+            <span className="mm-vchip">{ORIGIN_LABELS[item.origin]}</span>
+            <span>{formatMediaDate(item.date)}</span>
           </div>
-        )}
-        {items.length > 1 && (
-          <button type="button" className="mm-nav is-next" onClick={() => go(1)} aria-label="Siguiente (flecha derecha)">
-            <ChevronRight size={22} />
+          <h2 id="mm-viewer-title">{item.title}</h2>
+          {item.detail && <p>{item.detail}</p>}
+        </div>
+        <div className="mm-viewer-head-end">
+          <span className="mm-viewer-pos" aria-live="polite">
+            {index + 1} / {items.length}
+          </span>
+          <button type="button" className="btn-ghost btn-icon mm-viewer-close" onClick={onClose} aria-label="Cerrar visor (Esc)" data-autofocus>
+            <X size={18} />
           </button>
-        )}
-      </div>
+        </div>
+      </header>
+
+      <ViewerStage key={item.id} item={item} hasNav={items.length > 1} onPrev={() => go(-1)} onNext={() => go(1)} />
 
       <div className="mm-viewer-actions">
-        {(item.url || isBrand) && (
-          <button type="button" className="btn-secondary btn-sm" onClick={download}>
-            <Download size={14} /> {isBrand ? 'Descargar texto' : 'Descargar'}
+        {(url || isBrand) && (
+          <button type="button" className="btn-secondary btn-sm" onClick={() => void download()} disabled={downloading}>
+            {downloading ? <Spinner size="sm" /> : <Download size={14} />} {isBrand ? 'Descargar texto' : 'Descargar'}
           </button>
         )}
-        {item.url && (
-          <button type="button" className="btn-secondary btn-sm" onClick={() => copyText(item.url as string, 'Enlace copiado.')}>
+        {url && (
+          <button type="button" className="btn-secondary btn-sm" onClick={() => void copyText(url, 'Enlace copiado.')}>
             <Copy size={14} /> Copiar enlace
           </button>
         )}
-        {targets.length > 0 && (
-          <div className="mm-use">
-            <button type="button" className="btn-secondary btn-sm" aria-expanded={menuOpen} aria-haspopup="menu" onClick={() => setMenuOpen((v) => !v)}>
-              <Share2 size={14} /> Usar en…
-            </button>
-            {menuOpen && (
-              <div className="mm-use-menu" role="menu">
-                {targets.map((t) => (
-                  <button key={t.id} type="button" role="menuitem" className="mm-use-item" onClick={() => useIn(t)}>
-                    <strong>{t.label}</strong>
-                    <span>{t.hint}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        {targets.length > 0 && <UseInMenu key={item.id} targets={targets} onPick={(t) => void useIn(t)} />}
         {external ? (
           <a className="btn btn-ghost btn-sm" href={item.sourceHref} target="_blank" rel="noopener noreferrer">
             <ExternalLink size={14} /> Abrir enlace original
@@ -184,32 +137,12 @@ export function MediaViewer({ items, index, tags, onIndex, onClose, onAddTag, on
             <ExternalLink size={14} /> Ir al origen
           </Link>
         )}
-        <span className="mm-viewer-pos" aria-live="polite">
-          {index + 1} de {items.length}
+        <span className="mm-viewer-hint" aria-hidden="true">
+          <kbd>←</kbd> <kbd>→</kbd> navegar · <kbd>Esc</kbd> cerrar
         </span>
       </div>
 
-      <form className="mm-viewer-tags" onSubmit={submitTag}>
-        {itemTags.map((t) => (
-          <span key={t} className="mm-tag">
-            {t}
-            <button type="button" className="mm-tag-x" aria-label={`Quitar la etiqueta ${t}`} onClick={() => onRemoveTag(item.id, t)}>
-              <X size={11} />
-            </button>
-          </span>
-        ))}
-        <input
-          className="input"
-          value={tagDraft}
-          onChange={(e) => setTagDraft(e.target.value)}
-          placeholder="Añadir etiqueta"
-          aria-label="Añadir etiqueta (solo en este navegador)"
-          maxLength={24}
-        />
-        <button type="submit" className="btn-ghost btn-sm" disabled={!tagDraft.trim()}>
-          <Plus size={14} /> Etiquetar
-        </button>
-      </form>
+      <ViewerTags itemId={item.id} tags={tags[item.id] ?? []} onAdd={onAddTag} onRemove={onRemoveTag} />
     </div>
   );
 }

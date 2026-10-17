@@ -5,13 +5,17 @@ import { useEffect, type RefObject } from 'react';
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+function isVisible(el: HTMLElement): boolean {
+  return !el.hidden && el.getClientRects().length > 0;
+}
+
 /**
  * Comportamiento de ventana modal: foco dentro (Tab y Mayús+Tab dan la vuelta),
  * Esc cierra, el foco vuelve a quien la abrió y la página de fondo no se desplaza.
  */
 export function useDialog(ref: RefObject<HTMLElement | null>, onClose: () => void): void {
   useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const node = ref.current;
     const first = node?.querySelector<HTMLElement>('[data-autofocus]') ?? node?.querySelector<HTMLElement>(FOCUSABLE) ?? node;
     first?.focus();
@@ -34,7 +38,7 @@ export function useDialog(ref: RefObject<HTMLElement | null>, onClose: () => voi
       }
       const node = ref.current;
       if (e.key !== 'Tab' || !node) return;
-      const items = Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE));
+      const items = Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(isVisible);
       if (items.length === 0) {
         e.preventDefault();
         return;
@@ -45,7 +49,7 @@ export function useDialog(ref: RefObject<HTMLElement | null>, onClose: () => voi
       if (e.shiftKey && (active === firstItem || active === node)) {
         e.preventDefault();
         lastItem.focus();
-      } else if (!e.shiftKey && active === lastItem) {
+      } else if (!e.shiftKey && (active === lastItem || !node.contains(active))) {
         e.preventDefault();
         firstItem.focus();
       }

@@ -1,14 +1,16 @@
 import React from 'react';
 import { SkeletonLine } from '@/components/ui/Skeleton';
 
-/** Una tarjeta de esqueleto con las mismas medidas que `MediaCard` (miniatura 4:3 + dos líneas). */
+/** Una tarjeta de esqueleto con las mismas filas que `MediaCard` (miniatura 4:3 + título, detalle, origen y etiquetas). */
 function SkeletonTile() {
   return (
     <div className="mm-card is-skeleton" aria-hidden="true">
       <span className="fx-shimmer mm-skel-thumb" />
-      <div className="mm-skel-body">
-        <SkeletonLine width="80%" height={13} />
-        <SkeletonLine width="55%" height={11} />
+      <div className="mm-body">
+        <div className="mm-title"><SkeletonLine width="78%" height={13} /></div>
+        <div className="mm-detail"><SkeletonLine width="52%" height={11} /></div>
+        <div className="mm-meta"><SkeletonLine width="64%" height={16} /></div>
+        <div className="mm-tags" />
       </div>
     </div>
   );
@@ -26,20 +28,27 @@ export function MediaGridSkeleton({ tiles = 8 }: { tiles?: number }) {
   );
 }
 
-/** Pestañas y barra de herramientas en reposo, para que el esqueleto de la ruta ocupe lo mismo que la página real. */
+const TAB_WIDTHS = [74, 54, 52, 84] as const;
+
+/** Pestañas y barra de herramientas en reposo, con las mismas clases que la página real (CLS casi nulo). */
 export function MediaPageSkeleton() {
   return (
     <div className="container">
       <div className="mm-tabs" aria-hidden="true">
-        {[96, 84, 72, 104].map((w, i) => (
-          <span key={i} style={{ padding: '14px 14px 12px' }}>
-            <SkeletonLine width={w} height={16} />
+        {TAB_WIDTHS.map((w, i) => (
+          <span key={i} className="mm-tab">
+            <SkeletonLine width={w + 38} height={16} />
           </span>
         ))}
       </div>
       <div className="mm-toolbar" aria-hidden="true">
-        <SkeletonLine width="min(100%, 320px)" height={40} />
-        <SkeletonLine width={170} height={40} />
+        <div className="mm-search"><SkeletonLine width="100%" height={40} /></div>
+        <div className="mm-sort"><SkeletonLine width="100%" height={40} /></div>
+        <div className="mm-toolbar-actions">
+          <SkeletonLine width={96} height={40} />
+          <SkeletonLine width={150} height={40} />
+          <SkeletonLine width={40} height={40} />
+        </div>
       </div>
       <MediaGridSkeleton />
     </div>

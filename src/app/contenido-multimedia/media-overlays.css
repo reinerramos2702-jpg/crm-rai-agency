@@ -1,6 +1,6 @@
-/* Contenido multimedia — visor y diálogo «Añadir» (sin desenfoque; ver media.css para las reglas generales). */
+/* Contenido multimedia — visor y diálogos (sin desenfoque; ver media.css para las reglas generales). */
 
-/* ---------- Visor (sin desenfoque de fondo) ---------- */
+/* ---------- Visor: ocupa la pantalla y no necesita scroll propio salvo en alturas mínimas ---------- */
 .mm-viewer {
   position: fixed;
   inset: 0;
@@ -8,47 +8,81 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 12px 16px 16px;
+  padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: rgba(10, 10, 15, 0.92);
+  background: rgba(10, 10, 15, 0.94);
   color: #f5f5f5;
 }
-[data-theme="light"] .mm-viewer { background: rgba(26, 26, 46, 0.86); }
+[data-theme="light"] .mm-viewer { background: rgba(26, 26, 46, 0.9); }
+/* El visor es siempre oscuro: sus botones, menú y campos usan la paleta oscura también en el tema claro */
+.mm-viewer {
+  --rai-card: #1a1a2e;
+  --rai-dark: #12121a;
+  --rai-border: #2a2a4a;
+  --rai-gold: #c9a84c;
+  --rai-gold-br: #e8b923;
+  --rai-text: #f5f5f5;
+  --rai-muted: #a9a9c4;
+}
 
 .mm-viewer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; min-width: 0; }
 .mm-viewer-title { min-width: 0; }
-.mm-viewer-title h2 { margin: 0; font-size: 16px; color: #f5f5f5; overflow-wrap: anywhere; }
+.mm-viewer-title h2 { margin: 4px 0 0; font-size: 17px; line-height: 1.3; color: #f5f5f5; overflow-wrap: anywhere; }
 .mm-viewer-title p { margin: 2px 0 0; font-size: 12px; color: #b4b4cc; overflow-wrap: anywhere; }
+.mm-viewer-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 12px; color: #b4b4cc; }
+.mm-vchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #e6e6f2;
+}
+.mm-viewer-head-end { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+.mm-viewer-pos { font-size: 13px; font-variant-numeric: tabular-nums; color: #d8d8ea; }
+.mm-viewer-close { min-width: 44px; min-height: 44px; }
 
 .mm-stage {
   position: relative;
   flex: 1 1 auto;
+  min-width: 0;
+  min-height: min(46dvh, 300px);
+  touch-action: pan-y pinch-zoom;
+}
+.mm-stage-media {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 220px;
-  min-width: 0;
+  padding: 0 56px;
 }
-.mm-stage img,
-.mm-stage video {
+.mm-stage-media img,
+.mm-stage-media video {
   display: block;
   max-width: 100%;
-  max-height: calc(100dvh - 260px);
-  min-height: 120px;
+  max-height: 100%;
+  object-fit: contain;
   border-radius: var(--radius-sm);
   background: #12121a;
 }
-.mm-stage audio { width: min(520px, 100%); }
+.mm-stage-media img.is-pending { position: absolute; opacity: 0; }
+.mm-stage-skel { display: block; width: min(70%, 420px); aspect-ratio: 4 / 3; max-height: 70%; border-radius: var(--radius-md); }
+.mm-stage-audio { display: grid; justify-items: center; gap: 16px; width: min(520px, 100%); color: #d8d8ea; }
+.mm-stage-audio audio { width: 100%; }
 .mm-stage-doc {
   display: grid;
   justify-items: center;
-  gap: 10px;
+  gap: 12px;
   max-width: 420px;
   padding: 24px;
   text-align: center;
   color: #d8d8ea;
 }
+.mm-stage-doc p { margin: 0; font-size: 14px; line-height: 1.5; }
 
 .mm-nav {
   position: absolute;
@@ -61,22 +95,38 @@
   margin-top: -22px;
   padding: 0 !important;
   border-radius: 50% !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
-  background: rgba(10, 10, 15, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  background: rgba(10, 10, 15, 0.72) !important;
   color: #f5f5f5 !important;
   box-shadow: none !important;
 }
 .mm-nav.is-prev { left: 4px; }
 .mm-nav.is-next { right: 4px; }
+.mm-nav:focus-visible,
+.mm-viewer .btn:focus-visible,
+.mm-viewer button:focus-visible { outline: 2px solid var(--rai-gold-br); outline-offset: 2px; }
 
 .mm-viewer-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.mm-viewer-hint { margin-left: auto; font-size: 12px; color: #b4b4cc; }
+.mm-viewer-hint kbd {
+  display: inline-block;
+  min-width: 20px;
+  padding: 1px 5px;
+  font: inherit;
+  font-size: 11px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e6e6f2;
+}
 .mm-viewer-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.mm-viewer-tags .mm-tag { color: #d8d8ea; background: rgba(255, 255, 255, 0.12); display: inline-flex; align-items: center; gap: 4px; }
+.mm-viewer-tags .mm-tag { display: inline-flex; align-items: center; gap: 4px; color: #d8d8ea; background: rgba(255, 255, 255, 0.12); }
 .mm-tag-x {
   display: grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   padding: 0 !important;
   border: 0 !important;
   border-radius: 50% !important;
@@ -84,8 +134,7 @@
   color: inherit !important;
   box-shadow: none !important;
 }
-.mm-viewer-tags input { width: 150px; max-width: 100%; }
-.mm-viewer-pos { font-size: 12px; color: #b4b4cc; }
+.mm-viewer-tags input { width: 160px; max-width: 100%; min-height: 36px; }
 
 .mm-use { position: relative; }
 .mm-use-menu {
@@ -120,8 +169,9 @@
 }
 .mm-use-item strong { font-size: 13px; }
 .mm-use-item span { font-size: 12px; font-weight: 400; color: var(--rai-muted); }
+.mm-use-item:focus-visible { outline: 2px solid var(--rai-gold); outline-offset: -2px; background: color-mix(in srgb, var(--rai-gold) 10%, transparent) !important; }
 
-/* ---------- Diálogo «Añadir» ---------- */
+/* ---------- Diálogos ---------- */
 .mm-dialog-backdrop {
   position: fixed;
   inset: 0;
@@ -130,9 +180,9 @@
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: rgba(10, 10, 15, 0.72);
+  background: rgba(10, 10, 15, 0.74);
 }
-[data-theme="light"] .mm-dialog-backdrop { background: rgba(26, 26, 46, 0.35); }
+[data-theme="light"] .mm-dialog-backdrop { background: rgba(26, 26, 46, 0.4); }
 
 .mm-dialog {
   width: 100%;
@@ -146,29 +196,98 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--fx-elev-3);
 }
+.mm-dialog.is-sm { max-width: 420px; }
 .mm-dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .mm-dialog-head h2 { margin: 0; }
+.mm-dialog-head p { margin: 4px 0 0; }
 
-.mm-note {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  margin-bottom: 16px;
-  padding: 12px 14px;
-  font-size: 13px;
-  border: 1px solid color-mix(in srgb, var(--rai-warning) 45%, transparent);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--rai-warning) 8%, transparent);
-  color: var(--rai-text);
-}
-.mm-note svg { flex: 0 0 auto; margin-top: 2px; color: var(--rai-warning); }
-.mm-note p { margin: 0 0 4px; }
-.mm-note p:last-child { margin: 0; }
-
-.mm-section { display: grid; gap: 10px; padding: 14px 0; border-top: 1px solid var(--rai-border); }
-.mm-section h3 { margin: 0; font-size: 14px; }
-.mm-form-row { display: grid; grid-template-columns: 1fr 140px; gap: 8px; min-width: 0; }
-.mm-form-row > * { min-width: 0; }
+.mm-section { display: grid; gap: 10px; padding: 16px 0; border-top: 1px solid var(--rai-border); }
+.mm-section h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; }
+.mm-section p { margin: 0; font-size: 13px; }
 .mm-form-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .mm-error { margin: 0; font-size: 12px; color: var(--rai-error); }
 
+/* Formulario de enlace */
+.mm-link-form { display: grid; gap: 10px; min-width: 0; }
+.mm-link-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mm-link-row .input { flex: 1 1 auto; min-width: 0; }
+.mm-link-preview {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 42px;
+  overflow: hidden;
+  border: 1px solid var(--rai-border);
+  border-radius: var(--radius-sm);
+  background: var(--rai-dark);
+}
+.mm-link-preview img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.mm-radios { display: flex; flex-wrap: wrap; gap: 8px; }
+.mm-radio { position: relative; cursor: pointer; }
+.mm-radio input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; opacity: 0; cursor: pointer; }
+.mm-radio span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 4px 14px;
+  font-size: 13px;
+  border: 1px solid var(--rai-border);
+  border-radius: 100px;
+  color: var(--rai-muted);
+}
+.mm-radio input:checked + span {
+  color: var(--rai-gold);
+  background: color-mix(in srgb, var(--rai-gold) 14%, transparent);
+  border-color: color-mix(in srgb, var(--rai-gold) 55%, transparent);
+}
+.mm-radio input:focus-visible + span { outline: 2px solid var(--rai-gold); outline-offset: 2px; }
+
+/* Zona para soltar el .docx */
+.mm-drop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 14px;
+  border: 1px dashed color-mix(in srgb, var(--rai-gold) 45%, var(--rai-border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--rai-gold) 4%, transparent);
+}
+.mm-drop.is-over { border-style: solid; border-color: var(--rai-gold); background: color-mix(in srgb, var(--rai-gold) 12%, transparent); }
+.mm-drop.is-disabled { border-color: var(--rai-border); background: transparent; }
+
+/* ---------- Movimiento: solo transform y opacity ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .mm-viewer,
+  .mm-dialog-backdrop { animation: mm-fade 180ms ease-out backwards; }
+  .mm-dialog,
+  .mm-use-menu { animation: mm-rise 200ms ease-out backwards; }
+  .mm-stage-media img,
+  .mm-stage-media video { animation: mm-fade 220ms ease-out backwards; }
+  @keyframes mm-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes mm-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+}
+
+/* ---------- Hover: solo con puntero real ---------- */
+@media (hover: hover) {
+  .mm-use-item:hover { background: color-mix(in srgb, var(--rai-gold) 10%, transparent) !important; }
+  .mm-nav:hover { background: rgba(232, 185, 35, 0.28) !important; }
+  .mm-radio input:not(:checked):hover + span { color: var(--rai-text); border-color: color-mix(in srgb, var(--rai-gold) 40%, transparent); }
+}
+
+/* Los atajos de teclado solo se muestran con teclado físico */
+@media (hover: none), (max-width: 760px) {
+  .mm-viewer-hint { display: none; }
+}
+
+/* ---------- Responsive 320–1440 ---------- */
+@media (max-width: 640px) {
+  .mm-viewer { gap: 10px; padding: 8px 10px calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .mm-stage-media { padding: 0; }
+  .mm-nav { width: 40px; height: 40px; margin-top: -20px; }
+  .mm-viewer-actions .btn-sm,
+  .mm-viewer-actions .btn { flex: 1 1 auto; min-height: 40px; }
+  .mm-dialog { padding: 16px; }
+  .mm-viewer-tags input { flex: 1 1 140px; width: auto; }
+}

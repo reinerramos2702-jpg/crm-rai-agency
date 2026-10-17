@@ -2,6 +2,22 @@
 
 import toast from 'react-hot-toast';
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** Mensaje de error de una respuesta de la API (`{ error }`); cadena vacía si no trae ninguno. */
+export async function readApiError(res: Response): Promise<string> {
+  const data: unknown = await res.json().catch(() => null);
+  return isRecord(data) && typeof data.error === 'string' ? data.error : '';
+}
+
+/** true si el foco está en un campo donde las flechas y Esc son del propio campo. */
+export function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable;
+}
+
 /** Copia texto al portapapeles; avisa con un mensaje claro si el navegador no lo permite. */
 export async function copyText(text: string, okMessage: string): Promise<boolean> {
   try {
@@ -56,9 +72,10 @@ export async function downloadBrandText(fileName: string): Promise<boolean> {
   try {
     const res = await fetch('/api/workspace/brand-doc', { credentials: 'same-origin' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = (await res.json()) as { brandDocText?: string | null };
-    if (!data.brandDocText) throw new Error('vacío');
-    downloadText(data.brandDocText, fileName.replace(/\.[a-z0-9]+$/i, '') + '.txt', 'text/plain');
+    const data: unknown = await res.json();
+    const text = isRecord(data) && typeof data.brandDocText === 'string' ? data.brandDocText : '';
+    if (!text) throw new Error('vacío');
+    downloadText(text, fileName.replace(/\.[a-z0-9]+$/i, '') + '.txt', 'text/plain');
     return true;
   } catch {
     toast.error('No se pudo leer el texto del documento de marca.');

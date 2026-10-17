@@ -13,10 +13,16 @@ interface MediaTabsProps {
 /** Pestañas por tipo con conteos reales (cada una respeta la búsqueda y los filtros activos). */
 export function MediaTabs({ active, counts, onChange }: MediaTabsProps) {
   function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
-    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-    e.preventDefault();
+    const last = MEDIA_KINDS.length - 1;
     const i = MEDIA_KINDS.indexOf(active);
-    const next = MEDIA_KINDS[(i + (e.key === 'ArrowRight' ? 1 : -1) + MEDIA_KINDS.length) % MEDIA_KINDS.length];
+    let target = -1;
+    if (e.key === 'ArrowRight') target = i === last ? 0 : i + 1;
+    else if (e.key === 'ArrowLeft') target = i === 0 ? last : i - 1;
+    else if (e.key === 'Home') target = 0;
+    else if (e.key === 'End') target = last;
+    if (target < 0) return;
+    e.preventDefault();
+    const next = MEDIA_KINDS[target];
     onChange(next);
     requestAnimationFrame(() => document.getElementById(`mm-tab-${next}`)?.focus());
   }
@@ -39,7 +45,7 @@ export function MediaTabs({ active, counts, onChange }: MediaTabsProps) {
             onClick={() => onChange(kind)}
           >
             <Icon size={15} aria-hidden="true" />
-            {KIND_LABELS[kind]}
+            <span className="mm-tab-label">{KIND_LABELS[kind]}</span>
             {counts && <span className="mm-count">{counts[kind]}</span>}
           </button>
         );

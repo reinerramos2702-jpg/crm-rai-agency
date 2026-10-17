@@ -10,7 +10,7 @@ interface MediaGridProps {
   limit: number;
   selected: ReadonlySet<string>;
   tags: Readonly<Record<string, readonly string[]>>;
-  onToggle: (id: string) => void;
+  onToggle: (id: string, range?: boolean) => void;
   onOpen: (id: string) => void;
   onMore: () => void;
 }
@@ -22,8 +22,8 @@ export function MediaGrid({ items, limit, selected, tags, onToggle, onOpen, onMo
   const shown = items.slice(0, limit);
   const remaining = items.length - shown.length;
   return (
-    <div id="mm-results" role="tabpanel">
-      <div className="mm-grid">
+    <>
+      <div className={`mm-grid${selected.size > 0 ? ' has-selection' : ''}`}>
         {shown.map((item) => (
           <MediaCard
             key={item.id}
@@ -37,11 +37,12 @@ export function MediaGrid({ items, limit, selected, tags, onToggle, onOpen, onMo
       </div>
       {remaining > 0 && (
         <div className="mm-more">
+          <span className="muted" aria-live="polite">Mostrando {shown.length} de {items.length}</span>
           <button type="button" className="btn-secondary" onClick={onMore}>
-            Mostrar {Math.min(PAGE_SIZE, remaining)} más ({remaining} restantes)
+            Mostrar {Math.min(PAGE_SIZE, remaining)} más
           </button>
         </div>
       )}
-    </div>
+    </>
   );
 }
