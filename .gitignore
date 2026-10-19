@@ -30,3 +30,6 @@ ghl-capturas/**/*.webp
 .vercel
 .env*
 !.env*.example
+
+# Datos de cliente: no se versionan
+docs/clientes/
