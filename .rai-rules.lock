@@ -1,5 +1,7 @@
 {
   ".github/workflows/ci.yml": "71bd741a0b8181341467fe9e45eec295482388150273e700bd79f1f8b5d3f54d",
+  ".github/workflows/claude-review.yml": "227f46e257c87209dbca28577f70d44b524ad32a390d43ba118b68fb545e7ae3",
+  ".github/workflows/publish-scheduled.yml": "dfc5013e82e1d8c5cf51c13884b632d6a97b86c3a56e3b314fbbefacca8e4fe8",
   ".opencode/agent/backend.md": "3f4023ce47d4211bc1fbfa1a29b5ef05c12ad220ed8d8aa1da230abd6e98853d",
   ".opencode/agent/frontend.md": "677fdad814f5557903541cc885c9b241705638820b5b65b34edc7163d16d56d6",
   ".opencode/agent/orchestrator.md": "a9a8d07e1fb3079abf74501f97b41a976fc8ef9a2bf244eed82c9fdf5efb95a9",
