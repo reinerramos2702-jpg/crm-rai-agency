@@ -324,6 +324,13 @@ Forms:      .form-group, .input (en input/select/textarea)
 Utils:      .animate-spin, .mt-4, .mb-2, .mb-4, .mb-6, .w-full, .mb-0
 ```
 
+### Carga del CSS: agregador único (desde 21 oct 2026)
+- Todo el CSS sale del layout raíz: `src/app/layout.tsx` importa `globals.css` y, justo después, `../styles/modules` **una sola vez**. `src/styles/modules.ts` es el agregador del resto de hojas (efectos, select, tour, module-kit y cada módulo), con el orden de la cascada: primero lo compartido, luego los módulos; dentro de cada módulo se conserva el orden en que se importaban sus archivos.
+- **Regla: no importes `.css` desde páginas, layouts ni componentes; añádelo a `src/styles/modules.ts`.** El test `src/styles/__tests__/css-imports.test.ts` falla si hay un import de `.css` fuera del agregador (salvo `globals.css` en el layout), si el layout no importa `globals.css` antes que el agregador, o si algún `.css` de `src/` no está en el agregador (se exceptúan los que entran por `@import` dentro de otro CSS, p. ej. `cv-*.css` desde `conversaciones.css`).
+- Por qué: con el CSS repartido por páginas, Next lo descargaba tras el clic en el menú e insertaba el `<link>` en el mismo instante en que confirmaba el contenido, sin esperar a que cargara: unos 0,2–1 s de interfaz sin los estilos del módulo al navegar (Slow 4G + CPU ×4). Importar el CSS en `loading.tsx` no lo evitaba.
+- Consecuencia: todas las hojas conviven siempre, así que **cada clase de módulo lleva el prefijo de su módulo** y las hojas de módulo no deben traer reglas sin ámbito (selectores de etiqueta o de clases globales). Choques ya resueltos: `.st-grid`, `.st-card`, `.st-section-head` y `.st-section-title` existían con estilos distintos en Sitios y en Automatización → Automatización usa `au-st-*`; `code { overflow-wrap: anywhere }` de `content-ig.css` quedó acotado a `.ig-root`.
+- Coste conocido: CSS inicial de ≈425 KB (≈74 KB gzip) en `/login` y `/`, frente a ≈120–132 KB (≈23–25 KB gzip) antes; los hashes quedan en caché.
+
 ### Patrón de tabs
 ```ts
 const TOP_TABS = [

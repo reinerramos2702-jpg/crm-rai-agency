@@ -1,5 +1,5 @@
 # Estado de sesión — CRM RAI Agency
-Última actualización: 16 octubre 2026 (rama local `rai-feat-dashboard-premium`, solo commits locales, sin push; ver «Fase efectos + módulos (16 oct 2026)» al final). Las secciones del 1-10 oct describen el estado de la rama de login en esa fecha. Las secciones marcadas "25 sep" son el cierre anterior de OpenCode, conservado como historial.
+Última actualización: 21 octubre 2026 (rama local `fix-carga-estilos-modulos`, sin push; ver «Registro del 21 oct 2026 — CSS sin parpadeo» al final). Anterior, 16 octubre 2026 (rama local `rai-feat-dashboard-premium`, solo commits locales, sin push; ver «Fase efectos + módulos (16 oct 2026)» al final). Las secciones del 1-10 oct describen el estado de la rama de login en esa fecha. Las secciones marcadas "25 sep" son el cierre anterior de OpenCode, conservado como historial.
 
 ## Actualización 15 oct 2026 — Contenido IG (rama `rai-feat-programacion-ig`, solo commits locales)
 - Cadena de ramas locales (sin push): `rai-feat-automatizacion-config` (Corte A) → `rai-feat-automatizacion-ui` (Corte C: UI premium, tour, responsive) → `rai-feat-programacion-ig` (Corte B + extensión premium/tour a las demás pestañas; commits da14717, 0229698).
@@ -268,3 +268,15 @@ Rama local `rai-feat-dashboard-premium`, commits sin push: `74a8b91` (marketing)
 - Spinner infinito de Conversaciones: la petición a `/api/contacts` no tenía plazo; ahora corta a los 20 s con error y «Reintentar». Causa de fondo del cuelgue en staging sin confirmar.
 - SEO: el CRM no se indexa (`4b0d3a0`).
 - Brechas de API y deuda: panel de control, OLA-4B.
+
+## Registro del 21 oct 2026 — CSS sin parpadeo al navegar (rama `fix-carga-estilos-modulos`, solo commit local `6615ed2`)
+
+- Síntoma: al pasar de un módulo a otro se veía ~0,2–1 s la interfaz sin los estilos del módulo. Causa demostrada (Chromium, Slow 4G + CPU ×4, `next build` + `next start`): cada página importaba su propio CSS; Next lo pedía tras el clic e insertaba el `<link>` en el mismo instante en que confirmaba el contenido, sin esperar a que cargara. Importar el CSS en `loading.tsx` no lo evitaba. El middleware (PR #14, ya en `main`) no influye: verificar el JWT cuesta ~24 µs.
+- Arreglo: un solo agregador `src/styles/modules.ts`, importado una vez en `src/app/layout.tsx` tras `globals.css`. Quitados los 70 imports de `.css` de páginas, layouts y componentes; `marketing/_components/styles.ts` (vacío) movido a `_revisar-obsoletos/`. Convención y razones en `docs/MEMORY.md` §7 «Carga del CSS: agregador único».
+- Test `src/styles/__tests__/css-imports.test.ts`: falla si aparece un `.css` fuera del agregador, si el layout no importa `globals.css` primero o si una hoja de `src/` no está en el agregador.
+- Choques de clases al convivir todo el CSS: `.st-grid`, `.st-card`, `.st-section-head`, `.st-section-title` (Sitios vs Ajustes de Automatización) → Automatización usa `au-st-*`; `code { overflow-wrap }` de `content-ig.css` acotado a `.ig-root`.
+- Medición de carrera (21 módulos, mismo arnés, original vs nuevo): módulos que cargan CSS nuevo tras el clic 15 → 0; con ventana sin estilos 14 → 0 (136–1253 ms); fotogramas pintados con el CSS pendiente 174 → 0.
+- Comparación visual: 84 capturas (42 rutas × escritorio y móvil, reloj fijo, animaciones congeladas) sin regresiones; solo 2–4 píxeles de ruido que también varían entre dos cargas idénticas. Las capturas cubren el estado inicial de cada ruta, no modales ni pestañas abiertas.
+- Peso del CSS inicial: `/login` 119,6 KB (22,8 KB gzip) → 425,3 KB (73,8 KB gzip); `/` 132,0 KB (25,4 KB gzip) → 425,3 KB (73,8 KB gzip).
+- Verificación: `tsc` 0, ESLint 0 errores, Vitest 1155 en verde, `next build` exit 0, `rules-guard` OK.
+- Pendiente (requiere aprobación de Reiner): push y PR de la rama; comprobar en la vista previa de Vercel con red real que ya no hay parpadeo; revisar a mano modales y pestañas de Sitios y Automatización (Ajustes) tras el renombrado `au-st-*`.
