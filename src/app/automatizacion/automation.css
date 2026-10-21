@@ -1,0 +1,307 @@
+/* ============================================================================
+   Módulo Automatización — primitivas compartidas (cabecera, pestañas, botones,
+   chips, buscador, interruptor y diálogo).
+   Reglas: tokens var(--rai-*), sin desenfoque, solo transform/opacity animados
+   (150–250 ms, ease-out, dentro de prefers-reduced-motion:no-preference),
+   hover bajo (hover:hover). Ver docs/DISENO-EFECTOS.md.
+   ============================================================================ */
+
+.au-page > * { min-width: 0; }
+
+/* ---------- Cabecera ---------- */
+.au-page .rai-page-stats { gap: 16px; }
+.au-title { display: flex; align-items: center; gap: 10px; }
+.au-stat { text-align: right; min-width: 64px; }
+.au-stat-value { font-size: 22px; font-weight: 800; line-height: 1.2; min-height: 26px; }
+.au-stat-value.is-gold { color: var(--rai-gold); }
+.au-stat-label { font-size: 12px; color: var(--rai-muted); }
+.au-stat-skel { display: inline-block; width: 28px; height: 20px; border-radius: 6px; vertical-align: middle; }
+
+.au-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--rai-error) 45%, var(--rai-border));
+  background: color-mix(in srgb, var(--rai-error) 7%, var(--rai-card));
+}
+.au-banner > svg { flex: 0 0 auto; color: var(--rai-error); }
+.au-banner-text { flex: 1; min-width: 0; }
+.au-banner-text strong { display: block; font-size: 14px; }
+.au-banner-text p { margin: 2px 0 0; font-size: 13px; color: var(--rai-muted); }
+@media (max-width: 640px) {
+  .au-banner { flex-wrap: wrap; }
+  .au-banner button { width: 100%; }
+}
+
+/* ---------- Pestañas ---------- */
+.au-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--rai-border);
+}
+button.au-tab {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 14px !important;
+  border: 0 !important;
+  border-radius: 10px 10px 0 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--rai-muted) !important;
+  font-size: 14px !important;
+  font-weight: 500;
+  cursor: pointer;
+}
+button.au-tab::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--rai-gold);
+  transform: scaleX(0);
+}
+button.au-tab[aria-selected="true"] { color: var(--rai-gold) !important; font-weight: 700; }
+button.au-tab[aria-selected="true"]::after { transform: scaleX(1); }
+button.au-tab:active { transform: none; }
+@media (hover: hover) {
+  button.au-tab:hover:not([aria-selected="true"]) { color: var(--rai-text) !important; background: color-mix(in srgb, var(--rai-gold) 6%, transparent) !important; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  button.au-tab::after { transition: transform 0.2s ease-out; }
+}
+
+/* ---------- Botones ---------- */
+.au-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px !important;
+  border-radius: 10px !important;
+  border: 1px solid var(--rai-border) !important;
+  background: transparent !important;
+  color: var(--rai-text) !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none !important;
+}
+.au-btn:active { transform: translateY(1px); }
+.au-btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+.au-btn--primary {
+  background: linear-gradient(135deg, #c9a84c, #e8b923) !important;
+  border-color: rgba(232, 185, 35, 0.6) !important;
+  color: #0a0a0f !important;
+  font-weight: 700;
+}
+.au-btn--soft {
+  background: color-mix(in srgb, var(--rai-gold) 11%, transparent) !important;
+  border-color: color-mix(in srgb, var(--rai-gold) 42%, var(--rai-border)) !important;
+  color: var(--rai-gold) !important;
+}
+.au-btn--ghost { color: var(--rai-muted) !important; }
+.au-btn--danger {
+  color: var(--rai-error) !important;
+  border-color: color-mix(in srgb, var(--rai-error) 40%, var(--rai-border)) !important;
+}
+.au-btn--sm { min-height: 30px; padding: 0 10px !important; font-size: 12px !important; }
+.au-btn--icon { width: 34px; min-width: 34px; min-height: 34px; padding: 0 !important; }
+.au-btn--icon.au-btn--sm { width: 30px; min-width: 30px; min-height: 30px; }
+.au-btn--block { width: 100%; }
+@media (hover: hover) {
+  .au-btn:hover:not(:disabled) { border-color: var(--rai-gold) !important; color: var(--rai-gold) !important; }
+  .au-btn--primary:hover:not(:disabled) { color: #0a0a0f !important; border-color: rgba(232, 185, 35, 0.95) !important; }
+  .au-btn--danger:hover:not(:disabled) { border-color: var(--rai-error) !important; color: var(--rai-error) !important; }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .au-btn { transition: transform 0.15s ease-out, opacity 0.15s ease-out; }
+  .au-btn:hover:not(:disabled) { transform: translateY(-1px); }
+  .au-btn:active:not(:disabled) { transform: translateY(0); }
+}
+.au-spin { animation: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .au-spin { animation: au-spin 0.8s linear infinite; }
+  @keyframes au-spin { to { transform: rotate(360deg); } }
+}
+
+/* ---------- Chips de filtro ---------- */
+.au-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+button.au-chip {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--rai-border) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--rai-muted) !important;
+  font-size: 13px !important;
+  font-weight: 600;
+  cursor: pointer;
+}
+.au-chip-n {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rai-muted) 16%, transparent);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+button.au-chip[aria-pressed="true"] {
+  color: var(--rai-gold) !important;
+  background: color-mix(in srgb, var(--rai-gold) 12%, transparent) !important;
+  border-color: color-mix(in srgb, var(--rai-gold) 55%, var(--rai-border)) !important;
+}
+button.au-chip[aria-pressed="true"] .au-chip-n { background: color-mix(in srgb, var(--rai-gold) 22%, transparent); }
+button.au-chip:active { transform: none; }
+@media (hover: hover) {
+  button.au-chip:hover:not([aria-pressed="true"]) { color: var(--rai-text) !important; border-color: color-mix(in srgb, var(--rai-gold) 40%, var(--rai-border)) !important; }
+}
+
+/* ---------- Buscador y selectores ---------- */
+.au-search { position: relative; flex: 1 1 240px; min-width: 0; }
+.au-search > svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--rai-muted); pointer-events: none; }
+.au-search input { height: 40px; padding: 0 38px 0 38px; border-radius: 10px; }
+button.au-search-clear {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0 !important;
+  margin-top: -16px;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--rai-muted) !important;
+  cursor: pointer;
+}
+button.au-search-clear:active { transform: none; }
+@media (hover: hover) { button.au-search-clear:hover { color: var(--rai-text) !important; } }
+
+.au-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.au-field > span { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--rai-muted); }
+select.au-select { height: 40px; width: auto; max-width: 100%; min-width: 0; padding: 0 12px; border-radius: 10px; }
+
+/* ---------- Interruptor ---------- */
+button.au-switch {
+  position: relative;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 24px;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--rai-border) !important;
+  background: color-mix(in srgb, var(--rai-muted) 22%, transparent) !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+button.au-switch[aria-checked="true"] {
+  background: var(--rai-gold) !important;
+  border-color: var(--rai-gold) !important;
+}
+.au-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--rai-card);
+  box-shadow: var(--fx-elev-1);
+}
+button.au-switch[aria-checked="true"] .au-switch-knob { transform: translateX(16px); background: #fff; }
+button.au-switch:active { transform: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .au-switch-knob { transition: transform 0.18s ease-out; }
+}
+
+/* ---------- Diálogo ---------- */
+.au-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgba(10, 10, 15, 0.72);
+}
+[data-theme="light"] .au-dialog-backdrop { background: rgba(40, 30, 10, 0.38); }
+.au-dialog {
+  position: relative;
+  width: min(580px, 100%);
+  margin: auto;
+  border-radius: 18px;
+  border: 1px solid var(--rai-border);
+  background: var(--rai-card);
+  box-shadow: var(--fx-elev-3);
+  outline: none;
+}
+.au-dialog--sm { width: min(440px, 100%); }
+.au-dialog-head { display: flex; align-items: flex-start; gap: 12px; padding: 20px 20px 0; }
+.au-dialog-title { flex: 1; min-width: 0; margin: 0; font-size: 18px; line-height: 1.3; overflow-wrap: anywhere; }
+.au-dialog-body { padding: 16px 20px; }
+.au-dialog-foot { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 0 20px 20px; }
+@media (prefers-reduced-motion: no-preference) {
+  .au-dialog-backdrop { animation: au-fade 0.2s ease-out both; }
+  .au-dialog { animation: au-pop 0.2s ease-out both; }
+  .au-dialog-backdrop.is-closing { animation: au-fade-out 0.16s ease-out both; }
+  .au-dialog-backdrop.is-closing .au-dialog { animation: au-pop-out 0.16s ease-out both; }
+  @keyframes au-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes au-fade-out { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes au-pop { from { opacity: 0; transform: translateY(10px) scale(0.985); } to { opacity: 1; transform: none; } }
+  @keyframes au-pop-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(6px); } }
+}
+@media (max-width: 640px) {
+  .au-dialog-backdrop { align-items: flex-end; padding: 12px 0 0; }
+  .au-dialog { margin: 0; border-radius: 18px 18px 0 0; border-bottom: 0; }
+  .au-dialog-foot > button { flex: 1 1 140px; }
+}
+
+/* ---------- Esqueleto y estados ---------- */
+.au-skel-row { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 14px; border: 1px solid var(--rai-border); background: var(--rai-card); }
+.au-note { margin: 0; font-size: 12px; color: var(--rai-muted); }
+.au-error { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--rai-error) 40%, var(--rai-border)); color: var(--rai-error); font-size: 13px; }
+
+
+/* ---------- Pestañas de la página sin scroller horizontal ---------- */
+.au-tabs.rai-toptabs { flex-wrap: wrap; overflow: visible; }
+@media (max-width: 640px) {
+  .au-tabs.rai-toptabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; margin-bottom: 20px; }
+  .au-tabs.rai-toptabs > button.au-tab {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 4px !important;
+    font-size: 12px !important;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .au-tabs.rai-toptabs > button.au-tab::after { left: 8px; right: 8px; }
+}
+button.au-tab:focus-visible { outline: 2px solid var(--rai-gold); outline-offset: -2px; }

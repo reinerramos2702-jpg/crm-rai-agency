@@ -1,0 +1,93 @@
+/* ============================================================================
+   Informes — encabezado, selector de periodo, tarjetas de indicadores y
+   gráficos fantasma. Tokens var(--rai-*). Sin desenfoque; movimiento solo con
+   transform y opacity (260 ms, ease-out) bajo prefers-reduced-motion:
+   no-preference; hover bajo (hover: hover). Pestañas y tooltip: module-kit.
+   ============================================================================ */
+
+.rp-page { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.rp-page > * { min-width: 0; }
+.rp-page .mk-tabs { margin-bottom: 0; }
+.rp-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.rp-head-main { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; min-width: 0; }
+.rp-head-icon {
+  display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 auto; border-radius: 12px;
+  color: var(--rai-gold); background: color-mix(in srgb, var(--rai-gold) 12%, transparent);
+}
+.rp-sub { margin: 4px 0 0; }
+.rp-count { align-self: center; }
+
+/* ---------- Barra de herramientas ---------- */
+.rp-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.rp-period { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--rai-border); border-radius: 12px; background: var(--rai-dark); }
+.rp-period-btn {
+  min-height: 36px; padding: 6px 14px !important; font-size: 13px !important; font-weight: 500 !important;
+  border-radius: 9px !important; border: 0 !important; background: transparent !important; color: var(--rai-muted) !important;
+  box-shadow: none !important; text-transform: none !important; letter-spacing: normal !important;
+}
+.rp-period-btn[aria-pressed="true"] { background: color-mix(in srgb, var(--rai-gold) 16%, transparent) !important; color: var(--rai-gold) !important; font-weight: 600 !important; }
+.rp-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ---------- Panel ---------- */
+.rp-panel { display: grid; gap: 16px; min-width: 0; }
+.rp-panel:focus-visible { outline: 2px solid var(--rai-gold); outline-offset: 4px; border-radius: 8px; }
+.rp-panel-head { display: grid; gap: 6px; }
+.rp-panel-title { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.rp-panel-title h2 { margin: 0; font-size: 18px; }
+.rp-panel-head p { margin: 0; font-size: 14px; }
+.rp-empty-note { margin: 0; font-size: 13.5px; color: var(--rai-muted); }
+
+/* ---------- Tarjetas de indicadores ---------- */
+.rp-kpis { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.rp-kpi { display: grid; gap: 8px; align-content: start; min-height: 128px; min-width: 0; }
+.rp-kpi-label { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--rai-muted); }
+.rp-kpi-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; }
+.rp-kpi-value { font-size: clamp(26px, 3.4vw, 32px); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.rp-kpi-hint { font-size: 12.5px; color: var(--rai-muted); line-height: 1.45; }
+.rp-kpi--off { opacity: 0.85; }
+.rp-kpi-lock { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--rai-muted); }
+.rp-delta { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.rp-delta--up { color: var(--rai-success); background: color-mix(in srgb, var(--rai-success) 14%, transparent); }
+.rp-delta--down { color: var(--rai-error); background: color-mix(in srgb, var(--rai-error) 14%, transparent); }
+.rp-delta--flat { color: var(--rai-muted); background: color-mix(in srgb, var(--rai-muted) 14%, transparent); }
+.rp-delta--new { color: var(--rai-gold); background: color-mix(in srgb, var(--rai-gold) 14%, transparent); }
+
+/* ---------- Gráfico fantasma ---------- */
+.rp-ghost { display: grid; gap: 12px; min-width: 0; border-style: dashed; }
+.rp-ghost:hover { border-color: var(--rai-border); box-shadow: none; }
+.rp-ghost-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.rp-ghost-head h3 { margin: 0; font-size: 15px; }
+.rp-ghost-svg { display: block; width: 100%; max-width: 640px; height: auto; max-height: 220px; justify-self: center; opacity: 0.9; }
+.rp-ghost-text { margin: 0; font-size: 14px; color: var(--rai-text); line-height: 1.5; }
+.rp-ghost-soon { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--rai-muted); }
+.rp-ghost--skel { min-height: 300px; border-style: solid; align-content: start; }
+
+.rp-error { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-color: color-mix(in srgb, var(--rai-error) 45%, var(--rai-border)); }
+.rp-error svg { color: var(--rai-error); flex: 0 0 auto; }
+.rp-error p { margin: 2px 0 0; font-size: 13px; color: var(--rai-muted); }
+.rp-error > div { flex: 1 1 220px; }
+
+.rp-tabs-skel { display: flex; gap: 28px; align-items: center; min-height: 47px; padding: 0 16px; overflow: hidden; border-bottom: 1px solid var(--rai-border); }
+.rp-tabs-skel > * { flex: 0 0 auto; }
+
+/* ---------- Movimiento: solo transform y opacity ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .rp-kpi, .rp-ghost:not(.rp-ghost--skel) { animation: rp-rise 260ms ease-out both; }
+  .rp-kpis > :nth-child(2) { animation-delay: 40ms; }
+  .rp-kpis > :nth-child(3) { animation-delay: 80ms; }
+  .rp-kpis > :nth-child(n+4) { animation-delay: 120ms; }
+  @keyframes rp-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+}
+@media (hover: hover) {
+  .rp-period-btn[aria-pressed="false"]:hover { color: var(--rai-text) !important; }
+}
+
+/* ---------- Responsive 320–1440 ---------- */
+@media (max-width: 560px) {
+  .rp-head { flex-wrap: wrap; }
+  .rp-kpis { grid-template-columns: 1fr; }
+  .rp-kpi { min-height: 0; }
+  .rp-toolbar { align-items: stretch; }
+  .rp-period { width: 100%; }
+  .rp-period-btn { flex: 1; }
+}

@@ -51,7 +51,9 @@ export function AgentMonitor({ campaignId, executionId }: AgentMonitorProps) {
           const cost = (event.payload?.totalCost as number) || 0;
           setTotalCost((prev) => prev + cost);
         }
-      } catch {}
+      } catch {
+        // Ignorar eventos SSE malformados sin interrumpir el flujo en vivo.
+      }
     };
 
     es.onerror = () => {

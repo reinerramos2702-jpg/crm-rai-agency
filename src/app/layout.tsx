@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import '../styles/effects.css';
+import '../styles/select.css';
 import { Sidebar } from '@/components/layout/Sidebar';
+import TourHost from '@/components/tour/TourHost';
+import { ClickFx } from '@/components/ui/ClickFx';
 import { Toaster } from 'react-hot-toast';
 
 export const metadata: Metadata = {
@@ -8,6 +12,8 @@ export const metadata: Metadata = {
   description:
     'Genera campañas de contenido completas con IA: copy, imágenes, vídeos y publicación automática en Instagram.',
   keywords: ['contenido', 'automatización', 'IA', 'instagram', 'marketing', 'RAI Agency'],
+  // Aplicación privada con sesión: no debe indexarse (evita fugas y contenido duplicado en buscadores).
+  robots: { index: false, follow: false },
 };
 
 /**
@@ -32,7 +38,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('rai-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('rai-theme');if(t)document.documentElement.setAttribute('data-theme',t);if(localStorage.getItem('rai-sidebar-collapsed-v1')==='1')document.documentElement.setAttribute('data-sidebar','collapsed')}catch(e){}})()`,
+          }}
+        />
+        {/* Transición suave SOLO durante el cambio de tema: añade `theme-anim` a <html> 350 ms cuando cambia data-theme (el CSS no tiene transiciones universales permanentes). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var r=document.documentElement,t;new MutationObserver(function(){r.classList.add('theme-anim');clearTimeout(t);t=setTimeout(function(){r.classList.remove('theme-anim')},350)}).observe(r,{attributes:true,attributeFilter:['data-theme']})}catch(e){}})()`,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var d=localStorage.getItem('rai-density-v1');if(d==='compact'||d==='comfortable'||d==='spacious')document.documentElement.setAttribute('data-density',d)}catch(e){}})()`,
           }}
         />
       </head>
@@ -41,6 +58,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Sidebar />
           <main className="app-main">{children}</main>
         </div>
+        <TourHost />
+        <ClickFx />
         <Toaster
           position="bottom-right"
           toastOptions={{

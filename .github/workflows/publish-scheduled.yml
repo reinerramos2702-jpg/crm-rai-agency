@@ -1,0 +1,22 @@
+name: Publicar contenido programado
+
+# Invoca el cron protegido del CRM cada 15 min (el plan Hobby de Vercel limita sus propios crons).
+# Requiere los secretos del repositorio: APP_URL (ej. https://crm-rai-agency.vercel.app) y CRON_SECRET.
+# Mientras IG_PUBLISH_MODE no sea 'live' en el servidor, el CRM SIMULA la publicación.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Llamar /api/cron/publish
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          test -n "$APP_URL" && test -n "$CRON_SECRET" || { echo "Faltan secretos APP_URL/CRON_SECRET"; exit 1; }
+          curl --fail-with-body -sS -X POST "$APP_URL/api/cron/publish" -H "Authorization: Bearer $CRON_SECRET"

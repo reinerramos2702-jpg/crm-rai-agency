@@ -7,6 +7,7 @@ import { prisma } from './db';
 import { decrypt } from './crypto';
 
 export type Provider = 'openai' | 'anthropic' | 'google' | 'deepseek';
+export type ApiKeyProvider = Provider | 'elevenlabs' | 'suno';
 
 export const SUPPORTED_MODELS: Record<Provider, { id: string; label: string }[]> = {
   openai: [
@@ -28,33 +29,35 @@ export const SUPPORTED_MODELS: Record<Provider, { id: string; label: string }[]>
 };
 
 /**
- * Resuelve la API key del usuario para un provider determinado.
- * Fallback a env del operador si el user no tiene la suya.
+ * Resuelve la API key del workspace para un provider determinado.
+ * Fallback a env del operador si el workspace no tiene la suya.
  */
-export async function resolveApiKey(userId: string, provider: Provider): Promise<string | null> {
+export async function resolveApiKey(workspaceId: string, provider: ApiKeyProvider): Promise<string | null> {
   const stored = await prisma.apiKey.findFirst({
-    where: { userId, provider, validated: true },
+    where: { workspaceId, provider, validated: true },
     orderBy: { createdAt: 'desc' },
   });
   if (stored) {
     return decrypt(stored.ciphertext, stored.iv, stored.authTag);
   }
   // Fallback env
-  const envMap: Record<Provider, string | undefined> = {
+  const envMap: Record<ApiKeyProvider, string | undefined> = {
     openai: process.env.OPENAI_API_KEY,
     anthropic: process.env.ANTHROPIC_API_KEY,
     google: process.env.GOOGLE_API_KEY,
     deepseek: process.env.DEEPSEEK_API_KEY,
+    elevenlabs: process.env.ELEVENLABS_API_KEY,
+    suno: process.env.SUNO_API_KEY,
   };
   return envMap[provider] || null;
 }
 
 export async function getLLM(
-  userId: string,
+  workspaceId: string,
   provider: Provider,
   modelId: string
 ): Promise<LanguageModelV1> {
-  const apiKey = await resolveApiKey(userId, provider);
+  const apiKey = await resolveApiKey(workspaceId, provider);
   if (!apiKey) throw new Error(`No API key for ${provider}`);
 
   switch (provider) {

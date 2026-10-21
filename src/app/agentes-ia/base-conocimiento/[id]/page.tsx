@@ -58,12 +58,6 @@ const STATUS_BADGE: Record<string, string> = {
   suggested: 'badge-gold',
   disabled: 'badge-muted',
 };
-const STATUS_LABEL: Record<string, string> = {
-  active: 'Activo',
-  suggested: 'Sugerido',
-  disabled: 'Apagado',
-};
-
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }

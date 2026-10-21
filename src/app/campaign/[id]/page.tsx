@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { Play, Pause, RefreshCw, ArrowLeft, DollarSign } from 'lucide-react';
+import { Play, Pause, ArrowLeft, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { TopBar } from '@/components/layout/TopBar';
 import { StatusBadge } from '@/components/ui/Badge';

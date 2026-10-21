@@ -1,8 +1,8 @@
 import { streamText, generateText, convertToCoreMessages } from 'ai';
 import { NextRequest } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { getLLM, type Provider } from '@/lib/llm-providers';
 import { prisma } from '@/lib/db';
+import { CAMPAIGN_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 
 function jsonError(message: string, status: number) {
   return new Response(JSON.stringify({ error: message }), {
@@ -23,8 +23,8 @@ export const maxDuration = 60;
  * Inyecta automáticamente competitorInsights del masterJson si existen.
  */
 export async function POST(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, CAMPAIGN_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   let body: {
     campaignId: string;
@@ -45,13 +45,13 @@ export async function POST(req: NextRequest) {
   let modelId = body.modelId;
 
   const campaign = await prisma.campaign.findFirst({
-    where: { id: campaignId, userId: auth.userId },
+    where: { id: campaignId, workspaceId: ctx.workspace.id },
   });
   if (!campaign) return new Response('Campaign not found', { status: 404 });
 
   let model;
   try {
-    model = await getLLM(auth.userId, provider, modelId);
+    model = await getLLM(ctx.workspace.id, provider, modelId);
   } catch (e) {
     return jsonError((e as Error).message, 400);
   }
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
       if (isQuotaOrAvail) {
         try {
           modelId = 'gemini-2.5-flash';
-          model = await getLLM(auth.userId, provider, modelId);
+          model = await getLLM(ctx.workspace.id, provider, modelId);
         } catch (e2) {
           return jsonError((e2 as Error).message, 502);
         }

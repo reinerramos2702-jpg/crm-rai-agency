@@ -13,9 +13,9 @@ export const dynamic = 'force-dynamic';
  * appointment.overdue, contact.inactive, conversation.sla_overdue,
  * conversation.no_response, schedule.recurring, contact.milestone).
  *
- * Seguridad: requiere header `Authorization: Bearer <CRON_SECRET>` cuando
- * la variable de entorno CRON_SECRET está configurada (Vercel Cron la añade
- * automáticamente a las invocaciones programadas).
+ * Seguridad: requiere que CRON_SECRET esté configurado y que el header sea
+ * `Authorization: Bearer <CRON_SECRET>` (Vercel Cron lo añade automáticamente
+ * a las invocaciones programadas).
  *
  * NOTA (plan Hobby de Vercel): los cron jobs en el plan gratuito se ejecutan
  * como máximo 1 vez/día, sin importar el `schedule` configurado. Para la
@@ -25,11 +25,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = req.headers.get('authorization');
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  const auth = req.headers.get('authorization');
+  if (!secret || auth !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const result = await runDueWorkflows();

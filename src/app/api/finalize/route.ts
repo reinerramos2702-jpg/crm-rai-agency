@@ -1,10 +1,10 @@
 import { generateText } from 'ai';
 import { NextRequest } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { getLLM, type Provider } from '@/lib/llm-providers';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 import { MasterJsonSchema } from '@/lib/master-json-schema';
+import { CAMPAIGN_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -17,20 +17,20 @@ export const maxDuration = 60;
  * estructurado. Lo persiste en campaign.masterJson y marca status='ready'.
  */
 export async function POST(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, CAMPAIGN_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const { campaignId } = await req.json();
 
   const campaign = await prisma.campaign.findFirst({
-    where: { id: campaignId, userId: auth.userId },
+    where: { id: campaignId, workspaceId: ctx.workspace.id },
   });
   if (!campaign) return new Response('Campaign not found', { status: 404 });
 
   const provider = (campaign.llmProvider || 'deepseek') as Provider;
   const modelId = campaign.llmModel || 'deepseek-chat';
 
-  const model = await getLLM(auth.userId, provider, modelId);
+  const model = await getLLM(ctx.workspace.id, provider, modelId);
 
   const transcript = (campaign.chatHistory as Array<{ role: string; content: unknown }>)
     .map((m) => `${m.role.toUpperCase()}: ${typeof m.content === 'string' ? m.content : JSON.stringify(m.content)}`)

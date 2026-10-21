@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getOrCreateWorkspace } from '@/lib/workspace';
 import { isRoleContext, requireRole } from '@/lib/roles';
 import { SUPPORTED_MODELS, type Provider } from '@/lib/llm-providers';
 
@@ -13,7 +12,7 @@ export const runtime = 'nodejs';
  */
 
 export async function GET(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin', 'gerente', 'agente', 'viewer']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'viewer']);
   if (!isRoleContext(ctx)) return ctx;
   const ws = ctx.workspace;
 
@@ -29,7 +28,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin', 'gerente', 'agente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
   if (!isRoleContext(ctx)) return ctx;
   const ws = ctx.workspace;
 
@@ -42,13 +41,16 @@ export async function POST(req: NextRequest) {
 
   const kind = body.kind === 'voice' ? 'voice' : 'chat';
 
-  const count = await prisma.aIAgent.count({ where: { workspaceId: ws.id, kind } });
+  // Consultas independientes: se lanzan a la vez para acortar la creación.
+  const [count, existingPrimary] = await Promise.all([
+    prisma.aIAgent.count({ where: { workspaceId: ws.id, kind } }),
+    prisma.aIAgent.findFirst({ where: { workspaceId: ws.id, isPrimary: true }, select: { id: true } }),
+  ]);
   const defaultName =
     kind === 'voice' ? `Agente de Voz ${count + 1}` : `${count + 1} - Asistente Virtual`;
   const name = body.name?.trim() || defaultName;
 
-  // El primer agente de chat creado en el workspace queda como principal automáticamente.
-  const existingPrimary = await prisma.aIAgent.findFirst({ where: { workspaceId: ws.id, isPrimary: true } });
+  // El primer agente creado en el workspace queda como principal automáticamente.
 
   const defaultProvider: Provider = 'openai';
   const defaultModel = SUPPORTED_MODELS[defaultProvider][1]?.id || SUPPORTED_MODELS[defaultProvider][0].id;

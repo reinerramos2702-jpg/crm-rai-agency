@@ -1,6 +1,11 @@
 import { NextRequest } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import {
+  CONTENT_GENERATOR_READ_ROLES,
+  CONTENT_GENERATOR_WRITE_ROLES,
+  isRoleContext,
+  requireRole,
+} from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
@@ -10,32 +15,30 @@ export const runtime = 'nodejs';
  * DELETE /api/content-grids/[id]   → elimina la grilla y sus assets (cascade)
  */
 
-async function getOwnedGrid(id: string, userId: string) {
-  const grid = await prisma.contentGrid.findUnique({
-    where: { id },
+async function getWorkspaceGrid(id: string, workspaceId: string) {
+  return prisma.contentGrid.findFirst({
+    where: { id, workspaceId },
     include: { assets: { orderBy: [{ themeIndex: 'asc' }, { slideNumber: 'asc' }] } },
   });
-  if (!grid || grid.userId !== userId) return null;
-  return grid;
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, CONTENT_GENERATOR_READ_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const { id } = await params;
-  const grid = await getOwnedGrid(id, auth.userId);
+  const grid = await getWorkspaceGrid(id, ctx.workspace.id);
   if (!grid) return new Response('Not found', { status: 404 });
 
   return Response.json({ grid });
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, CONTENT_GENERATOR_WRITE_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const { id } = await params;
-  const existing = await getOwnedGrid(id, auth.userId);
+  const existing = await getWorkspaceGrid(id, ctx.workspace.id);
   if (!existing) return new Response('Not found', { status: 404 });
 
   const body = await req.json();
@@ -58,11 +61,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, CONTENT_GENERATOR_WRITE_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const { id } = await params;
-  const existing = await getOwnedGrid(id, auth.userId);
+  const existing = await getWorkspaceGrid(id, ctx.workspace.id);
   if (!existing) return new Response('Not found', { status: 404 });
 
   await prisma.contentGridAsset.deleteMany({ where: { gridId: id } });

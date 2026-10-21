@@ -15,12 +15,19 @@ datasource db {
 // IDENTIDAD (proviene del CRM via JWT, replicado local para FKs)
 // ============================================
 model User {
-  id          String   @id // UUID del CRM
-  email       String   @unique
-  displayName String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id // UUID del CRM (o generado localmente en registro por invitación)
+  email        String   @unique
+  displayName  String?
+  // Etapa 3 (Auth real): hash scrypt del password. Nullable a propósito — los
+  // usuarios existentes (SSO/dev) no tienen password hasta aceptar una
+  // invitación o ser bootstrap del super admin (SUPER_ADMIN_EMAILS).
+  passwordHash String?
+  // Recuperación de contraseña por SMS: teléfono E.164 (+58...) opcional, sin verificar.
+  phone        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
+  passwordResetTokens PasswordResetToken[]
   workspaces  Workspace[]
   apiKeys     ApiKey[]
   campaigns   Campaign[]
@@ -66,6 +73,7 @@ model Workspace {
   apiKeys           ApiKey[]
   metaConnection    WorkspaceMetaConnection?
   settings          Settings?
+  scheduledPosts    ScheduledPost[]
 
   // Guía de Inicio (/launchpad): overrides manuales para los ítems del checklist
   // que no tienen una condición verificable en la base de datos hoy (ej. "conecta
@@ -169,11 +177,7 @@ model ContentGridAsset {
 model ApiKey {
   id         String    @id @default(cuid())
   userId     String
-  // Bloque 1 (v3.0-master-prompt, multi-tenant): las keys BYOK quedaban ligadas
-  // solo al usuario, compartidas entre TODOS sus workspaces. Nullable por ahora
-  // para no romper filas existentes sin backfill — nueva escritura debe setearlo.
-  // Ver docs/AUDITORIA-ARQUITECTURA-BLOQUE-0.5.md punto 1.
-  workspaceId String?
+  workspaceId String
   provider   String // 'openai' | 'anthropic' | 'google' | 'deepseek' | 'elevenlabs' | 'suno' | 'instagram'
   label      String? // alias opcional
   ciphertext String // hex
@@ -184,9 +188,9 @@ model ApiKey {
   createdAt  DateTime  @default(now())
 
   user      User       @relation(fields: [userId], references: [id])
-  workspace Workspace? @relation(fields: [workspaceId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
 
-  @@unique([userId, provider, label])
+  @@unique([workspaceId, provider, label])
   @@index([userId])
   @@index([workspaceId])
 }
@@ -342,6 +346,8 @@ model Settings {
   automationsEnabled       Boolean   @default(true) // kill switch del workspace: pausar sus flujos
   automationNotifyEmail    String? // destino de notificaciones internas (alertas a gerente)
   aiBuilderProvider        String? // 'anthropic' | null - si hay API key configurada en /keys
+  // Configuración del planificador de contenido (/automatizacion): marca, reglas, horario
+  contentPlannerConfig     Json?
   updatedAt                DateTime  @updatedAt
 
   workspace                Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -960,4 +966,56 @@ model AuditEvent {
   @@index([workspaceId, createdAt])
   @@index([entityType, entityId])
   @@index([userId])
+}
+
+// Recuperación de contraseña: token de un solo uso (se guarda solo el sha256), vence en 30 min.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  channel   String // 'email' | 'sms'
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+
+// ============================================
+// PUBLICACIÓN PROGRAMADA EN INSTAGRAM (Corte B)
+// El community manager programa un lote; un cron protegido publica cada post
+// cuando llega su hora. Un post = una fila. Ver docs/SPEC-programacion-publicacion-instagram.md.
+// status: draft | scheduled | publishing | published | failed | cancelled
+// ============================================
+model ScheduledPost {
+  id              String    @id @default(cuid())
+  workspaceId     String
+  campaignRef     String? // id local de la campaña del planificador
+  dayNumber       Int? // día dentro de la campaña (idempotencia de programación)
+  caption         String    @db.Text
+  mediaUrls       String[] // URLs públicas (JPEG). Vacío solo en modo simulado.
+  mediaType       String    @default("image") // image | carousel
+  scheduledAt     DateTime
+  timezone        String    @default("UTC")
+  status          String    @default("scheduled")
+  attempts        Int       @default(0)
+  lastError       String?   @db.Text
+  igContainerId   String? // se guarda apenas existe: permite reanudar sin duplicar
+  igMediaId       String?
+  permalink       String?
+  simulated       Boolean   @default(false)
+  lockedAt        DateTime?
+  publishedAt     DateTime?
+  createdByUserId String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, campaignRef, dayNumber])
+  @@index([status, scheduledAt])
+  @@index([workspaceId, scheduledAt])
 }

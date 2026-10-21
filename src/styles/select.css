@@ -1,0 +1,105 @@
+/* ============================================================================
+   SELECTOR (<select>) PREMIUM — estilo global
+   ----------------------------------------------------------------------------
+   · Sin desenfoque ni animaciones: solo borde, color y un chevron SVG propio.
+   · Selector de baja especificidad: `select:where(...)` vale (0,0,1), igual que
+     la regla global `select` de globals.css; como este archivo se importa
+     después, gana a esa regla pero cede ante cualquier clase propia de una
+     página (p. ej. `select.au-select`) y ante estilos en línea.
+   · Escape: añade la clase `.select-native` para conservar el aspecto nativo.
+   · No aplica a `<select multiple>` ni `<select size>` (listas desplegadas).
+   · Chevron: el color depende del tema con dos reglas ([data-theme="light"]).
+   · Se importa en `src/app/layout.tsx`, justo después de `../styles/effects.css`.
+   ============================================================================ */
+
+select:where(:not(.select-native, [multiple], [size])) {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 40px;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 12px;
+  border: 1px solid var(--rai-border);
+  border-radius: 10px;
+  background-color: var(--rai-card);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238888AA' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px 12px;
+  color: var(--rai-text);
+  color-scheme: dark;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+/* Espacio reservado para el chevron: con !important vence también al padding en línea. */
+select:where(:not(.select-native, [multiple], [size])) { padding-right: 34px !important; }
+
+/* Tema claro: el global `[data-theme="light"] select` usa `background` abreviado,
+   así que el chevron se redefine con la misma especificidad (y gana por orden). */
+[data-theme="light"] select:where(:not(.select-native, [multiple], [size])) {
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235A5A70' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px 12px;
+  color-scheme: light;
+}
+
+/* Foco: anillo dorado visible (el chevron también se vuelve dorado). */
+select:where(:not(.select-native, [multiple], [size])):focus-visible {
+  outline: 2px solid var(--rai-gold);
+  outline-offset: 1px;
+  border-color: var(--rai-gold);
+  box-shadow: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23C9A84C' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+[data-theme="light"] select:where(:not(.select-native, [multiple], [size])):focus-visible {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A6A1E' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* Hover sutil, solo con puntero real */
+@media (hover: hover) {
+  select:where(:not(.select-native, [multiple], [size])):hover:not(:disabled):not(:focus-visible) {
+    border-color: color-mix(in srgb, var(--rai-gold) 55%, var(--rai-border));
+  }
+}
+
+/* Opciones legibles en ambos temas */
+select:where(:not(.select-native)) option,
+select:where(:not(.select-native)) optgroup {
+  background: var(--rai-card);
+  color: var(--rai-text);
+}
+[data-theme="light"] select:where(:not(.select-native)) option,
+[data-theme="light"] select:where(:not(.select-native)) optgroup {
+  background: #ffffff;
+  color: #1a1a2e;
+}
+select:where(:not(.select-native)) option:disabled { color: var(--rai-muted); }
+
+/* Estados: deshabilitado e inválido */
+select:where(:not(.select-native, [multiple], [size])):disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background-color: var(--rai-dark);
+}
+
+select:where(:not(.select-native, [multiple], [size]))[aria-invalid="true"],
+select:where(:not(.select-native, [multiple], [size])).is-invalid,
+select:where(:not(.select-native, [multiple], [size])):user-invalid {
+  border-color: var(--rai-error);
+}
+
+/* Móvil: objetivo táctil de 44 px (igual que los inputs de globals.css) */
+@media (max-width: 768px) {
+  select:where(:not(.select-native, [multiple], [size])) { min-height: 44px; }
+}

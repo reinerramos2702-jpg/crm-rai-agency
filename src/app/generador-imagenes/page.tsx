@@ -1,115 +1,157 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Images,
-  Plus,
-  Trash2,
-  FileText,
-  Upload,
-  CheckCircle2,
-  Loader2,
-  Sparkles,
-  Image as ImageIcon,
-} from 'lucide-react';
-import { TopBar } from '@/components/layout/TopBar';
-import { Spinner } from '@/components/ui/Spinner';
+import { FileText, Images, Plus, SearchX, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { TopBar } from '@/components/layout/TopBar';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonCard } from '@/components/ui/Skeleton';
+import { useCachedJson } from '@/lib/use-cached-json';
+import { fetchJson, invalidate, prefetchJson } from '@/lib/swr-cache';
+import { countByStatus, filterGrids, gridsSignature, hasActiveFilters, pinnedFirst, sortGrids } from '@/lib/grid-filters';
+import { buildTemplateThemes, templateById, type GridTemplate } from '@/lib/grid-templates';
+import { BrandDocCard } from './BrandDocCard';
+import { GridCard } from './GridCard';
+import { GridFilters } from './GridFilters';
+import { NewGridDialog } from './NewGridDialog';
+import { EMPTY_BRAND_DOC, type BrandDocInfo, type ContentGridSummary } from './types';
+import { getErrorMessage } from './utils';
+import { useGridView } from './useGridView';
+import { usePinnedGrids } from './usePinnedGrids';
+import './generador.css';
 
-interface ThemeSummary {
-  title?: string;
-  category?: string;
-}
+/** Duración del pulso `is-syncing` de la cabecera (el anillo dura ~1,1 s). */
+const SYNC_PULSE_MS = 1200;
 
-interface ContentGridSummary {
-  id: string;
-  name: string;
-  status: string;
-  currentStep: number;
-  activeThemeIndex: number;
-  themesTotal: number;
-  imageProvider: string;
-  themes: ThemeSummary[];
-  createdAt: string;
-  updatedAt: string;
-  _count: { assets: number };
-}
-
-interface BrandDocInfo {
-  brandDocName: string | null;
-  brandDocText: string | null;
-  brandDocUpdatedAt: string | null;
-  hasBrandDoc: boolean;
-}
-
-const NODE_LABELS = [
-  'Ideación semanal',
-  'Arquitectura narrativa',
-  'Generación de imágenes',
-  'Ciclaje de temas',
-  'Síntesis de copywriting',
+const FLOW_STEPS = [
+  { icon: FileText, title: '1 · Sube tu documento de marca', text: 'El .docx con reglas, narrativa y producción de tu agencia.' },
+  { icon: Sparkles, title: '2 · Crea la grilla', text: '7 temas con carruseles; el asistente te guía nodo por nodo.' },
+  { icon: Images, title: '3 · Genera y publica', text: 'Imágenes y copys listos para programar en tu calendario.' },
 ];
-
-const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
-  draft: { label: 'Sin iniciar', cls: 'badge-muted' },
-  in_progress: { label: 'En progreso', cls: 'badge-gold' },
-  completed: { label: 'Completada', cls: 'badge-success' },
-};
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' });
-}
 
 export default function GeneradorImagenesPage() {
   const router = useRouter();
-  const [grids, setGrids] = useState<ContentGridSummary[] | null>(null);
-  const [brandDoc, setBrandDoc] = useState<BrandDocInfo | null>(null);
   const [creating, setCreating] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [syncing, setSyncing] = useState(false);
+  const { view, setQuery, setStatus, setSort, clearFilters } = useGridView();
+  const { pinned, toggle: togglePin } = usePinnedGrids();
 
-  const loadGrids = useCallback(async () => {
-    try {
-      const res = await fetch('/api/content-grids');
-      if (!res.ok) throw new Error('No se pudieron cargar las grillas');
-      const data = await res.json();
-      setGrids(data.grids || []);
-    } catch (e: any) {
-      toast.error(e.message || 'Error cargando grillas');
-      setGrids([]);
-    }
-  }, []);
+  // Datos con caché compartida: al volver al módulo aparecen al instante y se
+  // actualizan por detrás (ver src/lib/use-cached-json.ts).
+  const gridsState = useCachedJson<{ grids?: ContentGridSummary[] }>('/api/content-grids', { ttlMs: 15_000 });
+  const brandState = useCachedJson<BrandDocInfo>('/api/workspace/brand-doc', { ttlMs: 60_000 });
+  const gridsData = gridsState.data;
+  const gridsError = gridsState.error;
+  const grids = useMemo<ContentGridSummary[] | null>(
+    () => (gridsData !== undefined ? gridsData.grids ?? [] : gridsError !== null ? [] : null),
+    [gridsData, gridsError],
+  );
+  const brandDoc: BrandDocInfo | null =
+    brandState.data ?? (brandState.error !== null ? EMPTY_BRAND_DOC : null);
 
-  const loadBrandDoc = useCallback(async () => {
-    try {
-      const res = await fetch('/api/workspace/brand-doc');
-      if (!res.ok) throw new Error('No se pudo cargar el doc de marca');
-      const data = await res.json();
-      setBrandDoc(data);
-    } catch {
-      setBrandDoc({ brandDocName: null, brandDocText: null, brandDocUpdatedAt: null, hasBrandDoc: false });
-    }
-  }, []);
+  // Conteos de los chips: con la búsqueda aplicada, para que coincidan con lo que se vería al pulsar.
+  const counts = useMemo(
+    () => countByStatus(filterGrids(grids ?? [], { query: view.query, status: 'all' })),
+    [grids, view.query],
+  );
+  const visibleGrids = useMemo(
+    () => (grids ? pinnedFirst(sortGrids(filterGrids(grids, view), view.sort), pinned) : null),
+    [grids, view, pinned],
+  );
+  const filtering = hasActiveFilters(view);
 
   useEffect(() => {
-    loadGrids();
-    loadBrandDoc();
-  }, [loadGrids, loadBrandDoc]);
+    if (gridsError) toast.error('No se pudieron cargar las grillas', { id: 'grids-error' });
+  }, [gridsError]);
 
-  async function handleCreate() {
+  // Pulso de sincronización: cuando termina una revalidación (revalidating: true -> false) y la
+  // lista (ids + updatedAt) difiere de la referencia, la cabecera pulsa una vez. La referencia
+  // solo cambia con la red en reposo; la primera carga aún no la tiene (null): solo la fija.
+  // Los cambios optimistas propios (eliminar) actualizan la referencia a mano.
+  const baselineRef = useRef<string | null>(null);
+  const revalidating = gridsState.revalidating;
+  useEffect(() => {
+    if (grids === null || revalidating) return;
+    const signature = gridsSignature(grids);
+    const previous = baselineRef.current;
+    baselineRef.current = signature;
+    if (previous !== null && previous !== signature) setSyncing(true);
+  }, [grids, revalidating]);
+
+  useEffect(() => {
+    if (!syncing) return;
+    const timer = setTimeout(() => setSyncing(false), SYNC_PULSE_MS);
+    return () => clearTimeout(timer);
+  }, [syncing]);
+
+  async function handleCreate(templateId: GridTemplate['id'] | null) {
     setCreating(true);
     try {
-      const res = await fetch('/api/content-grids', { method: 'POST' });
+      const template = templateId ? templateById(templateId) : undefined;
+      const stamp = new Date().toLocaleDateString('es', { day: '2-digit', month: 'short' });
+      const res = await fetch('/api/content-grids', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(template ? { name: `${template.name} · ${stamp}` } : {}),
+      });
       if (!res.ok) throw new Error('No se pudo crear la grilla');
       const data = await res.json();
+      if (template) {
+        // La plantilla ya define los 7 temas: la grilla arranca en el Nodo 2.
+        const patch = await fetch(`/api/content-grids/${data.grid.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ themes: buildTemplateThemes(template.id), currentStep: 2, status: 'in_progress' }),
+        });
+        if (!patch.ok) toast.error('La grilla se creó, pero no se pudieron precargar los temas');
+      }
+      invalidate('/api/content-grids');
       router.push(`/generador-imagenes/${data.grid.id}`);
-    } catch (e: any) {
-      toast.error(e.message || 'Error creando la grilla');
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Error creando la grilla'));
       setCreating(false);
+    }
+  }
+
+  async function handleDuplicate(grid: ContentGridSummary) {
+    setDuplicatingId(grid.id);
+    try {
+      const source = await fetchJson<{ grid: { themes?: unknown[]; themesTotal?: number; imageProvider?: string; llmProvider?: string | null; llmModel?: string | null } }>(
+        `/api/content-grids/${grid.id}`,
+      );
+      const themes = Array.isArray(source.grid.themes) ? source.grid.themes : [];
+      const hasTitles = themes.some((t) => typeof (t as { title?: unknown })?.title === 'string' && (t as { title: string }).title.trim() !== '');
+      const created = await fetch('/api/content-grids', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: `${grid.name} (copia)`.slice(0, 120), imageProvider: source.grid.imageProvider }),
+      });
+      if (!created.ok) throw new Error('No se pudo duplicar la grilla');
+      const { grid: copy } = await created.json();
+      const patch = await fetch(`/api/content-grids/${copy.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          themes,
+          ...(typeof source.grid.themesTotal === 'number' ? { themesTotal: source.grid.themesTotal } : {}),
+          ...(source.grid.llmProvider ? { llmProvider: source.grid.llmProvider } : {}),
+          ...(source.grid.llmModel ? { llmModel: source.grid.llmModel } : {}),
+          currentStep: hasTitles ? 2 : 1,
+          status: hasTitles ? 'in_progress' : 'draft',
+        }),
+      });
+      if (!patch.ok) throw new Error('La copia se creó, pero no se pudo traer el contenido');
+      await gridsState.refresh();
+      toast.success('Grilla duplicada: se copiaron temas y copys (las imágenes no).');
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Error duplicando la grilla'));
+    } finally {
+      setDuplicatingId(null);
     }
   }
 
@@ -121,10 +163,12 @@ export default function GeneradorImagenesPage() {
     try {
       const res = await fetch(`/api/content-grids/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('No se pudo eliminar la grilla');
-      setGrids((prev) => (prev || []).filter((g) => g.id !== id));
+      const remaining = (grids ?? []).filter((g) => g.id !== id);
+      baselineRef.current = gridsSignature(remaining);
+      gridsState.mutate({ grids: remaining });
       toast.success('Grilla eliminada');
-    } catch (e: any) {
-      toast.error(e.message || 'Error eliminando la grilla');
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Error eliminando la grilla'));
     } finally {
       setDeletingId(null);
     }
@@ -143,20 +187,16 @@ export default function GeneradorImagenesPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error subiendo el documento');
       toast.success(`Documento de marca cargado: ${data.brandDocName}`);
-      loadBrandDoc();
-    } catch (e: any) {
-      toast.error(e.message || 'Error subiendo el documento');
+      void brandState.refresh();
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Error subiendo el documento'));
     } finally {
       setUploading(false);
     }
   }
 
-  function onDrop(e: React.DragEvent) {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) uploadBrandDoc(file);
-  }
+  const total = grids?.length ?? 0;
+  const shown = visibleGrids?.length ?? 0;
 
   return (
     <>
@@ -164,263 +204,98 @@ export default function GeneradorImagenesPage() {
         title="Generador Imágenes"
         subtitle="Crea grillas semanales de contenido guiadas paso a paso, desde la ideación hasta el copywriting final."
         actions={
-          <button className="btn-primary" onClick={handleCreate} disabled={creating}>
-            {creating ? <Spinner size="sm" /> : <Plus size={16} />}
+          <button className="btn-primary" onClick={() => setDialogOpen(true)} disabled={creating}>
+            <Plus size={16} />
             Nueva Grilla
           </button>
         }
       />
 
       <div className="container">
-        {/* ===== Doc de marca (Sistema Operativo de Contenido) ===== */}
-        <div
-          className="card"
-          style={{
-            marginBottom: 28,
-            borderStyle: dragOver ? 'dashed' : 'solid',
-            borderColor: dragOver ? 'var(--rai-gold)' : undefined,
-            background: dragOver ? 'rgba(201,168,76,0.06)' : undefined,
-          }}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={onDrop}
-        >
-          <div className="row-between" style={{ flexWrap: 'wrap', gap: 16 }}>
-            <div className="row" style={{ gap: 14 }}>
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 'var(--radius-md)',
-                  background: 'rgba(201,168,76,0.1)',
-                  border: '1px solid rgba(201,168,76,0.25)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <FileText size={20} color="var(--rai-gold)" />
-              </div>
-              <div>
-                <div className="row" style={{ gap: 8 }}>
-                  <h3>Sistema Operativo de Contenido</h3>
-                  {brandDoc?.hasBrandDoc ? (
-                    <span className="badge badge-success">
-                      <CheckCircle2 size={11} /> Cargado
-                    </span>
-                  ) : (
-                    <span className="badge badge-muted">Sin documento</span>
-                  )}
-                </div>
-                {brandDoc?.hasBrandDoc ? (
-                  <p className="muted" style={{ marginTop: 4 }}>
-                    {brandDoc.brandDocName}
-                    {brandDoc.brandDocUpdatedAt && ` · actualizado ${formatDate(brandDoc.brandDocUpdatedAt)}`}
-                    {' · '}
-                    {brandDoc.brandDocText?.length.toLocaleString('es')} caracteres
-                  </p>
-                ) : (
-                  <p className="muted" style={{ marginTop: 4 }}>
-                    Arrastra aquí el documento .docx con las reglas de marca, narrativa y producción
-                    de tu agencia. El asistente lo usará como guion para cada nodo del wizard.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="row" style={{ gap: 8 }}>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".docx"
-                style={{ display: 'none' }}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) uploadBrandDoc(file);
-                  e.target.value = '';
-                }}
-              />
-              <button
-                className="btn-secondary btn-sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-              >
-                {uploading ? <Spinner size="sm" /> : <Upload size={14} />}
-                {brandDoc?.hasBrandDoc ? 'Reemplazar' : 'Subir .docx'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <BrandDocCard brandDoc={brandDoc} uploading={uploading} onUpload={uploadBrandDoc} />
 
         {/* ===== Galería de grillas ===== */}
-        <div className="row-between" style={{ marginBottom: 16 }}>
+        <div className={`row-between gi-head fx-sync${syncing ? ' is-syncing' : ''}`}>
           <h2>Tus grillas</h2>
-          {grids && <span className="muted">{grids.length} grilla{grids.length === 1 ? '' : 's'}</span>}
+          {grids && (
+            <span className="muted" aria-live="polite">
+              {filtering ? `${shown} de ${total}` : total} grilla{total === 1 ? '' : 's'}
+            </span>
+          )}
         </div>
 
-        {grids === null ? (
-          <div className="row" style={{ justifyContent: 'center', padding: 60 }}>
-            <Spinner size="lg" />
+        {grids !== null && total > 0 && (
+          <GridFilters
+            view={view}
+            counts={counts}
+            onQueryChange={setQuery}
+            onStatusChange={setStatus}
+            onSortChange={setSort}
+          />
+        )}
+
+        {visibleGrids === null ? (
+          <div className="grid grid-auto">
+            {[0, 1, 2].map((i) => (
+              <SkeletonCard key={i} lines={4} className="gi-skeleton" />
+            ))}
           </div>
-        ) : grids.length === 0 ? (
-          <EmptyState onCreate={handleCreate} creating={creating} />
+        ) : total === 0 ? (
+          <EmptyState
+            icon={Images}
+            title="Aún no tienes grillas"
+            text="Una grilla es un proyecto semanal de contenido: 7 temas con sus carruseles, imágenes y copys. El asistente te guía nodo por nodo, validando cada paso contigo."
+            steps={FLOW_STEPS}
+            action={
+              <button className="btn-primary" onClick={() => setDialogOpen(true)} disabled={creating}>
+                <Sparkles size={16} />
+                Crear primera grilla
+              </button>
+            }
+          />
+        ) : shown === 0 ? (
+          <EmptyState
+            icon={SearchX}
+            title="Ninguna grilla coincide"
+            text="Prueba con otro nombre o cambia el estado seleccionado para volver a ver tus grillas."
+            action={
+              <button className="btn-secondary" onClick={clearFilters}>
+                Limpiar filtros
+              </button>
+            }
+          />
         ) : (
           <div className="grid grid-auto">
-            {grids.map((grid) => (
+            {visibleGrids.map((grid) => (
               <GridCard
                 key={grid.id}
                 grid={grid}
                 onOpen={() => router.push(`/generador-imagenes/${grid.id}`)}
                 onDelete={() => handleDelete(grid.id, grid.name)}
+                onDuplicate={() => handleDuplicate(grid)}
+                onTogglePin={() => togglePin(grid.id)}
+                onWarm={() => prefetchJson(`/api/content-grids/${grid.id}`, 8_000)}
+                pinned={pinned.includes(grid.id)}
                 deleting={deletingId === grid.id}
+                duplicating={duplicatingId === grid.id}
               />
             ))}
 
             {/* Tarjeta "Nueva grilla" al final de la cuadrícula */}
-            <button
-              onClick={handleCreate}
-              disabled={creating}
-              className="card"
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 10,
-                minHeight: 200,
-                border: '1px dashed var(--rai-border)',
-                background: 'transparent',
-                color: 'var(--rai-muted)',
-                boxShadow: 'none',
-              }}
-            >
-              {creating ? <Spinner size="md" /> : <Plus size={28} />}
-              <span style={{ fontWeight: 600, textTransform: 'none', fontSize: 14 }}>Nueva grilla</span>
+            <button onClick={() => setDialogOpen(true)} disabled={creating} className="card gi-new">
+              <Plus size={28} />
+              <span className="gi-new-label">Nueva grilla</span>
             </button>
           </div>
         )}
       </div>
+
+      <NewGridDialog
+        open={dialogOpen}
+        creating={creating}
+        onClose={() => setDialogOpen(false)}
+        onCreate={handleCreate}
+      />
     </>
-  );
-}
-
-function EmptyState({ onCreate, creating }: { onCreate: () => void; creating: boolean }) {
-  return (
-    <div className="card" style={{ textAlign: 'center', padding: '60px 24px' }}>
-      <div
-        style={{
-          width: 64,
-          height: 64,
-          borderRadius: '50%',
-          background: 'rgba(201,168,76,0.1)',
-          border: '1px solid rgba(201,168,76,0.25)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 16px',
-        }}
-      >
-        <Images size={28} color="var(--rai-gold)" />
-      </div>
-      <h2 style={{ marginBottom: 8 }}>Aún no tienes grillas</h2>
-      <p className="muted" style={{ maxWidth: 440, margin: '0 auto 20px' }}>
-        Una "grilla" es un proyecto semanal de contenido: 7 temas con sus carruseles, imágenes
-        y copys. El asistente te guía nodo por nodo, validando cada paso contigo.
-      </p>
-      <button className="btn-primary" onClick={onCreate} disabled={creating}>
-        {creating ? <Spinner size="sm" /> : <Sparkles size={16} />}
-        Crear primera grilla
-      </button>
-    </div>
-  );
-}
-
-function GridCard({
-  grid,
-  onOpen,
-  onDelete,
-  deleting,
-}: {
-  grid: ContentGridSummary;
-  onOpen: () => void;
-  onDelete: () => void;
-  deleting: boolean;
-}) {
-  const statusInfo = STATUS_LABEL[grid.status] || STATUS_LABEL.draft;
-  const progressPct = Math.round(((grid.currentStep - 1) / 5) * 100);
-  const themeTitles = (grid.themes || []).filter((t) => t?.title).slice(0, 3);
-
-  return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12, cursor: 'pointer' }} onClick={onOpen}>
-      <div className="row-between">
-        <div className="row" style={{ gap: 8, minWidth: 0 }}>
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 'var(--radius-sm)',
-              background: 'rgba(201,168,76,0.1)',
-              border: '1px solid rgba(201,168,76,0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <Images size={16} color="var(--rai-gold)" />
-          </div>
-          <h3 style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{grid.name}</h3>
-        </div>
-        <button
-          className="btn-icon btn-danger btn-sm"
-          title="Eliminar grilla"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          disabled={deleting}
-        >
-          {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-        </button>
-      </div>
-
-      <span className={`badge ${statusInfo.cls}`} style={{ alignSelf: 'flex-start' }}>
-        {statusInfo.label}
-      </span>
-
-      <div>
-        <div className="row-between" style={{ marginBottom: 6 }}>
-          <span className="label">Nodo {grid.currentStep}/5</span>
-          <span className="muted" style={{ fontSize: 12 }}>{NODE_LABELS[grid.currentStep - 1]}</span>
-        </div>
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${Math.max(progressPct, 4)}%` }} />
-        </div>
-      </div>
-
-      {themeTitles.length > 0 && (
-        <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {themeTitles.map((t, i) => (
-            <li key={i} className="muted" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              · {t.title}
-            </li>
-          ))}
-          {grid.themes.length > 3 && (
-            <li className="muted" style={{ fontSize: 12 }}>+ {grid.themes.length - 3} más</li>
-          )}
-        </ul>
-      )}
-
-      <div className="row-between muted" style={{ fontSize: 12, marginTop: 'auto', paddingTop: 8, borderTop: '1px solid var(--rai-border)' }}>
-        <span className="row" style={{ gap: 4 }}>
-          <ImageIcon size={12} /> {grid._count.assets} imagen{grid._count.assets === 1 ? '' : 'es'}
-        </span>
-        <span>Actualizado {formatDate(grid.updatedAt)}</span>
-      </div>
-    </div>
   );
 }

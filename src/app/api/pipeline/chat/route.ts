@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { CAMPAIGN_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 
 const SYSTEM_PROMPT = `Eres un estratega de contenido de nivel agencia senior, especializado en Instagram para negocios locales y PYMEs. Hablas español latinoamericano neutro. Tu trabajo produce resultados reales: más reservas, más mensajes de WhatsApp, más ventas.
 
@@ -114,6 +115,9 @@ Cuando generes el calendario, usa este JSON dentro de \`\`\`json ... \`\`\`:
 - No usar fechas de 2024 — usar fechas reales a partir de hoy`;
 
 export async function POST(req: NextRequest) {
+  const ctx = await requireRole(req, CAMPAIGN_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
+
   try {
     const { messages, model, brandContext } = await req.json();
 
@@ -151,7 +155,6 @@ export async function POST(req: NextRequest) {
     ];
 
     const isGemini = model?.startsWith('gemini');
-    const isOpenAI = model?.startsWith('gpt') || model?.startsWith('claude');
 
     let reply = '';
     let campaign = null;

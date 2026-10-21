@@ -1,7 +1,11 @@
 import { NextRequest } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { getOrCreateWorkspace } from '@/lib/workspace';
+import {
+  CONTENT_GENERATOR_READ_ROLES,
+  CONTENT_GENERATOR_WRITE_ROLES,
+  isRoleContext,
+  requireRole,
+} from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
@@ -11,11 +15,11 @@ export const runtime = 'nodejs';
  */
 
 export async function GET(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, CONTENT_GENERATOR_READ_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const grids = await prisma.contentGrid.findMany({
-    where: { userId: auth.userId },
+    where: { workspaceId: ctx.workspace.id },
     orderBy: { updatedAt: 'desc' },
     select: {
       id: true,
@@ -32,14 +36,27 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  return Response.json({ grids });
+  // La lista solo necesita títulos, categoría y si hay copy: no se envía el texto completo
+  // de cada copy (el JSON `themes` puede crecer) para mantener la carga rápida.
+  const slim = grids.map((grid) => ({
+    ...grid,
+    themes: (Array.isArray(grid.themes) ? (grid.themes as unknown[]) : []).map((t) => {
+      const theme = (t && typeof t === 'object' ? t : {}) as Record<string, unknown>;
+      return {
+        title: typeof theme.title === 'string' ? theme.title : '',
+        category: typeof theme.category === 'string' ? theme.category : '',
+        hasCopy: typeof theme.caption === 'string' && theme.caption.trim() !== '',
+      };
+    }),
+  }));
+
+  return Response.json({ grids: slim });
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
-
-  const ws = await getOrCreateWorkspace(auth.userId);
+  const ctx = await requireRole(req, CONTENT_GENERATOR_WRITE_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
 
   let body: { name?: string; imageProvider?: string } = {};
   try {
@@ -49,13 +66,13 @@ export async function POST(req: NextRequest) {
   }
 
   // Nombre amistoso automático: "Grilla 1", "Grilla 2", ...
-  const count = await prisma.contentGrid.count({ where: { userId: auth.userId } });
+  const count = await prisma.contentGrid.count({ where: { workspaceId: ctx.workspace.id } });
   const name = body.name?.trim() || `Grilla ${count + 1}`;
 
   const grid = await prisma.contentGrid.create({
     data: {
       workspaceId: ws.id,
-      userId: auth.userId,
+      userId: ctx.auth.userId,
       name,
       imageProvider: body.imageProvider || 'gemini',
     },

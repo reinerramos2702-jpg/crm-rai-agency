@@ -45,7 +45,10 @@ export async function analyzeImageWithGemini(
       if (ct) mimeType = ct.split(';')[0];
     } else {
       // Ruta local: leer del sistema de archivos
+      if (!path.isAbsolute(imagePath)) return null;
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- Local files are absolute paths derived from Dirent entries below an inventory root validated by realpath.
       if (!fs.existsSync(imagePath)) return null;
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- Same validated absolute inventory path checked for existence immediately above.
       const buffer = fs.readFileSync(imagePath);
       imageBase64 = buffer.toString('base64');
       const ext = path.extname(imagePath).toLowerCase();

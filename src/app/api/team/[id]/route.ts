@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { ROLES, isRoleContext, requireRole } from '@/lib/roles';
+import { INVITABLE_ROLES, isRoleContext, requireRole } from '@/lib/roles';
+import { invalidateRoleContext } from '@/lib/role-context-cache';
 
 export const runtime = 'nodejs';
 
@@ -10,7 +11,7 @@ export const runtime = 'nodejs';
  */
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const ctx = await requireRole(req, ['admin']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin']);
   if (!isRoleContext(ctx)) return ctx;
 
   const member = await prisma.workspaceMember.findFirst({
@@ -23,7 +24,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const data: { role?: string; status?: string } = {};
 
   if (role !== undefined) {
-    if (!(ROLES as string[]).includes(role) || role === 'admin') {
+    // Capa 1 del bloqueo de escalada: excluye admin, super_admin y agency_owner.
+    // Capa 2 vive en getRole(), que ignora estos roles si quedaran guardados.
+    if (!(INVITABLE_ROLES as string[]).includes(role)) {
       return NextResponse.json({ error: 'Rol inválido' }, { status: 400 });
     }
     data.role = role;
@@ -37,12 +40,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const updated = await prisma.workspaceMember.update({ where: { id: member.id }, data });
+  // El rol/estado cambió: el contexto cacheado de ese usuario (≤5 s) ya no vale.
+  if (member.userId) invalidateRoleContext(member.userId);
 
   return NextResponse.json({ member: updated });
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const ctx = await requireRole(req, ['admin']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin']);
   if (!isRoleContext(ctx)) return ctx;
 
   const member = await prisma.workspaceMember.findFirst({
@@ -51,6 +56,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   if (!member) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 });
 
   await prisma.workspaceMember.delete({ where: { id: member.id } });
+  if (member.userId) invalidateRoleContext(member.userId);
 
   return NextResponse.json({ ok: true });
 }

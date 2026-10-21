@@ -1,0 +1,91 @@
+/* ============================================================================
+   CENTRO DE VOZ (/agentes-ia/voz) — estilos propios.
+   Sin desenfoque. Movimiento solo con transform/opacity (150–250 ms ease-out) dentro de
+   `prefers-reduced-motion: no-preference`; hover bajo `(hover: hover)`; tokens `var(--rai-*)`.
+   Reutiliza `.ag-*` de agentes.css y `.fx-*` de effects.css.
+   ============================================================================ */
+.vz { --ag-accent: var(--ag-voice); }
+.vz .ag-btn--accent { color: #0A0A0F !important; }
+[data-theme="light"] .vz .ag-btn--accent { color: #FFFFFF !important; }
+
+.vz-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .vz-grid { grid-template-columns: minmax(0, 1fr); } }
+.vz-block { margin-top: 16px; }
+.vz-test { display: grid; gap: 12px; max-width: 760px; }
+.vz-card { min-width: 0; }
+.vz-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.vz-h2 { display: flex; align-items: center; gap: 8px; font-size: 16px; margin: 0; }
+.vz-err { color: var(--rai-error); font-size: 13px; overflow-wrap: anywhere; }
+.vz-warn { display: flex; align-items: flex-start; gap: 6px; color: var(--rai-warning); font-size: 13px; margin: 6px 0 0; }
+.vz-warn svg { flex: 0 0 auto; margin-top: 2px; }
+
+.vz-badge { display: inline-flex; align-items: center; gap: 8px; padding: 3px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--rai-muted); border: 1px solid var(--rai-border); }
+.vz-badge--live { color: var(--rai-success); border-color: color-mix(in srgb, var(--rai-success) 50%, transparent); }
+
+/* Pasos */
+.vz-steps { list-style: none; padding: 0; margin: 0 0 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@media (min-width: 1200px) { .vz-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.vz-step { display: flex; gap: 8px; align-items: flex-start; padding: 10px; border: 1px solid var(--rai-border); border-radius: 10px; min-width: 0; }
+.vz-step[data-state="ok"] { border-color: color-mix(in srgb, var(--rai-success) 45%, var(--rai-border)); }
+.vz-step[data-state="ok"] .vz-step-num { color: var(--rai-success); }
+.vz-step-num { color: var(--rai-muted); flex: 0 0 auto; margin-top: 1px; }
+.vz-step-text { display: grid; gap: 2px; min-width: 0; font-size: 13px; }
+.vz-step-state { display: inline-flex; align-items: center; gap: 6px; color: var(--rai-muted); font-size: 12px; }
+
+.vz-missing, .vz-webhook { display: grid; gap: 6px; margin-bottom: 12px; }
+.vz-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.vz-chip { padding: 2px 8px; border-radius: 6px; font-size: 12px; background: color-mix(in srgb, var(--rai-warning) 12%, transparent); border: 1px solid color-mix(in srgb, var(--rai-warning) 40%, transparent); overflow-wrap: anywhere; }
+.vz-copy { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.vz-url { flex: 1 1 220px; min-width: 0; padding: 6px 10px; border-radius: 8px; font-size: 12px; border: 1px solid var(--rai-border); overflow-wrap: anywhere; }
+
+.vz-details { margin-bottom: 12px; font-size: 13px; }
+.vz-details summary { cursor: pointer; color: var(--rai-muted); padding: 4px 0; }
+.vz-details summary:focus-visible { outline: 2px solid var(--rai-gold); outline-offset: 2px; }
+.vz-checklist { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 10px; }
+.vz-checklist li { display: flex; gap: 10px; align-items: flex-start; }
+.vz-checklist .fx-dot { margin-top: 5px; }
+
+.vz-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.vz-result { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rai-border); font-size: 13px; }
+.vz-result p { display: flex; gap: 6px; align-items: flex-start; margin: 0 0 6px; overflow-wrap: anywhere; }
+.vz-preview { display: grid; gap: 6px; margin: 10px 0 0; }
+.vz-preview div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; }
+.vz-preview dt { color: var(--rai-muted); }
+.vz-preview dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .vz-preview div { grid-template-columns: minmax(0, 1fr); gap: 0; } }
+
+/* Uso */
+.vz-usage-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.vz-usage-value { font-size: clamp(24px, 4vw, 30px); font-weight: 800; }
+.vz-meter { height: 8px; border-radius: 4px; overflow: hidden; background: color-mix(in srgb, var(--rai-border) 60%, transparent); }
+.vz-meter-bar { height: 100%; width: 100%; background: var(--rai-success); transform-origin: left center; transform: scaleX(var(--p, 0)); }
+.vz-meter[data-level="warn"] .vz-meter-bar { background: var(--rai-warning); }
+.vz-meter[data-level="cap"] .vz-meter-bar { background: var(--rai-error); }
+@media (prefers-reduced-motion: no-preference) { .vz-meter-bar { transition: transform 0.25s ease-out; } }
+.vz-level { font-size: 13px; margin: 8px 0 12px; color: var(--rai-muted); }
+.vz-level[data-level="warn"] { color: var(--rai-warning); }
+.vz-level[data-level="cap"] { color: var(--rai-error); font-weight: 600; }
+.vz-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.vz-stats div { display: grid; gap: 2px; }
+.vz-stats dt { font-size: 12px; color: var(--rai-muted); }
+.vz-stats dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+
+/* Llamadas */
+.vz-calls { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.vz-call { padding: 12px; border: 1px solid var(--rai-border); border-radius: 10px; display: grid; gap: 6px; min-width: 0; }
+.vz-call-top { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+.vz-call-who { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; overflow-wrap: anywhere; }
+.vz-call-meta { font-size: 12px; }
+.vz-call-outcome { display: flex; align-items: center; gap: 8px; font-size: 13px; flex-wrap: wrap; }
+.vz-call-summary { margin: 0; font-size: 13px; overflow-wrap: anywhere; }
+.vz-call-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.vz-chev { flex: 0 0 auto; }
+@media (prefers-reduced-motion: no-preference) { .vz-chev { transition: transform 0.15s ease-out; } }
+.vz-chev[data-open="true"] { transform: rotate(180deg); }
+.vz-transcript { display: grid; gap: 6px; padding-top: 8px; border-top: 1px dashed var(--rai-border); }
+.vz-turn { margin: 0; font-size: 13px; line-height: 1.5; padding: 6px 10px; border-radius: 8px; overflow-wrap: anywhere; border: 1px solid var(--rai-border); }
+.vz-turn[data-role="agent"] { background: color-mix(in srgb, var(--ag-voice) 8%, var(--rai-card)); }
+.vz-turn-who { display: block; font-size: 11px; font-weight: 700; color: var(--rai-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.vz-settings { max-width: 820px; }
+@media (hover: hover) { .vz-call:hover { border-color: color-mix(in srgb, var(--ag-voice) 50%, var(--rai-border)); } }

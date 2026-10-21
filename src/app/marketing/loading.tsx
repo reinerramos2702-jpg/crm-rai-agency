@@ -1,0 +1,7 @@
+import { MarketingSkeleton } from './_components/MarketingSkeleton';
+import './_components/styles';
+
+/** Esqueleto instantáneo mientras se resuelve la ruta (Next lo muestra al hacer clic en el menú). */
+export default function Loading() {
+  return <MarketingSkeleton />;
+}

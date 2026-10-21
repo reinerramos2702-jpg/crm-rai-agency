@@ -33,6 +33,15 @@
 - Relay entre agentes: bloques "Para pegar en Claude Code" copiados literal de un chat a otro.
 - Formato de respuesta fijo en Cowork: siempre 2 bloques — Información general / Tareas a ejecutar (skill `bloques-info-tareas`).
 
+**Actualización 10 oct 2026 (reemplaza el flujo de 3 agentes de arriba donde haya conflicto)**
+- La ejecución de código la hace **OpenCode** con los agentes `@orchestrator`, `@backend`, `@frontend` y `@qa` (`.opencode/agent/`), bajo las reglas de `AGENTS.md`. Cowork planifica, cierra specs, edita documentación y verifica con evidencia; Claude.ai queda para estrategia.
+- Método por bloque: spec cerrada en `docs/SPEC-<bloque>.md` → prompt maestro corto → bucle verificar/corregir hasta cumplir los criterios → commit local → Reiner decide push, PR y merge.
+- Fuentes de verdad: reglas `AGENTS.md`; estado `docs/ESTADO-SESION.md`; backlog `docs/planning/panel-control.html` (único; `ROADMAP.md` está eliminado); requisitos `docs/SPEC-*.md`. No duplicar información entre ellas.
+- Verificar el repo real (`git status`, `git log`) antes de fiarse de cualquier documento.
+- Pruebas: `vitest`, lint y `build` se ejecutan en Windows/OpenCode; la VM de Cowork usa el `node_modules` de Windows y no puede correrlos.
+- Desde Cowork nunca cambiar de rama en la carpeta compartida (`git checkout`/`switch`): OpenCode usa el mismo directorio. Para otras ramas usar comandos de bajo nivel o un worktree.
+- En la carpeta montada Git no puede borrar sus archivos temporales: aparecen `index.lock`/`HEAD.lock` vacíos. Comprobar que están vacíos y que no corre ningún Git; moverlos a `.git/_to_delete/`, nunca borrarlos sin permiso.
+
 ---
 
 ## 1. Bucle agéntico
@@ -58,7 +67,7 @@ Exploración → Planificación → Ejecución → Verificación → Fin. Siempr
 ## 4. Memoria del proyecto
 - `CLAUDE.md` corto — solo lo esencial (rol, reglas fijas de la sección 0, stack, contexto de negocio). Uno gigante penaliza cada ejecución.
 - Reglas secundarias específicas (branding visual, convenciones JS, accesibilidad) van en `.claude/rules/`, no en el `CLAUDE.md` principal — se cargan solo cuando la tarea las necesita.
-- `MEMORY.md` / `CONTEXT.md` / `ESTADO.md` (dentro del repo real, no en esta carpeta) — historial de sesiones, se leen primero en cada sesión nueva. Ya confirmado como fuente de verdad en `COWORK-BRIEFING.md`.
+- `MEMORY.md` / `CONTEXT.md` / `ESTADO.md` (dentro del repo real, no en esta carpeta) — historial de sesiones, se leen primero en cada sesión nueva. Ya confirmado como fuente de verdad en el briefing histórico de Cowork (archivado en `_revisar-obsoletos/docs/planning/COWORK-BRIEFING.md`).
 
 ## 5. Modelos y esfuerzo
 - **Sonnet**: día a día. **Opus**: tareas complejas — default para trabajo serio de este proyecto (ver master prompt v2.0: "Abre Claude Code (Opus) DENTRO del worktree"). **Fable**: solo si hace falta lo máximo.

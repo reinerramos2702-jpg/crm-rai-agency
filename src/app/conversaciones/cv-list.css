@@ -1,0 +1,60 @@
+/* ---------- Columna izquierda: bandeja de conversaciones ---------- */
+.cv-list-head { display: grid; flex: 0 0 auto; gap: 10px; padding: 14px 14px 12px; border-bottom: 1px solid var(--rai-border); }
+.cv-list-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; }
+.cv-search { position: relative; }
+.cv-search input { height: 40px; padding: 0 36px 0 34px; }
+.cv-search input[type="search"] { -webkit-appearance: none; appearance: none; }
+.cv-search input[type="search"]::-webkit-search-cancel-button { display: none; }
+.cv-search-icon { position: absolute; top: 13px; left: 12px; color: var(--rai-muted); pointer-events: none; }
+.cv-page button.cv-search-clear {
+  position: absolute; top: 4px; right: 4px; width: 32px; height: 32px; padding: 0 !important; justify-content: center;
+  background: transparent !important; border: 0 !important; box-shadow: none !important; border-radius: 8px !important;
+}
+.cv-chips { display: flex; gap: 6px; }
+.cv-page button.cv-chip {
+  gap: 6px; min-height: 32px; padding: 4px 12px !important; border: 1px solid var(--rai-border) !important; border-radius: 999px !important;
+  background: transparent; box-shadow: none !important; color: var(--rai-muted); font-size: 12px !important; font-weight: 600;
+}
+.cv-page button.cv-chip[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--rai-gold) 14%, transparent) !important; color: var(--rai-text);
+  border-color: color-mix(in srgb, var(--rai-gold) 55%, var(--rai-border)) !important;
+}
+.cv-chip-count { font-variant-numeric: tabular-nums; opacity: 0.85; }
+@media (hover: hover) { .cv-page button.cv-chip:hover { color: var(--rai-text); } }
+.cv-page .cv-new { width: 100%; justify-content: center; min-height: 40px; }
+
+.cv-list-body { flex: 1 1 auto; min-height: 0; padding: 6px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.cv-rows { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+
+.cv-page button.cv-row {
+  display: grid !important; grid-template-columns: auto minmax(0, 1fr); align-items: center; justify-content: stretch; gap: 12px;
+  width: 100%; min-height: 68px; padding: 10px 12px !important; border: 1px solid transparent !important; border-radius: 12px !important;
+  background: transparent; box-shadow: none !important; color: var(--rai-text); font-size: 13px !important; font-weight: 400;
+  text-align: left; white-space: normal !important;
+}
+.cv-page button.cv-row[data-active] { background: color-mix(in srgb, var(--rai-gold) 11%, transparent); border-color: color-mix(in srgb, var(--rai-gold) 32%, transparent) !important; }
+.cv-page button.cv-row:focus-visible { outline-offset: -2px; }
+@media (hover: hover) { .cv-page button.cv-row:hover:not([data-active]) { background: color-mix(in srgb, var(--rai-muted) 10%, transparent); } }
+.cv-row-avatar { position: relative; display: block; }
+.fx-dot.cv-row-dot { position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; box-shadow: 0 0 0 2px var(--rai-dark); }
+.cv-row-dot--ok { --fx-dot-c: var(--rai-success); }
+.cv-row-dot--warn { --fx-dot-c: var(--rai-warning); }
+.cv-row-dot--muted { --fx-dot-c: var(--rai-muted); }
+.cv-row-main { display: grid; gap: 3px; min-width: 0; }
+.cv-row-top, .cv-row-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.cv-row-name { min-width: 0; overflow: hidden; font-size: 13.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.cv-row[data-unread] .cv-row-name { font-weight: 800; }
+.cv-row-time { flex: 0 0 auto; color: var(--rai-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.cv-row-preview { min-width: 0; overflow: hidden; color: var(--rai-muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.cv-row[data-unread] .cv-row-preview { color: var(--rai-text); }
+.cv-row-you { color: var(--rai-muted); }
+.cv-row-badge { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+
+/* Esqueleto de la lista: cada fila mide lo mismo que una fila real (68 px) */
+.cv-list-skel { display: grid; gap: 2px; }
+.cv-row-skel { display: flex; align-items: center; gap: 12px; height: 68px; padding: 10px 12px; }
+
+.cv-list-empty { display: grid; justify-items: center; gap: 6px; padding: 28px 16px; text-align: center; }
+.cv-list-empty-icon { color: var(--rai-muted); }
+.cv-list-empty-title { margin: 0; font-size: 14px; font-weight: 700; }
+.cv-list-empty-text { margin: 0 0 8px; color: var(--rai-muted); font-size: 12.5px; line-height: 1.5; }

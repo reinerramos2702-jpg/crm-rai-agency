@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { getOrCreateWorkspace } from '@/lib/workspace';
+import { isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
@@ -19,27 +18,28 @@ function randomSlug() {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'staff', 'viewer']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
 
-  const ws = await getOrCreateWorkspace(auth.userId);
   const links = await prisma.activationLink.findMany({
     where: { workspaceId: ws.id },
     orderBy: { createdAt: 'desc' },
+    take: 500,
+    select: { id: true, label: true, slug: true, destination: true, clicks: true, createdAt: true },
   });
   return NextResponse.json({ links });
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
 
   const { label, destination, slug } = await req.json();
   if (!label || !label.trim() || !destination || !destination.trim()) {
     return NextResponse.json({ error: 'label y destination son requeridos' }, { status: 400 });
   }
-
-  const ws = await getOrCreateWorkspace(auth.userId);
 
   let finalSlug = (slug || randomSlug()).trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
   // Garantizar unicidad
@@ -56,13 +56,13 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
 
   const id = req.nextUrl.searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'id es requerido' }, { status: 400 });
 
-  const ws = await getOrCreateWorkspace(auth.userId);
   const existing = await prisma.activationLink.findFirst({ where: { id, workspaceId: ws.id } });
   if (!existing) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
 

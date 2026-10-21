@@ -1,20 +1,20 @@
 import { NextRequest } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { CAMPAIGN_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
 /**
  * GET  /api/campaigns
- * POST /api/campaigns  body: { workspaceId, name, pipelineType }
+ * POST /api/campaigns  body: { name, pipelineType }
  */
 
 export async function GET(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, CAMPAIGN_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const campaigns = await prisma.campaign.findMany({
-    where: { userId: auth.userId },
+    where: { workspaceId: ctx.workspace.id },
     orderBy: { updatedAt: 'desc' },
     include: { workspace: { select: { name: true } }, _count: { select: { executions: true } } },
   });
@@ -29,26 +29,15 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, CAMPAIGN_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
-  const { workspaceId, name, pipelineType } = await req.json();
-
-  // Auto-crear workspace dev si no existe
-  let ws = workspaceId
-    ? await prisma.workspace.findFirst({ where: { id: workspaceId, ownerId: auth.userId } })
-    : await prisma.workspace.findFirst({ where: { ownerId: auth.userId } });
-
-  if (!ws) {
-    ws = await prisma.workspace.create({
-      data: { ownerId: auth.userId, name: 'Default Workspace' },
-    });
-  }
+  const { name, pipelineType } = await req.json();
 
   const campaign = await prisma.campaign.create({
     data: {
-      workspaceId: ws.id,
-      userId: auth.userId,
+      workspaceId: ctx.workspace.id,
+      userId: ctx.auth.userId,
       name: name || 'Untitled campaign',
       pipelineType: pipelineType || 'ugc',
       status: 'planning',

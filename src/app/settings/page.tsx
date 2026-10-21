@@ -5,12 +5,7 @@ import { Settings2, Webhook, Globe, ToggleLeft, ToggleRight, CheckCircle2, Alert
 import { TopBar } from '@/components/layout/TopBar';
 import { Spinner } from '@/components/ui/Spinner';
 import toast from 'react-hot-toast';
-import { ROLES, ROLE_LABELS, ROLE_DESCRIPTIONS, type Role } from '@/lib/roles-shared';
-
-interface SettingsData {
-  n8nWebhookUrl?: string;
-  igBusinessId?: string;
-}
+import { ROLES, INVITABLE_ROLES, ROLE_LABELS, ROLE_DESCRIPTIONS, type Role } from '@/lib/roles-shared';
 
 interface TeamMember {
   id: string;
@@ -27,8 +22,6 @@ interface TeamOwner {
   displayName: string | null;
 }
 
-const INVITABLE_ROLES = ROLES.filter((r) => r !== 'admin') as Exclude<Role, 'admin'>[];
-
 /**
  * Página de Configuración.
  * - URL del Webhook n8n
@@ -36,7 +29,6 @@ const INVITABLE_ROLES = ROLES.filter((r) => r !== 'admin') as Exclude<Role, 'adm
  * - Toggle modo dev / producción
  */
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<SettingsData>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testingN8n, setTestingN8n] = useState(false);
@@ -193,7 +185,6 @@ export default function SettingsPage() {
       const res = await fetch('/api/settings');
       if (res.ok) {
         const data = await res.json();
-        setSettings(data.settings || {});
         setN8nUrl(data.settings?.n8nWebhookUrl || '');
         setIgBusinessId(data.settings?.igBusinessId || '');
       }

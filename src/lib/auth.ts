@@ -1,4 +1,4 @@
-import { jwtVerify } from 'jose';
+import { jwtVerify, SignJWT } from 'jose';
 import { NextRequest } from 'next/server';
 import { prisma } from './db';
 
@@ -9,6 +9,9 @@ export interface AuthContext {
 }
 
 const encoder = new TextEncoder();
+
+/** Nombre de la cookie httpOnly de sesión (Etapa 3 — Auth real). */
+export const SESSION_COOKIE = 'rai_session';
 
 export async function verifyJwt(token: string): Promise<AuthContext | null> {
   try {
@@ -27,6 +30,29 @@ export async function verifyJwt(token: string): Promise<AuthContext | null> {
 }
 
 /**
+ * Emite un JWT de sesión del CRM (HS256, expiración 7 días) con el mismo
+ * payload que verifyJwt espera: sub=userId, email, name=displayName.
+ * Usado por POST /api/auth/login (Etapa 3). El JWT viaja en cookie httpOnly,
+ * nunca en localStorage.
+ */
+export async function signJwt(ctx: {
+  userId: string;
+  email: string;
+  displayName?: string;
+  /** Duración en segundos. Por defecto 7 días (comportamiento histórico). */
+  expiresInSec?: number;
+}): Promise<string> {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET no configurado — no se puede emitir sesión.');
+  return new SignJWT({ email: ctx.email, name: ctx.displayName })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setSubject(ctx.userId)
+    .setIssuedAt()
+    .setExpirationTime(ctx.expiresInSec ? Math.floor(Date.now() / 1000) + ctx.expiresInSec : '7d')
+    .sign(encoder.encode(secret));
+}
+
+/**
  * Cache en memoria de usuarios sincronizados. Evita upsert a DB en cada request.
  * Clave: userId. Valor: AuthContext.
  * En dev (DEV_BYPASS_AUTH) la entrada se mantiene durante toda la vida del proceso.
@@ -37,11 +63,44 @@ const authCache = new Map<string, { ctx: AuthContext; expiresAt: number }>();
 let devUserSynced = false;
 
 /**
+ * Super admin de la plataforma (RAI Agency, cross-tenant). Se decide SOLO por
+ * la env var SUPER_ADMIN_EMAILS (emails separados por coma), nunca por
+ * WorkspaceMember.role: un admin de workspace no puede crear super admins.
+ * El email sale del JWT verificado (o del usuario dummy de dev).
+ */
+export function isPlatformSuperAdmin(email: string | undefined): boolean {
+  if (!email) return false;
+  const allowed = (process.env.SUPER_ADMIN_EMAILS ?? '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return allowed.includes(email.trim().toLowerCase());
+}
+
+let bypassIgnoredWarned = false;
+
+/**
+ * El bypass solo tiene efecto fuera de producción: si DEV_BYPASS_AUTH quedara
+ * en 'true' por error en un deploy productivo, se ignora y se exige JWT real.
+ */
+export function isDevBypassActive(): boolean {
+  if (process.env.DEV_BYPASS_AUTH !== 'true') return false;
+  if (process.env.NODE_ENV === 'production') {
+    if (!bypassIgnoredWarned) {
+      console.error('[auth] DEV_BYPASS_AUTH=true ignorado: NODE_ENV=production exige JWT real.');
+      bypassIgnoredWarned = true;
+    }
+    return false;
+  }
+  return true;
+}
+
+/**
  * Extrae el contexto del usuario desde JWT del CRM (SSO).
  * En dev, si DEV_BYPASS_AUTH=true, devuelve un user dummy y lo crea si hace falta.
  */
 export async function getAuth(req: NextRequest): Promise<AuthContext | null> {
-  if (process.env.DEV_BYPASS_AUTH === 'true') {
+  if (isDevBypassActive()) {
     const ctx: AuthContext = {
       userId: 'dev-user-001',
       email: 'dev@rai.local',
@@ -68,7 +127,11 @@ export async function getAuth(req: NextRequest): Promise<AuthContext | null> {
   }
 
   const authHeader = req.headers.get('authorization');
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  // Etapa 3: además del header Bearer (SSO externo), acepta la cookie httpOnly
+  // de sesión emitida por POST /api/auth/login. El frontend autentica con la
+  // cookie (se envía sola en requests same-origin), sin tocar localStorage.
+  const token = bearerToken ?? req.cookies?.get(SESSION_COOKIE)?.value ?? null;
   if (!token) return null;
 
   const ctx = await verifyJwt(token);

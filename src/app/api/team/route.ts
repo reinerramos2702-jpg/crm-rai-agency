@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { ROLES, isRoleContext, requireRole } from '@/lib/roles';
+import { ROLES, INVITABLE_ROLES, isRoleContext, requireRole } from '@/lib/roles';
+import { invalidateRoleContext } from '@/lib/role-context-cache';
 
 export const runtime = 'nodejs';
 
@@ -10,7 +11,7 @@ export const runtime = 'nodejs';
  */
 
 export async function GET(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin']);
   if (!isRoleContext(ctx)) return ctx;
 
   const owner = await prisma.user.findUnique({ where: { id: ctx.workspace.ownerId } });
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const ctx = await requireRole(req, ['admin']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin']);
   if (!isRoleContext(ctx)) return ctx;
 
   const { email, role } = await req.json();
@@ -51,6 +52,14 @@ export async function POST(req: NextRequest) {
   if (role === 'admin') {
     return NextResponse.json(
       { error: 'No se puede invitar a alguien directamente como administrador.' },
+      { status: 400 }
+    );
+  }
+  // Capa 1 del bloqueo de escalada: super_admin y agency_owner no se invitan.
+  // Capa 2 vive en getRole(), que ignora estos roles si quedaran guardados.
+  if (!(INVITABLE_ROLES as string[]).includes(role)) {
+    return NextResponse.json(
+      { error: 'Ese rol no se asigna desde el equipo del workspace.' },
       { status: 400 }
     );
   }
@@ -75,6 +84,10 @@ export async function POST(req: NextRequest) {
       userId: existingUser?.id ?? null,
     },
   });
+
+  // Alta/cambio de membresía: invalida el contexto cacheado del usuario afectado (si ya existe).
+  if (existingUser) invalidateRoleContext(existingUser.id);
+  if (member.userId) invalidateRoleContext(member.userId);
 
   return NextResponse.json({ member });
 }

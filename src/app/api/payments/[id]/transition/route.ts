@@ -26,7 +26,7 @@ const TRANSITIONS: Record<string, Partial<Record<Action, string>>> = {
 };
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const ctx = await requireRole(req, ['admin', 'gerente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente']);
   if (!isRoleContext(ctx)) return ctx;
   const { id } = await params;
 

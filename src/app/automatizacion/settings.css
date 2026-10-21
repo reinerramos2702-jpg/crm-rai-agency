@@ -1,0 +1,87 @@
+/* Configuración — tarjetas por tema, preferencias y «Próximamente» */
+
+.st-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (min-width: 1024px) { .st-layout { grid-template-columns: 200px minmax(0, 880px); } }
+.st-index { display: none; }
+@media (min-width: 1024px) {
+  .st-index { display: block; position: sticky; top: 16px; padding: 10px; border-radius: 14px; border: 1px solid var(--rai-border); background: var(--rai-card); }
+}
+.st-index ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.st-index a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  color: var(--rai-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.st-index a:focus-visible { outline: 2px solid var(--rai-gold); outline-offset: 1px; }
+@media (hover: hover) { .st-index a:hover { color: var(--rai-gold); background: color-mix(in srgb, var(--rai-gold) 8%, transparent); } }
+
+.st-grid { display: grid; gap: 32px; min-width: 0; }
+.st-section { scroll-margin-top: 16px; }
+.st-section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.st-section-ico { display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px; color: var(--rai-gold); background: color-mix(in srgb, var(--rai-gold) 11%, transparent); border: 1px solid color-mix(in srgb, var(--rai-gold) 28%, transparent); }
+.st-section-title { margin: 0; font-size: 16px; font-weight: 700; }
+.st-section-text { margin: 2px 0 0; font-size: 12px; color: var(--rai-muted); }
+.st-section-body { display: grid; gap: 16px; min-width: 0; }
+
+.st-card { padding: 18px 20px; border-radius: 16px; border: 1px solid var(--rai-border); background: var(--rai-card); }
+.st-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.st-card-title { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 15px; font-weight: 700; }
+.st-card-title svg { color: var(--rai-gold); flex: 0 0 auto; }
+.st-card-text { margin: 6px 0 0; max-width: 560px; font-size: 13px; line-height: 1.5; color: var(--rai-muted); }
+.st-card-side { display: flex; align-items: center; gap: 12px; }
+.st-state { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--rai-muted); white-space: nowrap; }
+.st-inline { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.st-inline input { flex: 1 1 220px; width: auto; min-width: 0; height: 40px; border-radius: 10px; }
+@media (max-width: 520px) { .st-card-head { flex-direction: column; } }
+
+.st-prefs { display: grid; gap: 0; margin-top: 8px; }
+.st-pref { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 20px; padding: 14px 0; border-top: 1px solid var(--rai-border); }
+.st-pref:first-child { border-top: 0; }
+.st-pref-text { flex: 1 1 260px; min-width: 0; }
+.st-pref-text strong { display: block; font-size: 13px; }
+.st-pref-text span { display: block; margin-top: 2px; font-size: 12px; line-height: 1.45; color: var(--rai-muted); }
+.st-pref select.au-select { min-width: 190px; }
+.st-pref--stack { align-items: stretch; }
+.st-pref-field { flex: 1 1 100%; display: grid; gap: 6px; }
+.st-pref-field input { height: 40px; border-radius: 10px; }
+.st-preview { font-size: 12px; color: var(--rai-muted); }
+.st-preview b { color: var(--rai-text); font-weight: 600; }
+.st-foot { display: flex; justify-content: flex-end; margin-top: 4px; }
+
+.st-soon { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); gap: 12px; }
+.st-soon-card { display: grid; gap: 6px; padding: 14px 16px; border-radius: 14px; border: 1px dashed var(--rai-border); background: color-mix(in srgb, var(--rai-muted) 5%, transparent); }
+.st-soon-top { display: flex; align-items: center; gap: 8px; }
+.st-soon-top svg { color: var(--rai-muted); flex: 0 0 auto; }
+.st-soon-top strong { flex: 1; min-width: 0; font-size: 13px; }
+.st-soon-card p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--rai-muted); }
+.st-tag { padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--rai-muted); border: 1px solid var(--rai-border); white-space: nowrap; }
+.st-progress { margin: 10px 0 0; font-size: 12px; color: var(--rai-muted); }
+.st-hidden-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* Impacto, validación y riesgos */
+.st-impact { margin: 8px 0 0; max-width: 560px; font-size: 13px; line-height: 1.5; color: var(--rai-text); }
+.st-field-error { margin: 8px 0 0; font-size: 12px; color: var(--rai-error); }
+.st-inline input[aria-invalid="true"] { border-color: var(--rai-error); }
+.st-subtitle { margin: 16px 0 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--rai-muted); }
+.st-ok { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; color: var(--rai-success); }
+.st-risks { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.st-risk { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--rai-border); font-size: 13px; line-height: 1.5; }
+.st-risk svg { margin-top: 2px; color: var(--rai-muted); }
+.st-risk--high { border-color: color-mix(in srgb, var(--rai-error) 50%, var(--rai-border)); background: color-mix(in srgb, var(--rai-error) 7%, transparent); }
+.st-risk--high svg { color: var(--rai-error); }
+.st-risk--medium { border-color: color-mix(in srgb, var(--rai-warning) 50%, var(--rai-border)); background: color-mix(in srgb, var(--rai-warning) 7%, transparent); }
+.st-risk--medium svg { color: var(--rai-warning); }
+
+/* Importación: lista previa */
+.st-import-list { display: grid; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; max-height: none; }
+.st-import-item { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 13px; overflow-wrap: anywhere; }
+
+.st-saved { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--rai-success); }
+@media (prefers-reduced-motion: no-preference) { .st-saved { animation: fx-pop 0.22s ease-out both; } }

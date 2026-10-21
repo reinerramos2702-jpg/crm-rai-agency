@@ -1,25 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from './db';
-import { getAuth, AuthContext } from './auth';
-import { getOrCreateWorkspace } from './workspace';
-import { ROLES, hasPermission, type Role, type Permission } from './roles-shared';
+import { getAuth, isPlatformSuperAdmin, AuthContext } from './auth';
+import { resolveActiveWorkspace, WorkspaceAccessError, type ActiveWorkspace } from './workspace';
+import { ROLES, ESCALATION_ROLES, hasPermission, type Role, type Permission } from './roles-shared';
+import {
+  isRoleContextCacheEnabled,
+  loadRoleContext,
+  roleContextKey,
+} from './role-context-cache';
 
 export * from './roles-shared';
+export { invalidateRoleContext } from './role-context-cache';
 
 /**
  * Resuelve el rol efectivo de un usuario dentro de un workspace.
- * El owner del workspace es siempre 'admin' (no necesita fila en WorkspaceMember).
- * Si el usuario no tiene membresía activa, se le trata como 'viewer' (acceso mínimo
- * de solo lectura) para no romper invitaciones pendientes ni accesos legacy.
+ * - Email en SUPER_ADMIN_EMAILS → 'super_admin' (único origen de ese rol).
+ * - Owner del workspace → 'admin' (no necesita fila en WorkspaceMember).
+ * - Membresía activa → su rol; un rol de escalada guardado en DB se ignora
+ *   (ESCALATION_ROLES: 'super_admin', 'agency_owner').
+ * - Sin membresía válida → 'viewer' (acceso mínimo de solo lectura).
  */
-export async function getRole(userId: string, ws: { id: string; ownerId: string }): Promise<Role> {
-  if (ws.ownerId === userId) return 'admin';
+export async function getRole(auth: AuthContext, ws: { id: string; ownerId: string }): Promise<Role> {
+  if (isPlatformSuperAdmin(auth.email)) return 'super_admin';
+  if (ws.ownerId === auth.userId) return 'admin';
 
   const member = await prisma.workspaceMember.findFirst({
-    where: { workspaceId: ws.id, userId, status: 'active' },
+    where: { workspaceId: ws.id, userId: auth.userId, status: 'active' },
   });
 
-  if (member && (ROLES as string[]).includes(member.role)) {
+  if (
+    member &&
+    !(ESCALATION_ROLES as string[]).includes(member.role) &&
+    (ROLES as string[]).includes(member.role)
+  ) {
     return member.role as Role;
   }
 
@@ -28,20 +41,39 @@ export async function getRole(userId: string, ws: { id: string; ownerId: string 
 
 export interface RoleContext {
   auth: AuthContext;
-  workspace: { id: string; ownerId: string; name: string };
+  workspace: ActiveWorkspace;
   role: Role;
 }
 
 /**
- * Helper para rutas de API: obtiene auth + workspace + rol del usuario actual.
- * Devuelve null si no está autenticado (el caller debe responder 401).
+ * Helper para rutas de API: obtiene auth + workspace activo + rol del usuario actual.
+ * Devuelve null si no está autenticado o si el workspace pedido vía
+ * X-Workspace-Id no es accesible para este usuario (el caller responde 401).
+ * Mantiene la firma `RoleContext | null` para no romper a los callers existentes.
  */
 export async function getRoleContext(req: NextRequest): Promise<RoleContext | null> {
+  // La identidad se verifica SIEMPRE (JWT firmado y vigente); la caché solo evita
+  // repetir las consultas a la base (workspace + membresía) durante ≤5 s.
   const auth = await getAuth(req);
   if (!auth) return null;
-  const workspace = await getOrCreateWorkspace(auth.userId);
-  const role = await getRole(auth.userId, workspace);
-  return { auth, workspace, role };
+
+  const resolve = async (): Promise<{ workspace: ActiveWorkspace; role: Role } | null> => {
+    let workspace: ActiveWorkspace;
+    try {
+      workspace = await resolveActiveWorkspace(req, auth);
+    } catch (e) {
+      if (e instanceof WorkspaceAccessError) return null;
+      throw e;
+    }
+    const role = await getRole(auth, workspace);
+    return { workspace, role };
+  };
+
+  const resolved = isRoleContextCacheEnabled()
+    ? await loadRoleContext(roleContextKey(auth.userId, auth.email, req.headers?.get?.('x-workspace-id')), resolve)
+    : await resolve();
+
+  return resolved ? { auth, workspace: resolved.workspace, role: resolved.role } : null;
 }
 
 /**

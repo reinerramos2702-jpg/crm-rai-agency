@@ -309,12 +309,16 @@ footer{
 <header>
   <div class="eyebrow">DOCUMENTO VIVO — SE ACTUALIZA CADA SESIÓN</div>
   <h1>RAI Agency CRM<br>Panel de Control</h1>
-  <p class="subtitle">Checklist maestro del proyecto. Planeación en chat, ejecución en Claude Code vía Cowork. Este archivo es la fuente de verdad del avance — no el historial de chat.</p>
+  <p class="subtitle">Checklist maestro y fuente única del backlog del proyecto. La planificación parte de este panel, OpenCode orquesta subagentes especializados y QA verifica antes de cualquier aprobación humana.</p>
 
   <div class="meta-row">
-    <div class="meta-item">REPO: <span>crm-rai-agency</span> <span style="color:var(--dim)">(renombrado 29 ago 2026, antes content-engine-mvp)</span></div>
+    <div class="meta-item">REPO: <span>crm-rai-agency</span></div>
     <div class="meta-item">DEPLOY: <span>Vercel — crm-rai-agency.vercel.app</span></div>
-    <div class="meta-item">ÚLTIMA ACTUALIZACIÓN: <span id="updated-date">14 septiembre 2026 — <a href="https://github.com/reinerramos2702-jpg/crm-rai-agency/pull/11" target="_blank">PR #11</a> (centralización de <code>docs/planning/</code> y <code>docs/ESTADO-SESION.md</code>) MERGEADO a <code>main</code> (commit a64e528). <a href="https://github.com/reinerramos2702-jpg/crm-rai-agency/pull/10" target="_blank">PR #10</a> (fix bug visual de Launchpad — progreso calculado contra la DB en vez de <code>localStorage</code>, incluye limpieza de 2 campañas demo en producción) MERGEADO a <code>main</code> (commit 480500c). Sede única del proyecto pasa a ser esta laptop (<code>C:\Users\PC\Documents\RAI Agency\CRM RAI Agency</code>) — la carpeta de la computadora vieja (<code>C:\Users\RAI Agency\crm-rai-agency</code>) queda de respaldo, sin uso activo. <code>GITHUB_TOKEN</code> inválido de la compu vieja, resuelto. Pendiente: crear el <code>.env</code> real en esta laptop (en curso, valores por pasar aparte). Catálogo GHL: 8 fichas completas. Retargeting Fase 1 construido, PR abierto, esperando credenciales</span></div>
+    <div class="meta-item">RAMA ACTIVA: <span>security/fase-0 <span style="color:var(--dim)">(publicada en GitHub, seguimiento de origin/security/fase-0)</span></span></div>
+    <div class="meta-item">ÚLTIMA ACTUALIZACIÓN: <span id="updated-date">20 septiembre 2026 (sesión Cowork/OpenCode) — <strong>FASE 00 — Seguridad crítica</strong> en rama <code>security/fase-0</code>: sub-fases 0.1-0.3 <strong>cerradas y commiteadas</strong> + Etapa 4 (diseño RLS) + Etapa 5 (CI+ESLint) <strong>cerradas</strong>. 19 sep: Commit 4 (<code>cb2f057</code>) — <code>super_admin</code>/<code>agency_owner</code> en los 60 guards, <code>gerente</code> fuera de <code>/api/keys</code>; staff operativo hotelero (<code>a7743bb</code>); cron fail-closed + revisión high-value env vars (<code>4533e43</code> arc. <code>pipeline/chat</code> protegido); las 19 rutas con acceso a contenido y claves migradas a scope por <code>workspaceId</code> (<code>8fceff5</code> — <code>userId</code> queda solo como autor, claves BYOK por workspace, migración no-destructiva pendiente de backfill). 20 sep: <strong>PRIORIDAD 0 — auth real cerrada en código</strong> (<code>2ee646f</code>): login/registro por invitación, cookie httpOnly, 173/173 tests, ver item. <strong>Etapa 4 — plan RLS listo</strong> (<code>docs/planning/PLAN-RLS.md</code>, commit docs <code>9d2f280</code>): política por tabla, rol <code>crm_app</code> (sin BYPASSRLS) vs <code>crm_service</code> (BYPASSRLS para cron/worker), inyección vía <code>SET LOCAL</code> dentro de <code>$transaction</code>; hallazgo crítico: <code>DATABASE_URL</code> usa superusuario <code>postgres</code> → RLS nunca aplicaría — ejecución sigue bloqueada hasta Plan Mode con Reiner. <strong>Etapa 5 — CI+ESLint cerrada</strong> (<code>4b2c2d9</code>): workflow GitHub Actions (<code>tsc --noEmit</code> + <code>vitest</code> + <code>npm run lint</code> por push/PR), ESLint con reglas de seguridad, 0 errores/67 warnings de deuda legacy. Pendientes externos que requieren a Reiner: ejecutar RLS (Plan Mode), <code>prisma migrate deploy</code> de migraciones pendientes (incluye backfill de claves BYOK), setear <code>CRON_SECRET</code>/<code>SUPER_ADMIN_EMAILS</code>/<code>JWT_SECRET</code> en Vercel, rotación de Stripe key, decisi&oacute;n del plan Hobby de Vercel (cron). Sin push a remoto. <strong>1 oct 2026:</strong> spec cerrada <code>docs/SPEC-login-registro-ui.md</code> (login/registro premium + auto-registro con workspace propio auto-provisionado, decisión de registro actualizada — ver tarjeta de decisión), rama <code>rai-feat-login-registro-ui</code>; queda en ejecución por OpenCode (orquestador + sub-agentes), loop autónomo sin push/merge/deploy hasta aprobación de Reiner. <strong>5-10 oct 2026 (verificado en repo el 10 oct):</strong> rama <code>rai-feat-login-registro-ui</code> en <code>b9687c7</code> (spec v3 + imágenes + ESTADO-SESION), <strong>sin cambios de código</strong> — la implementación del login/registro <strong>aún no arrancó</strong> (OpenCode sigue pendiente de releer la spec v3 y salir de modo Plan). Hidromáticos Oriente: documento de integración app móvil ↔ CRM versionado aparte en la rama local <code>hidromaticos-docs-integracion-crm</code> (<code>35ba210</code>, base <code>origin/security/fase-0</code>), con 9 preguntas bloqueantes sin responder; <strong>trabajo pausado hasta la reunión de Reiner con el cliente</strong>. Nada publicado en remoto; RLS, migraciones remotas, variables de Vercel, merge y deploy siguen bloqueados. <strong>10 oct 2026 (limpieza, aprobada por Reiner):</strong> eliminados 5 documentos obsoletos de <code>docs/</code>, <code>docs/planning/claude-outputs/</code> (cierre 4 sep y 2 prompts de validación, historia superada) y 2 carpetas vacías <code>Claude outputs</code>. <strong>10 oct 2026 (specs):</strong> <code>docs/SPEC-login-registro-ui.md</code> pasa a <strong>v4</strong> (copy del login, aislamiento de tema, <code>acceptTerms</code>, honeypot, UX/a11y del formulario, e2e, tabla de contraste, deuda diferida); nueva <code>docs/SPEC-sistema-visual-premium.md</code> (efectos <code>fx-*</code> para el resto del CRM, rama <code>rai-feat-visual-premium</code>, precondición: login cerrado). Publicación automática IG+FB y endurecimiento del orquestador quedan como pendientes nuevos (sin spec/implementación aún). Sin cambios de código. <strong>10 oct 2026 (spec IG+FB v2.1):</strong> Reiner confirmó cuenta Instagram Business <code>@raiagency__</code> y dominio oficial <code>raiagency.net</code>; sin Página de Facebook confirmada; nuevo slice 7 y decisión D9 (persistir marca del negocio en DB, hoy solo <code>localStorage</code>); formulario Contenido IG del CRM rellenado provisionalmente por Claude en el navegador 2. <strong>11 oct 2026 (sesión Cowork, local, sin push):</strong> staging modo B (schema <code>staging</code> + rol <code>crm_staging</code>) verificado y la app local funciona contra él (registro/login); arreglo de contraste del botón primario (<code>62de918</code>); spec nueva <code>docs/SPEC-middleware-proteccion-paginas.md</code> (decisión B: proteger páginas en servidor); Página de Facebook <em>RAI Agency</em> creada y enlazada a <code>@raiagency__</code>; app Meta <code>RAI Agency Publisher</code> con permisos <code>instagram_business_*</code>, token generado por Reiner (guardado solo en su gestor de contraseñas) y caso de uso «Administra todo en tu página» agregado; spec de publicación <strong>v2.2</strong> (registro del token, <code>authType</code>); login: toggle «Mantener sesión iniciada» (<code>f4b450a</code>, 30 días, 182/182 tests del área), fondo full-bleed cosmos (<code>81e01b1</code>) y script <code>scripts/reset-password.mjs</code> para staging (<code>65b6782</code>). <strong>11 oct (noche):</strong> registro abierto implementado en local (<code>d387b05</code>, 192/192 tests), fondo «amanecer» aplicado y modelo freemium con planes 34/49/67 USD en borrador (<code>docs/SPEC-planes-monetizacion.md</code>); no desplegar el registro abierto sin gating de planes. Nada enviado a OpenCode; RLS, migraciones remotas, Vercel, merge y deploy siguen bloqueados. <strong>15-16 oct 2026 (local, sin push, rama <code>rai-feat-dashboard-premium</code>):</strong> Corte B de programación IG con Meta simulado, Dashboard premium, Guía de Inicio responsive y recorrido guiado premium con botón «?» en 20 módulos; tsc limpio, lint 0 errores, 281 tests. <strong>15-16 oct 2026 (fase efectos + módulos, local, sin push):</strong> caché SWR con precarga y anillo de clic (<code>7e6cc86</code>); base de efectos sin blur, selector de densidad, <code>Skeleton</code> y <code>EmptyState</code> (<code>d73bb05</code>); Nueva Campaña con tarjetas accesibles y borrador auto-guardado (<code>9153856</code>); Launchpad con hito y pulso (<code>98b76ea</code>); Generador con vista guardada (<code>dddac5b</code>). Verificado: tsc 0 errores, eslint 0, 388 tests, 0 desborde de 320 a 1440 px. Nuevo <code>docs/planning/ROADMAP-ESCALABILIDAD.md</code>. <strong>16 oct 2026 (Ola 3, local, sin push):</strong> voz con Retell en modo simulado (<code>4c49cb8</code>), inicio (<code>5e75580</code>), campaña (<code>11e03e9</code>) y generador (<code>9938a33</code>); tsc 0, eslint 0, 737 tests, build de 72 páginas. Decisión de Reiner: voz real primero, luego Configuración general. Push, merge y producción siguen bloqueados.</span></div>
+    <div class="meta-item">ACTUALIZACIÓN 17 OCT (TARDE): <span>arquitectura del ecosistema, carpeta <code>_revisar-obsoletos/</code>, base de conocimiento reutilizable y arreglo del planificador de redes (Ola 4b). Ver sección OLA-4B.</span></div>
+    <div class="meta-item">ACTUALIZACIÓN OPERATIVA: <span>25 septiembre 2026 — árbol local recuperado en <code>d2989f0</code>; rama <code>security/fase-0</code> publicada y sincronizada con GitHub; protocolo nocturno, mantenimiento continuo, skills internas y evaluación de Jev registrados en la sección OPS. El texto histórico anterior se conserva como cierre de las Etapas 1-5.</span></div>
+    <div class="meta-item">TURNO NOCTURNO VALIDADO: <span>25 septiembre 2026 — primera corrida jerárquica completada con orquestador y subagentes backend/frontend/QA en scopes separados; QA revisó después del autor. <code>21b2f5f</code> aisló el inventario por workspace; <code>9e3d3aa</code> eliminó las 67 advertencias de lint; <code>36eaaf3</code> versionó los agentes; <code>c418bef</code> cerró variantes de bypass en guardrails. Validación final: 189/189 tests, <code>tsc --noEmit</code> limpio, ESLint 0 errores/0 warnings y build exitoso de 62 páginas. Rama publicada y sincronizada con <code>origin/security/fase-0</code> hasta <code>c418bef</code>. Único warning no bloqueante: paquete opcional <code>@valkey/valkey-glide</code> de BullMQ. Producción, RLS, migraciones, merge y deploy siguen sin ejecutar.</span></div>
   </div>
 
   <div class="progress-wrap">
@@ -324,6 +328,423 @@ footer{
 </header>
 
 <main>
+
+<!-- FASE 0 SEGURIDAD -->
+<section>
+  <div class="section-head">
+    <span class="phase-num">FASE 00</span>
+    <span class="section-title">Seguridad crítica — RLS + RBAC (rama <code>security/fase-0</code>)</span>
+    <span class="section-note">0.1—0.3 + Etapa 4 (plan RLS) + Etapa 5 (CI/ESLint) cerradas; rama publicada en GitHub el 25 sep — bloques restantes requieren a Reiner: RLS, migraciones, secretos de Vercel, revisión del preview y merge</span>
+  </div>
+  <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:680px;">Abierta 15-16 sep 2026 tras detectar RLS desactivado en las 41 tablas de producción (máxima prioridad, ver abajo) y confirmar que el RBAC no-owner heredado del Bloque 1 (ver FASE 02) seguía sin efecto real. Toda la Fase 0 corre en <strong>modo manual, sin auto mode</strong>, por su carácter crítico (RLS, RBAC, Stripe key, <code>DEV_BYPASS_AUTH</code>) — no cambiar sin confirmación explícita de Reiner. Framework de 4 checkpoints vigente desde esta fase para toda sesión futura: (1) resumen fijo al cerrar cada sub-fase — qué se hizo, qué patrón sigue/introduce, tests, pendientes; (2) justificar en una línea antes de introducir un mecanismo nuevo en vez de reusar uno existente; (3) próxima prioridad post-Fase-0 — CI (<code>tsc --noEmit</code> + <code>vitest run</code> en cada push) y luego ESLint con reglas de seguridad; (4) toda decisión de arquitectura en 3 líneas — opción elegida, alternativas descartadas, motivo del descarte.</p>
+
+  <div class="check-list">
+    <div class="check-item blocked" data-status="blocked">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">🚨 CRÍTICO — RLS desactivado en las 41 tablas de producción</div>
+        <div class="check-desc">Verificado vía Supabase MCP contra <code>bskdozxkgbxifftuulvc</code>: cualquiera con la <code>anon key</code> pública (la misma que usa el frontend) puede leer/escribir cualquier fila de cualquier tenant directo contra Supabase, sin pasar por backend, RBAC ni filtro de <code>workspaceId</code>. Más grave que el RBAC no-owner o las rutas por <code>userId</code> — es la puerta de entrada directa a la base. <strong>Plan de ejecución listo (Etapa 4, <code>docs/planning/PLAN-RLS.md</code>, commit <code>9d2f280</code>):</strong> políticas por tabla (directas <code>workspaceId = current_workspace_id()</code>, transitivas vía subquery, excepciones Workspace/User/WorkspaceMember/AuditEvent), dos roles <code>crm_app</code> (sin BYPASSRLS) y <code>crm_service</code> (BYPASSRLS para cron/worker), inyección del workspace vía <code>SET LOCAL app.current_workspace_id</code> dentro de <code>$transaction</code> por request. <strong>Hallazgo crítico nuevo:</strong> <code>DATABASE_URL</code> usa el superusuario <code>postgres</code> de Supabase → RLS no aplica al superusuario; hay que crear <code>crm_app</code> y mover <code>DATABASE_URL</code>/<code>DIRECT_URL</code> antes de habilitar nada, o RLS daría falsa confianza. Orden de habilitación en 16 pasos con validación por fase y rollback no-destructivo en el doc. <strong>Ejecución sigue bloqueada:</strong> requiere Plan Mode con Reiner antes de crear roles o <code>ENABLE ROW LEVEL SECURITY</code>, y migrar cron (<code>engine.ts</code>) + worker BullMQ a <code>crm_service</code> primero.</div>
+      </div>
+      <span class="tag tag-blocked">plan listo 20 sep — ejecución en Plan Mode (bloqueada)</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Sub-fase 0.1 — Auditoría de seguridad</div>
+        <div class="check-desc"><code>docs/AUDITORIA-SEGURIDAD-15SEP.md</code> creado. Corrigió cifras viejas ("41 tablas/13 rutas") a las reales (39 modelos/16 rutas), documentó 3 rutas no auditadas antes (<code>finalize</code>, <code>retry/[taskId]</code>, <code>webhook/dispatch</code>).</div>
+      </div>
+      <span class="tag tag-decided">cerrada — commiteada en rama local</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Sub-fase 0.2 — Resolución de workspace activo + cierre de <code>DEV_BYPASS_AUTH</code> en producción</div>
+        <div class="check-desc"><code>resolveActiveWorkspace()</code> (<code>src/lib/workspace.ts</code>) es ahora el único punto que resuelve en qué workspace opera cada request — reemplaza <code>getOrCreateWorkspace</code>, que solo miraba ownership e ignoraba <code>WorkspaceMember</code>. Retrocompatible sin header <code>X-Workspace-Id</code>; con header, exige ownership o membresía activa, si no 403/404 explícito, nunca fallback silencioso. <code>isDevBypassActive()</code> (<code>auth.ts</code>) apaga <code>DEV_BYPASS_AUTH</code> si <code>NODE_ENV=production</code>, aunque la variable quede en <code>true</code> por error.</div>
+      </div>
+      <span class="tag tag-decided">cerrada — commiteada en rama local</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Sub-fase 0.3 — RBAC real (<code>super_admin</code> / <code>agency_owner</code> / <code>staff</code>) — CERRADA</div>
+        <div class="check-desc"><strong>Hecho:</strong> <code>super_admin</code> de plataforma vive solo en <code>SUPER_ADMIN_EMAILS</code> (sin campo en DB) — <code>isPlatformSuperAdmin(email)</code> case-insensitive, sin match parcial; <code>getRole()</code> lo chequea primero e ignora explícitamente un <code>super_admin</code> guardado en <code>WorkspaceMember.role</code>; <code>resolveActiveWorkspace()</code> deja cruzar tenant a super_admin solo con header explícito. Hallazgo cerrado de paso: <code>POST /api/team</code> y <code>PATCH /api/team/[id]</code> rechazaban asignar <code>admin</code> pero dejaban pasar <code>super_admin</code> — cerrado con doble capa (rechazo 400 en las rutas + <code>getRole()</code> ignora el valor guardado). Tests: 64 verdes, <code>tsc --noEmit</code> limpio. <code>roles-shared.ts</code> reescrito como fuente única de verdad: <code>ESCALATION_ROLES</code> (<code>super_admin</code>, <code>agency_owner</code>) e <code>INVITABLE_ROLES</code> (<code>gerente</code>, <code>agente</code>, <code>staff</code>, <code>viewer</code>) separan quién puede escalar de quién se puede invitar; <code>MODULE_ACCESS</code> ampliado; <code>hasModuleAccess()</code> pasó a fail-closed (deniega por defecto ante un rol no reconocido en vez de permitir). <strong>"Commit 3, el grande" en curso (18 sep):</strong> migración de las ~19 rutas a <code>requireRole</code>/<code>isRoleContext</code>, roles por ruta según <code>MODULE_ACCESS</code> (GET típico: los 7 roles completos; POST/PATCH/DELETE excluyen <code>viewer</code> y a veces <code>staff</code>) — <code>contacts/route.ts</code> (GET+POST) terminado, <code>snippets/route.ts</code> (GET) en curso, quedan ~17 rutas, modo manual sin excepción. <strong>Decisiones de Plan Mode cerradas hoy (18 sep) para terminar 0.3:</strong> staff en <code>/generador-imagenes</code> (rutas <code>brand-doc</code> y <code>content-grids</code>) mantiene la regla — sin acceso de escritura, solo lectura, mismo patrón que contacts/snippets/notes; y Hallazgo C (ver ítem aparte abajo) se corrige en Commit 4, nunca mezclado con Commit 3. Prompt con los pasos exactos de ambas partes (cierre de Commit 3 + Commit 4 nuevo) ya entregado para Claude Code local, pendiente de que Reiner lo corra. <strong>Falta para cerrar 0.3:</strong> terminar Commit 3; correr Commit 4; bloquear asignación de <code>agency_owner</code> vía Team con el mismo patrón que <code>super_admin</code> (confirmado por Reiner).</div>
+      </div>
+      <span class="tag tag-decided">cerrada — commits 3 y 4 verificados</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Hallazgo C (18 sep) — ~20 rutas ya migradas no reconocen <code>super_admin</code> como rol de escalada</div>
+        <div class="check-desc">Detectado al revisar el lote de rutas migrado en una sesión anterior: siguen comprobando el rol contra listas hardcodeadas viejas que no contemplan <code>super_admin</code> como rol de escalada — un usuario <code>super_admin</code> recibe 403 indebido en esas rutas. Se corrige en un commit aparte, <strong>"Commit 4"</strong>, nunca mezclado con Commit 3, para no mezclar reorganización de rutas con fix de seguridad en el mismo diff. Prompt con los pasos exactos ya entregado para Claude Code local (junto con el cierre de Commit 3), pendiente de que Reiner lo corra. <strong>Cerrado 19 sep 2026:</strong> commit local <code>cb2f057</code>; 30 rutas API y 60 guards auditados, <code>super_admin</code>/<code>agency_owner</code> añadidos en todos y <code>gerente</code> retirado solo de <code>/api/keys</code>. Validación: <code>prisma generate</code>, <code>tsc --noEmit</code> y 80/80 tests verdes.</div>
+      </div>
+      <span class="tag tag-decided">cerrado — cb2f057</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Pendiente — staff sin acceso funcional en módulo hotel (18 sep)</div>
+        <div class="check-desc">Detectado durante la planificación de Commit 4 (Hallazgo C): <code>MODULE_ACCESS</code> le da a <code>staff</code> acceso al módulo <code>/reservas</code> y <code>/pasajeros</code>, pero las rutas de API reales (<code>bookings</code>, <code>guests</code>, <code>rooms</code>, <code>room-types</code>, <code>hotel-kpis</code>) nunca incluyeron a <code>staff</code> en ninguna lista de roles — hoy <code>staff</code> recibe 403 en las 5. No se corrigió en Commit 4 a propósito: es una decisión de producto aparte (falta definir si el alcance de <code>staff</code> ahí es solo lectura o también escritura), no un fix de escalada de <code>super_admin</code>/<code>agency_owner</code> como el resto del hallazgo. Requiere que Reiner defina el alcance antes de tocar código. <strong>Cerrado 19 sep 2026:</strong> staff puede leer/crear/actualizar reservas y huéspedes, consultar KPIs y leer habitaciones para formularios; no puede borrar registros ni configurar habitaciones/tipos. Commit <code>a7743bb</code>, 17 pruebas específicas y suite completa verde.</div>
+      </div>
+      <span class="tag tag-decided">cerrado — a7743bb</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Hallazgo — <code>pipeline/chat</code> sin auth (18 sep)</div>
+        <div class="check-desc">La ruta <code>POST /api/pipeline/chat</code> no tiene ningún chequeo de sesión — cualquiera puede pegarle y usar las API keys de la plataforma (<code>GOOGLE_API_KEY</code>, <code>OPENAI_API_KEY</code>) como proxy abierto de LLM. Riesgo de costo real + exposición. No tocado todavía, prioridad alta, coordinar con la Prioridad 0 de login real. <strong>Cerrado 19 sep 2026:</strong> agregado guard <code>requireRole</code> con roles de campaña centralizados; acceso anónimo, viewer y staff rechazados antes de consumir proveedores. Commit <code>4533e43</code>; pruebas de ruta incluidas.</div>
+      </div>
+      <span class="tag tag-decided">cerrado — 4533e43</span>
+    </div>
+    <div class="check-item blocked" data-status="blocked">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Hallazgo — <code>automations/run-due</code> fail-open (18 sep)</div>
+        <div class="check-desc">Protegida por <code>CRON_SECRET</code>, pero si esa variable de entorno no está seteada en el deploy, la ruta queda sin protección. Falta verificar que <code>CRON_SECRET</code> esté seteada en Vercel producción, y considerar cambiar el chequeo a fail-closed. <strong>Código cerrado 19 sep 2026:</strong> la ruta ahora rechaza con 401 si falta la variable, el header o la coincidencia exacta; 4 pruebas cubren los casos. Commit <code>4533e43</code>. <strong>Bloqueo restante:</strong> confirmar manualmente en Vercel que <code>CRON_SECRET</code> existe, sin revelar su valor.</div>
+      </div>
+      <span class="tag tag-blocked">código listo — verificar Vercel</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">🚨 PRIORIDAD 0 (18 sep) — Auth real: el CRM no tiene login (email+password) — CERRADA 20 sep</div>
+        <div class="check-desc">Auditado el problema y cerrado en código el 20 sep 2026 (commit <code>2ee646f</code>): <code>User.passwordHash</code> (scrypt nativo, sin libs), <code>POST /api/auth/register</code> SOLO por invitación (403 sin invitación; única excepción bootstrap de <code>SUPER_ADMIN_EMAILS</code>), <code>POST /api/auth/login</code> con JWT (<code>signJwt</code>/<code>verifyJwt</code> vía <code>jose</code>) en cookie <code>rai_session</code> httpOnly (nunca localStorage, rate-limit 5/15min por email e IP), páginas <code>/login</code> y <code>/registro</code>, fetch wrapper cliente <code>apiFetch</code> (401 → redirect a /login), <code>getAuth</code> ahora acepta la cookie además del Bearer (SSO externo intacto). 173/173 tests (21 nuevos), <code>tsc --noEmit</code> limpio, schema Prisma válido. <strong>Pendiente no-code:</strong> habilitar la migración <code>20260920120000_add_user_password_hash</code> con <code>prisma migrate deploy</code> aprobado, setear <code>SUPER_ADMIN_EMAILS</code> en prod (sin eso nadie crea la primera cuenta) y <code>JWT_SECRET</code>. Rate-limit es por instancia (Vercel serverless), anotado en código.</div>
+      </div>
+      <span class="tag tag-decided">cerrado en código — 2ee646f</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Login/registro premium + auto-registro con workspace propio</div>
+        <div class="check-desc">Reiner pidió reemplazar el bypass de producción (<code>DEV_BYPASS_AUTH</code> aterrizando directo en el dashboard) por una landing real de login/registro, rediseño visual de alta gama (banner "skyline dorado nocturno", 100% paleta de marca) y <strong>auto-registro abierto con workspace propio auto-provisionado</strong> (decisión nueva, ver tarjeta de decisión actualizada — reemplaza el "solo por invitación" original). Spec cerrada en <code>docs/SPEC-login-registro-ui.md</code>, rama <code>rai-feat-login-registro-ui</code>. Pendiente: ejecución por OpenCode (orquestador + @backend/@frontend/@qa), loop autónomo hasta cumplir los criterios de aceptación de la spec. Al cerrar: commiteado localmente, sin push/merge/deploy hasta aprobación explícita de Reiner. <strong>Actualización 1 oct 2026 (tarde):</strong> imágenes reales ya commiteadas en <code>public/auth/login-bg-desktop.jpg</code> (1672×941) y <code>login-bg-mobile.jpg</code> (941×1672) — escena cósmica dorada-púrpura con logo "RAI Agency" incluido en la imagen (Reiner eligió usarla tal cual, reemplaza el concepto "skyline sin texto/logo" original). Spec actualizada: layout pasa a <strong>full-bleed</strong> (imagen cubre toda la pantalla en desktop y mobile, ya no split-screen), se agrega scrim oscuro fuerte para legibilidad del texto del card, se quita el logo separado de <code>AuthShell</code> (duplicado con el de la imagen), y se cierran animaciones CSS puras (Ken Burns lento en el fondo + fade-in/slide del card, con <code>prefers-reduced-motion</code>). Todo sigue cerrado en <code>docs/SPEC-login-registro-ui.md</code>, sin ambigüedad para el loop. <strong>Revisión 1 oct 2026 (previa a ejecución):</strong> el plan que devolvió el orquestador de OpenCode antes de salir de modo Plan exponía 3 huecos reales — <code>/registro</code> con copy/comentarios de "solo por invitación" (contradice el feature), <code>POST /api/auth/register</code> sin rate-limit (antes gateado por invitación, ahora abierto al público), <code>businessName</code> sin trim/límite de longitud. Los 3 ya están cerrados en la spec (reusa <code>checkRateLimit</code> de <code>@/lib/rate-limit</code>, mismo patrón que login, sin tocar ese archivo). Spec 100% cerrada, loop listo para ejecutar. <strong>Verificación 10 oct 2026:</strong> HEAD <code>b9687c7</code>, <code>git status</code> sin cambios en <code>src/</code>; <code>register/route.ts</code> sigue sin rate-limit ni creación de Workspace, <code>AuthShell.tsx</code> sin fondo ni <code>@keyframes</code>, <code>/registro</code> conserva "solo por invitación". Siguiente paso: en OpenCode releer <code>@docs/SPEC-login-registro-ui.md</code> (v3) y salir de modo Plan; al terminar correr <code>tsc</code>, lint, <code>vitest run</code> y <code>build</code> en Windows y registrar aquí los resultados reales (la VM de Cowork no puede ejecutar vitest). <strong>Spec v4 (10 oct 2026):</strong> hallados y cerrados 2 huecos más — <code>/login</code> también dice "(solo con invitación)" y el tema claro "Perla" rompería el card (se aísla con scope <code>data-auth-shell</code> siempre oscuro). Añadidos: <code>acceptTerms</code> obligatorio, honeypot <code>website</code>, páginas placeholder <code>/terminos</code> y <code>/privacidad</code> (sin texto legal inventado), UX/a11y del formulario (mostrar/ocultar contraseña, medidor de fuerza, <code>autocomplete</code>, <code>aria-live</code>, cuenta atrás 429), e2e <code>tests/e2e/auth-ui.spec.ts</code>, tabla de contraste WCAG AA, LCP medido (no bloqueante), cero dependencias nuevas. Deuda diferida registrada en §7: CAPTCHA/Turnstile, verificación de email, persistir aceptación legal, rate-limit en memoria, cabecera obsoleta de <code>login.spec.ts</code>, texto legal real, política de enumeración en 409.</div>
+      </div>
+      <span class="tag tag-open">spec v4 cerrada — implementación sin iniciar (verificado 10 oct)</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Hidromáticos Oriente — app móvil conectada al CRM (diseño de integración)</div>
+        <div class="check-desc">La app móvil del cliente (Android/iPhone) debe mostrar y escribir en el CRM: citas, calendario, informes y pagos. Propuesta técnica en <code>docs/INTEGRACION-HIDROMATICOS.md</code> (575 líneas), versionada <strong>solo</strong> en la rama local <code>hidromaticos-docs-integracion-crm</code> (<code>35ba210</code>, base <code>origin/security/fase-0</code> porque <code>main</code> no tiene los archivos que el documento cita), separada del trabajo de login. Puntos clave: un Workspace para el cliente con <code>workspaceId</code> tomado del token, <code>CustomerAccount</code> con secreto/audiencia JWT propios y rotación de refresh, API <code>/api/v1/*</code>, citas con restricción de exclusión (<code>btree_gist</code>), eventos de dominio (outbox) + push FCM, comprobantes privados en R2 con URLs firmadas, OCR asíncrono con aprobación de pago solo por staff. <strong>Pendiente:</strong> Reiner debe responder las 9 preguntas bloqueantes (§9) y decidir la base de la rama de implementación (<code>hidromaticos-feat-api-movil-v1</code> propuesta); la planeación de implementación va en un chat nuevo del mismo proyecto. Archivos comerciales sueltos (contrato, propuesta, embudo) están sin versionar en <code>docs/clientes/hidromaticos/</code> (movidos el 10 oct desde <code>Claude outputs/</code>). <strong>PAUSADO por Reiner (10 oct 2026):</strong> no se avanza hasta reunirse con el cliente para que responda las preguntas; el chat de planeación de implementación queda en pausa. Sin código, sin push, sin merge.</div>
+      </div>
+      <span class="tag tag-blocked">PAUSADO — hasta reunión con el cliente</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Bloque 0 — Entorno de staging (Supabase + Vercel Preview separados de producción)</div>
+        <div class="check-desc">Decisión de Reiner (10 oct): armar staging antes de enviar el prompt maestro a OpenCode. Spec en <code>docs/SPEC-entorno-staging.md</code> (v1). Motivo verificado: el CRM tiene <strong>una sola base de datos</strong> (proyecto <code>CRM RAI Agency</code>, us-west-2, organización «CRM RAI Agency» de Supabase; el proyecto <code>wckufllomfmuwxptegvm</code> es de Quadro Café, no del CRM), por lo que toda prueba, migración o registro cae en esa base; el login v4 crea usuarios reales y la spec de publicación necesita una URL HTTPS estable para el planificador. Parte de repositorio (OpenCode, rama <code>rai-chore-staging-entorno</code>): <code>env-check</code>, variable <code>APP_ENV</code>, insignia de entorno, guardia de base de datos, plantilla <code>.env.staging.example</code>, <code>docs/ENTORNOS.md</code> y seed de demostración. Infraestructura R1–R8 (proyecto Supabase, variables Preview en Vercel, Upstash/R2 separados, secretos distintos, redirect URI de Meta, migraciones a staging, secretos de GitHub Actions) la aprueba y provisiona Reiner. <strong>Actualización 11 oct (spec v1.1):</strong> dos modos — B (schema <code>staging</code> + rol limitado, gratis, arranque) y A (proyecto Supabase aparte, destino escalable); mismo código, cambian las URLs. <strong>Verificado el 10 oct en docs oficiales:</strong> plan gratuito de Supabase = 2 proyectos activos y pausa tras 1 semana sin actividad; Vercel Hobby admite rama de staging con variables Preview propias. <strong>No verificado:</strong> a qué base apunta hoy <code>.env.local</code>.</div>
+      </div>
+      <span class="tag tag-open">spec cerrada — infra espera aprobación de Reiner</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Sistema visual premium para el resto del CRM (efectos <code>fx-*</code>)</div>
+        <div class="check-desc">Spec cerrada en <code>docs/SPEC-sistema-visual-premium.md</code> (10 oct 2026): tokens <code>--fx-*</code> y utilidades <code>.fx-*</code> (glass, lift solo con hover real, border-glow, sheen del botón primario, stagger, fondo aurora, glow del item activo del sidebar, halo de estados vacíos, toast glass, anillo <code>:focus-visible</code>, hook <code>useCountUp</code>). Rama <code>rai-feat-visual-premium</code>. <strong>Precondición:</strong> bloque de login cerrado. Reglas: ambos temas, animar solo transform/opacity, <code>prefers-reduced-motion</code>, máximo 2 superficies con <code>backdrop-filter</code> por pantalla, First Load JS ≤ +5 kB, CLS=0, capturas 4 combinaciones (desktop/mobile × oscuro/claro), sin push/merge/deploy.</div>
+      </div>
+      <span class="tag tag-open">spec cerrada — espera cierre del login</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Publicación automática de contenido en Instagram + Facebook (15 posts, historias, calendario)</div>
+        <div class="check-desc">Petición de Reiner (10 oct): programar y publicar automáticamente imágenes desde carpetas <code>día N</code> (imagen + <code>.md</code> con copy/hashtags), historias, y UI de calendario. Estado real verificado: solo existe <code>src/app/api/publish/instagram/route.ts</code> (IG únicamente), modelo <code>WorkspaceMetaConnection</code>, <code>vercel.json</code> con <code>crons: []</code>; la rama <code>rai-feat-calendario-contenido</code> (<code>d6f362d</code>) no está mergeada y usa <code>tenantId</code> vs <code>workspaceId</code>. Hechos de la API de Meta (docs oficiales): Instagram no programa de forma nativa (la app necesita su propio planificador), límite ~100 publicaciones API/24 h, solo JPEG; en Facebook las historias son solo inmediatas y los posts de feed admiten <code>scheduled_publish_time</code>. <strong>Falta:</strong> spec propia (motor de publicación, planificador, FB feed+historias, IG feed+historias, importador <code>día N</code>, UI de calendario), una App de Meta (Reiner "no está seguro" del estado: pendiente chequeo de 3 pasos), cron/worker externo (límites del plan Hobby de Vercel) y aprobaciones de merge/deploy/migración remota. Puente sin código hoy: programación de Meta Business Suite. <strong>Borrador de spec (10 oct):</strong> <code>docs/SPEC-publicacion-contenido-ig-fb.md</code> v1 — 7 slices definidos; <strong>v2 (10 oct):</strong> decisiones D2–D7 cerradas por Reiner (solo cuentas propias en v1 con diseño multi-tenant para que clientes conecten su propia app Meta después; planificador propio IG+FB; disparador GitHub Actions; solo importar imágenes; rescate selectivo de la rama de calendario; 1 post/día 10:00 Caracas por defecto). Verificado 10 oct en developers.facebook.com: app <code>RAI Agency Publisher</code> en modo Desarrollo, Reiner Administrador; GitHub <code>reinerramos2702-jpg</code>; Vercel plan Hobby. <strong>Pendiente bloqueante para Reiner:</strong> D1 pasos 1 y 3 (IG Business/Creator vinculado a Página de Facebook y token con permisos) y secretos/workflow de GitHub (D8). Slices 1–6 son ejecutables con Meta simulado. <strong>v2.1 (10 oct):</strong> Reiner confirmó <code>@raiagency__</code> como Instagram Business; <strong>falta crear una Página de Facebook</strong> (Facebook solo publica en Páginas; el perfil personal no sirve) y vincularla; el login de Instagram por API puede no exigir Página según los docs leídos. Nuevo <strong>slice 7 / D9</strong>: persistir marca y datos del negocio en base de datos por workspace (hoy el formulario Contenido IG guarda solo en <code>localStorage</code> del navegador). Días 1–4 del plan de contenido listos (13 PNG sin <code>.md</code> de copy). <strong>v2.2 (11 oct):</strong> nueva §11 «Registro del token de Meta en el CRM». Hallazgos verificados: (1) el CRM solo conecta por OAuth de <strong>Facebook Login</strong> (<code>graph.facebook.com</code>, <code>me/accounts</code>) y el token de Reiner es de <strong>Instagram Login</strong> (<code>instagram_business_*</code>) → no encajan sin un campo <code>authType</code>; (2) no existe entrada manual de token (se propone <code>PUT /api/workspace/meta/token</code> con cifrado en servidor + campo de pegado en Ajustes); (3) el caso de uso «Administra todo en tu página» fue agregado a la app el 11 oct; los permisos <code>pages_manage_posts</code> y <code>pages_read_engagement</code> siguen sin añadir (esperan autorización de Reiner); (4) duración real del token largo y su renovación sin verificar en docs oficiales. Página de Facebook <em>RAI Agency</em> creada y enlazada a <code>@raiagency__</code>; Reiner es Evaluador en la app. <strong>Contenido listo (verificado en disco, 11 oct):</strong> días 1–4 = 13 PNG 1080×1350 con copy; días 6, 8, 10 con imágenes sin <code>.md</code>; días 5, 7, 9 una imagen sin copy (día 5 solo alternativa); Work sigue generando hasta el día 15 y Claude revisará cada imagen y redactará los copies. <strong>Bloqueos para programar de verdad:</strong> el módulo no existe (sin <code>ScheduledPost</code>/planificador/importador), PNG→JPEG, URL pública de imágenes, producción sin migraciones 10–11, planificador necesita URL desplegada. Commit docs <code>a113ad5</code>. Nada enviado a OpenCode.</div>
+      </div>
+      <span class="tag tag-open">spec v2.2 cerrada — token (§11) y prueba real esperan decisiones de Reiner</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="login-mantener-sesion">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Login: toggle «Mantener sesión iniciada» (sesión de 30 días)</div>
+        <div class="check-desc">Petición de Reiner (11 oct): no volver a escribir la cuenta cada vez. Hallazgo: la cookie ya duraba 7 días fijos, sin opción. Implementado en la rama <code>rai-feat-login-registro-ui</code> (commit local <code>f4b450a</code>): <code>rememberMe: true</code> → cookie persistente de 30 días + JWT de 30 días; sin marcar → cookie de sesión (se borra al cerrar el navegador) + JWT de 12 h; <code>signJwt</code> acepta <code>expiresInSec</code> (por defecto sigue 7 días); módulo <code>src/lib/session-ttl.ts</code>. UI: interruptor premium accesible (<code>role="switch"</code>, brillo dorado, barrido de luz, resorte), ambos temas, <code>prefers-reduced-motion</code>; recuerda la última elección en <code>localStorage</code>. <strong>Evidencia:</strong> 182/182 tests en <code>src/lib/__tests__</code> (login 9, duración de sesión 2), <code>tsc --noEmit</code> limpio, JWT medido: 30 d = 2 592 000 s, 12 h = 43 200 s, defecto = 604 800 s; Reiner lo vio funcionando en <code>localhost:3000/login</code>. <strong>Cambio de comportamiento a notar:</strong> sin marcar la casilla la sesión ya no dura 7 días. <strong>Deuda:</strong> el JWT es sin estado y no hay endpoint de cierre de sesión que lo revoque en servidor; no se probó el tema claro ni el móvil con capturas; no hay flujo de recuperación de clave (se añadió <code>scripts/reset-password.mjs</code> solo para staging, <code>65b6782</code>).</div>
+      </div>
+      <span class="tag tag-decided">hecho local — f4b450a (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="login-fondo-full-bleed">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Fondo full-bleed de /login y /registro (imagen cosmos con robot + logo)</div>
+        <div class="check-desc"><strong>Actualización final 11 oct:</strong> Reiner eligió la imagen «galaxia» (<code>public/auth/login-bg-galaxia.webp</code>, 1672×941), anclada al 62 % vertical para no cortar la cabeza del robot; capa oscura uniforme 38 % y card premium (borde dorado giratorio, cabecera centrada) — commits locales <code>3155b9f</code>, <code>cf64de5</code> y el de la galaxia. <strong>Actualización 11 oct (noche):</strong> Reiner reemplazó la imagen por una menos saturada («amanecer», 1672×941) — <code>public/auth/login-bg-amanecer.webp</code>, commit local <code>d387b05</code>; verificada con capturas reales de <code>/login</code> y <code>/registro</code> (card legible). La imagen 21:9 ya no es bloqueante. Histórico: Imagen recibida de Reiner (1672×941, 16:9) y aplicada en local (commit <code>81e01b1</code>): <code>public/auth/login-bg-cosmos.webp</code> (225 KB, <code>next/image</code> fill + priority), scrim radial, card translúcido, logo suelto solo en móvil (&lt;900 px), zoom lento y entrada del card con <code>prefers-reduced-motion</code>. Verificado con capturas reales de <code>/login</code> y <code>/registro</code>. <strong>Problema detectado por Reiner:</strong> el área visible de su navegador es 1920×826 (2,32:1), más ancha que la imagen (1,78:1) → <code>object-fit: cover</code> recortaba ~24 % de la altura. Mitigación aplicada (<code>b1af734</code>): imagen anclada abajo (<code>object-position: 50% 100%</code>) y zoom reducido a 1,02. <strong>Pendiente:</strong> Reiner genera una imagen 21:9 (≈2,33:1) con logo y robot dentro de zonas seguras; versión móvil 9:16 después. Original guardado en <code>entrada/fondo-login_desktop.png</code>. Ya existen <code>public/auth/login-bg-desktop.jpg</code> y <code>login-bg-mobile.jpg</code> (1 oct) sin usar en código.</div>
+      </div>
+      <span class="tag tag-decided">hecho local — imagen amanecer, d387b05 (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="registro-abierto">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Registro abierto con workspace propio (backend + UI)</div>
+        <div class="check-desc">Decisión de Reiner (11 oct): cualquiera se registra y usa el CRM gratis. <code>POST /api/auth/register</code> crea el workspace del usuario (<code>businessName</code> opcional), exige <code>acceptTerms</code>, honeypot <code>website</code>, rate limit por email e IP (429) y responde 409 si el email ya tiene cuenta (anti account-takeover). Invitación pendiente → se une al workspace invitado. UI <code>/registro</code> actualizada, <code>/login</code> sin «solo con invitación», placeholders <code>/terminos</code> y <code>/privacidad</code>. <strong>Evidencia:</strong> 192/192 tests (registro 13), <code>tsc --noEmit</code> limpio, capturas reales. <strong>No desplegar a producción sin gating de planes.</strong> Falta (spec v4, para OpenCode): verificación de email, e2e, fuerza/mostrar contraseña, a11y restante.</div>
+      </div>
+      <span class="tag tag-decided">hecho local — d387b05 (sin push)</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="monetizacion-freemium-planes">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Modelo freemium y planes de 34 / 49 / 67 USD (spec + gating)</div>
+        <div class="check-desc">Decidido por Reiner: básico gratis; intermedio/avanzado de pago (p. ej. publicación automática IG). Borrador <code>docs/SPEC-planes-monetizacion.md</code> v0.1 con preguntas abiertas (funciones por plan, periodo, proveedor de cobro, límites, prueba gratis, degradación). Sin implementar: requiere <code>Workspace.plan</code> + <code>canUse</code> en servidor + webhook de cobro. <strong>P1 cerrado el 12 oct</strong>: Reiner aprobó el reparto gratis/pago de §2b. <strong>P4 cerrado el 12 oct</strong>: Reiner aprobó la tabla de topes (§2c); pendiente medir el costo real por imagen para fijar el valor del crédito. Bloquea el despliegue del registro abierto.</div>
+      </div>
+      <span class="tag tag-open">P1 y P4 cerrados — espera P2, P3, P5, P6 de Reiner</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="programacion-ig-automatica">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Programar y publicar automático en Instagram (botón Programar + cron)</div>
+        <div class="check-desc">Pedido de Reiner 13 oct: solo Instagram por ahora; el community manager programa un lote, pulsa Programar y el CRM publica solo cada día. Borrador <code>docs/SPEC-programacion-publicacion-instagram.md</code> v0.1 (modelo <code>ScheduledPost</code>, cron protegido, idempotencia, aislamiento por workspace). Requiere: permisos de Meta añadidos (pestaña de Meta congelada, reintentar), URLs públicas de imagen (¿JPEG?), revisar rama remota <code>claude/rai-instagram-crm-automation-ykkwg2</code>. Lote 1 = días 1–15 en <code>Contenido RRSS/Instagram/Plan 31-1102026/salida</code>. <strong>13 oct:</strong> auditoría hecha (config solo en localStorage, interruptor sin backend, handle por defecto de otro negocio, sin cron ni carrusel). Plan en cortes A (config por workspace) → B (carrusel + ScheduledPost + cron) → C (rediseño de interfaz) en §6–7 del spec. Sin implementar; no enviado a OpenCode.</div>
+      </div>
+      <span class="tag tag-open">Corte A verificado en staging (14 oct). Corte B implementado en local con Meta SIMULADO (15 oct, rama rai-feat-programacion-ig, 275 tests): falta aplicar tabla en staging y probarlo en vivo; publicación real pendiente de imágenes públicas y revisión de docs de Meta. Corte C (UI premium + recorrido guiado) hecho y verificado en 5 anchos</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="dashboard-tour-premium">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Dashboard premium + recorrido guiado en todo el CRM</div>
+        <div class="check-desc">Pedido de Reiner (15-16 oct). Dashboard con saludo, accesos rápidos, pulso de Instagram, filtros y diálogo de confirmación propio; Guía de Inicio responsive con pastillas de % uniformes; <code>src/components/tour/</code> (ProductTour premium con foco deslizante, marcas numeradas en cascada, flecha, progreso, teclado y hoja inferior en móvil), <code>TourHost</code> con botón «?» y registro de 20 guías por módulo + recorrido general. Verificado en vivo (0 overflow en 20 rutas a 390 px), tsc limpio, lint 0 errores, 281 tests. Deuda: <code>ContentIGTab.tsx</code> (~1200 líneas) y <code>automatizacion/page.tsx</code> (~1000) por dividir; textos genéricos de módulos sin revisar con Reiner.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="rendimiento-swr-precarga">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Rendimiento: caché SWR en cliente + precarga + caché de 10 s en servidor</div>
+        <div class="check-desc">Las páginas renderizan en ~50 ms; el retraso venía de las APIs remotas. <code>swr-cache.ts</code> y <code>use-cached-json.ts</code> pintan al instante lo último conocido y actualizan por detrás; precarga al pasar el mouse, enfocar o tocar un enlace del menú (<code>route-data.ts</code>); caché de 10 s por workspace para los conteos de <code>/api/launchpad</code>. <strong>Evidencia:</strong> commit 7e6cc86; ~225 ms al abrir Launchpad y Generador en modo desarrollo; tsc 0, eslint 0.</div>
+      </div>
+      <span class="tag tag-decided">hecho local — 7e6cc86 (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="clickfx-micro-efectos">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">ClickFx (anillo de clic) y micro-efectos de presión y foco</div>
+        <div class="check-desc">Anillo dorado discreto al hacer clic o tocar (máx. 4 a la vez), presión <code>:active</code>, elevación suave de tarjetas y anillo de foco en campos; solo <code>transform</code>/<code>opacity</code>, sin blur, desactivado con <code>prefers-reduced-motion</code>. <strong>Evidencia:</strong> commit 7e6cc86. <strong>Limitación:</strong> no se vio en vivo porque el Chrome de pruebas tiene reduced-motion activo; verificar a mano en un navegador normal.</div>
+      </div>
+      <span class="tag tag-decided">hecho local — 7e6cc86; falta verlo en vivo</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="base-efectos-densidad">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Base de efectos sin blur + selector de densidad + Skeleton y EmptyState compartidos</div>
+        <div class="check-desc"><code>src/styles/effects.css</code> (shimmer, puntos de estado, sombras de profundidad, acciones al hover), selector de densidad Compacta/Estándar/Espaciosa (<code>DensityToggle</code>, <code>html[data-density]</code>), componentes <code>Skeleton</code> y <code>EmptyState</code>, y registro de efectos adoptados y rechazados en <code>docs/DISENO-EFECTOS.md</code>. <strong>Evidencia:</strong> commit d73bb05; 388 tests (34 archivos), tsc 0, eslint 0.</div>
+      </div>
+      <span class="tag tag-decided">hecho local — d73bb05 (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="campana-radiocards-borrador">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Nueva Campaña: tarjetas de pipeline accesibles, borrador auto-guardado y campos progresivos</div>
+        <div class="check-desc">Tarjetas de pipeline como <code>radiogroup</code> accesible; borrador auto-guardado (7 días) con restaurar o descartar; campos opcionales que aparecen de forma progresiva. <strong>Evidencia:</strong> commit 9153856; 0 desborde horizontal a 320/390/768/1024/1440 en <code>/campaign/new</code>. Deuda: <code>src/app/campaign/new/page.tsx</code> (~1130 líneas) por dividir (ver ítem pendiente).</div>
+      </div>
+      <span class="tag tag-decided">hecho local — 9153856 (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="launchpad-hito-pulso">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Launchpad: banner de hito al 100 %, pulso de sincronización y estados por ítem</div>
+        <div class="check-desc">Banner de hito al completar el 100 %, pulso de sincronización, esqueleto de carga, rebote del check solo en la transición y punto de estado por ítem. <strong>Evidencia:</strong> commit 98b76ea; 0 desborde en <code>/launchpad</code> a 5 anchos; tsc 0, eslint 0.</div>
+      </div>
+      <span class="tag tag-decided">hecho local — 98b76ea (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="generador-vista-guardada">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Generador de imágenes: vista guardada con buscador, chips de estado y orden</div>
+        <div class="check-desc">Buscador, chips de estado con contadores y orden; acciones al hover; esqueleto y estado vacío compartidos; corrección de la elevación de tarjetas. <strong>Evidencia:</strong> commit dddac5b; 0 desborde en <code>/generador-imagenes</code> a 5 anchos; 388 tests, tsc 0, eslint 0.</div>
+      </div>
+      <span class="tag tag-decided">hecho local — dddac5b (sin push)</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="swr-otros-modulos">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Aplicar <code>useCachedJson</code> (SWR) a Calendario, Contactos y Conversaciones</div>
+        <div class="check-desc">Hoy solo Launchpad y Generador usan la caché SWR. Para sumar un módulo basta añadir su ruta y endpoints a <code>ROUTE_DATA</code> en <code>route-data.ts</code> y cambiar su carga por <code>useCachedJson</code>. Medir antes y después en <code>next build</code> + <code>next start</code>.</div>
+      </div>
+      <span class="tag tag-open">pendiente — siguiente corte de rendimiento</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="atajos-n-esc">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Atajos de teclado <code>N</code> (nuevo) y <code>Esc</code> (cerrar)</div>
+        <div class="check-desc">Propuesta pendiente de implementar: <code>N</code> abre la creación en el módulo activo y <code>Esc</code> cierra paneles y diálogos de forma uniforme. Debe ignorarse cuando el foco está en un campo de texto y registrarse en la paleta Ctrl+K. Siguen sin implementar también migas de pan, centro de actividad y badges de menú.</div>
+      </div>
+      <span class="tag tag-open">pendiente — sin spec</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="bloqueo-optimista-auditlog">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Bloqueo optimista (versión por fila) + tabla <code>AuditLog</code></div>
+        <div class="check-desc">Integridad antes de abrir el registro a más usuarios (<code>docs/planning/ROADMAP-ESCALABILIDAD.md</code>, fase 2): <code>version</code>/<code>updatedAt</code> comparado en PATCH de contactos, campañas y marca con UI de conflicto; <code>AuditLog</code> inmutable (usuario, workspace, acción, antes/después, IP, fecha), empezando por claves, planes y borrados. Requiere migración: no se ejecuta sin aprobación de Reiner.</div>
+      </div>
+      <span class="tag tag-open">pendiente — backlog (migración requiere aprobación)</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="dividir-campaign-new">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Dividir <code>src/app/campaign/new/page.tsx</code> (~1130 líneas) por sección</div>
+        <div class="check-desc">Corte de refactor sin cambio de comportamiento, con pruebas de humo. Misma deuda, en cortes aparte: <code>ContentIGTab.tsx</code> (~1200 líneas) y <code>automatizacion/page.tsx</code> (~1000).</div>
+      </div>
+      <span class="tag tag-open">pendiente — deuda de tamaño</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="paquete-legal-abogado">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Paquete legal: consentimientos, derecho al olvido y ToS/SLA con revisión de abogado</div>
+        <div class="check-desc">Borrador de plantillas de consentimiento (opt-in/opt-out), política de retención por módulo, exportación y borrado por contacto, y términos de servicio, según <code>ROADMAP-ESCALABILIDAD.md</code> §3. No es asesoría legal: Reiner debe validarlo con un abogado de datos y privacidad antes del despliegue comercial. Hoy <code>/terminos</code> y <code>/privacidad</code> son placeholders.</div>
+      </div>
+      <span class="tag tag-open">pendiente — requiere abogado</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="recuperar-contrasena">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Recuperar contraseña por correo o teléfono + sesión de 30 días por defecto</div>
+        <div class="check-desc">Pedido de Reiner (11 oct). <code>/recuperar</code> (pestañas Correo/Teléfono), <code>/restablecer</code>, <code>POST /api/auth/forgot-password</code> y <code>/reset-password</code>; token de 256 bits de un solo uso (solo sha256 en DB, 30 min), respuesta genérica anti-enumeración, rate limit; teléfono opcional en el registro. «Mantener sesión iniciada» ahora viene activado por defecto (30 días). Spec: <code>docs/SPEC-recuperar-contrasena.md</code>. <strong>Evidencia:</strong> 203/203 tests, <code>tsc</code> limpio, capturas reales. <strong>12 oct:</strong> dominio <code>raiagency.net</code> agregado en Resend (faltan los registros DNS en Cloudflare — «Auto configure» lo hace Reiner con un clic de autorización) y migración lista en el editor SQL de Supabase solo para el esquema <code>staging</code>; el clic final de «Run without RLS» lo bloqueó el clasificador de seguridad y queda para Reiner. <strong>Pendiente (Reiner):</strong> confirmar esa migración en staging, crear cuenta gratis en Resend, verificar <code>raiagency.net</code> y poner <code>RESEND_API_KEY</code> + <code>EMAIL_FROM</code> (el código ya envía por Resend, 208/208 tests); SMS sigue pendiente (no hay opción gratuita). Deuda: sin revocación de sesiones al cambiar clave.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push) — envío real pendiente de proveedor</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="meta-caso-uso-paginas">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Meta: caso de uso «Administra todo en tu página» agregado a la app</div>
+        <div class="check-desc">Autorizado por Reiner (opción A, 11 oct) y ejecutado por Claude en el navegador 2; <strong>verificado en pantalla:</strong> <code>RAI Agency Publisher</code> ahora lista 2 casos de uso (Instagram + Páginas). Permisos ya en «Listo para prueba»: <code>pages_show_list</code>, <code>public_profile</code>, <code>business_management</code>. Disponibles y <strong>no agregados</strong>: <code>pages_manage_posts</code> (publicar en la Página), <code>pages_read_engagement</code>, <code>pages_manage_engagement</code>, <code>pages_manage_metadata</code>, <code>pages_read_user_content</code>, <code>read_insights</code>. No se tocó el caso de uso Instagram, el token ni los roles. Registrado en spec de publicación §11.1.</div>
+      </div>
+      <span class="tag tag-decided">hecho 11 oct — verificado en pantalla</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="meta-permisos-paginas">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Meta: añadir permisos <code>pages_manage_posts</code> + <code>pages_read_engagement</code> y generar token de Página</div>
+        <div class="check-desc">Mínimo para publicar en la Página de Facebook <em>RAI Agency</em> con el planificador (spec §11). Requiere autorización explícita de Reiner antes de pulsar «Añadir»; luego Reiner genera el token y lo guarda en su gestor de contraseñas (nunca en chat ni en el repo). Duración del token y renovación siguen sin verificar en docs oficiales.</div>
+      </div>
+      <span class="tag tag-open">espera autorización de Reiner</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="contenido-revision-copies-5-15">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Revisar imágenes de Work (días 5–15) y redactar los copies</div>
+        <div class="check-desc">Work genera las imágenes hasta el día 15 (11 oct). Claude revisa cada imagen (errores de texto, logo, esquina inferior derecha, formato 1080×1350, sin contador ni marca de agua) y redacta el copy de cada día alineado a <code>PLAN-AUTORIDAD-B2B-31-dias.md</code>, sin inventar cifras ni testimonios. Los días 1–4 ya tienen copy y QA (<code>_QA-dias-01-04.md</code>). Salida esperada: <code>dia-NN_copy.md</code> por día + QA ampliado.</div>
+      </div>
+      <span class="tag tag-open">pendiente — cuando Work termine</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Orquestador director autónomo + skill reutilizable (endurecimiento del proceso)</div>
+        <div class="check-desc">Objetivo de Reiner (10 oct): un orquestador con reglas obligatorias fijas e inmutables que lleve en la mano este panel y <code>roadmap-agentes-rai.html</code>, dirija a los demás agentes (que le consultan), verifique todo contra el panel y trabaje con mínima interacción, partiendo de un "plan gigante" generado por OpenCode; además, convertir el proceso en una skill reutilizable (se entrega una ruta de HTML y corre en cualquier proyecto). Auditoría de <code>.opencode/agent/orchestrator.md</code>: tiene <code>edit: allow</code> y <code>git *: ask</code>; se proponen mejoras (gates independientes de verificación, <code>scripts/gate</code>, <code>scripts/panel-check</code>, atributos <code>data-*</code> en el panel, bloqueo de edición de archivos de reglas, <code>CODEOWNERS</code>, detección de bucles atascados). <strong>Cualquier cambio que altere permisos/guardrails requiere aprobación explícita de Reiner.</strong> No pegar nada en OpenCode hasta cerrar las specs y decidir el orden. <strong>Aprobado por Reiner (10 oct) y preparado en rama local <code>rai-chore-orquestador-guardrails</code> (<code>754ec87</code>, sin push, sin checkout):</strong> <code>scripts/gate.mjs</code>, <code>scripts/panel-check.mjs</code> (probado contra este panel: 0 errores, 27 avisos de ítems históricos), <code>scripts/rules-guard.mjs</code> + <code>.rai-rules.lock</code> y sección de reglas inmutables en <code>orchestrator.md</code>; ver <code>docs/planning/GUARDRAILS-ORQUESTADOR.md</code>. Pendiente: <code>CODEOWNERS</code> (falta usuario de GitHub de Reiner), añadir los checks a <code>ci.yml</code>, <code>data-id</code> por ítem, y que Reiner revise el diff antes de que OpenCode use la rama. Gate no ejecutado completo (tsc/lint/vitest/build requieren Windows).</div>
+      </div>
+      <span class="tag tag-open">aprobado — rama lista para revisión de Reiner</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Rutas API que filtran por <code>userId</code> en vez de <code>workspaceId</code> (hallazgo previo, 5 sep)</div>
+        <div class="check-desc">No explotable hoy, misma clase de riesgo que el RLS desactivado y el RBAC no-owner. Distinto del hallazgo de las 19 rutas sin <code>getRoleContext</code> de la auditoría 0.1 — revisar ambos juntos, mismo esfuerzo de arquitectura de acceso por workspace. <strong>Cerrado en código 19 sep 2026:</strong> la auditoría actual encontró 16 rutas directas y 3 accesos indirectos a claves; todos migrados a <code>ctx.workspace.id</code>. <code>userId</code> queda solo como autor/actor, agentes y worker reciben workspace, y las claves BYOK pasan a scope por workspace. Commit <code>8fceff5</code>; 152/152 tests verdes, TypeScript y schema Prisma válidos.</div>
+      </div>
+      <span class="tag tag-decided">cerrado en código — 8fceff5</span>
+    </div>
+    <div class="check-item blocked" data-status="blocked">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Backfill verificado de claves BYOK legacy antes de exigir <code>ApiKey.workspaceId</code></div>
+        <div class="check-desc">La migración <code>20260919120000_require_apikey_workspace_scope</code> es no destructiva y aborta si existe cualquier clave con <code>workspaceId IS NULL</code>; no copia, elige ni borra credenciales. Requiere inspeccionar producción, asignar cada clave legacy a su workspace real con aprobación manual y recién después ejecutar <code>prisma migrate deploy</code>. No se ejecutó SQL ni migración contra producción.</div>
+      </div>
+      <span class="tag tag-blocked">requiere datos y migrate deploy aprobado</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Confirmar del lado del SSO que los emails del JWT vienen verificados</div>
+        <div class="check-desc">Supuesto de seguridad detrás de <code>SUPER_ADMIN_EMAILS</code> en producción — documentado, no confirmado aún.</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Subir a <code>main</code> el commit local <code>96ee2c8</code> (panel-control) antes del PR de Fase 0</div>
+        <div class="check-desc">Para que no aparezca mezclado en el diff del PR de seguridad cuando se abra.</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Rotar la clave Stripe expuesta en <code>DEV_BYPASS_AUTH</code></div>
+        <div class="check-desc">Acción manual de Reiner, fuera de Claude Code — no automatizable desde acá.</div>
+      </div>
+      <span class="tag tag-open">acción manual de Reiner</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Post-Fase-0: CI (GitHub Actions) + ESLint con reglas de seguridad</div>
+        <div class="check-desc"><strong>Cerrado 20 sep 2026 (Etapa 5, commit <code>4b2c2d9</code>) y saneado 25 sep (commit local <code>9e3d3aa</code>):</strong> workflow CI en <code>.github/workflows/ci.yml</code> — <code>tsc --noEmit</code> + <code>vitest run</code> + <code>npm run lint</code> en cada push/PR; ESLint (<code>.eslintrc.cjs</code>, plugins security + react-hooks + @next/next) mantiene reglas de seguridad en error. Las 67 advertencias legacy fueron eliminadas sin cambio funcional. QA final de la corrida: 189/189 tests, typecheck limpio, ESLint 0 errores/0 warnings y build exitoso de 62 páginas; persiste solo el warning no bloqueante de BullMQ por el paquete opcional <code>@valkey/valkey-glide</code>.</div>
+      </div>
+      <span class="tag tag-decided">cerrado — 4b2c2d9 + 9e3d3aa</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Limpieza de raíz del repo — docs sueltos organizados</div>
+        <div class="check-desc">11 <code>.md</code> que vivían sueltos en la raíz (<code>ARCHITECTURE.md</code>, <code>BACKLOG_NEXT_SESSION.md</code>, <code>BRAND_GUIDE.md</code>, <code>CONTEXT.md</code>, <code>HANDOFF.md</code>, <code>historial-entregas.md</code>, <code>MEMORY.md</code>, <code>PROJECT_MEMORY.md</code>, <code>ROADMAP_AUTOMATIZACION.md</code>, <code>TUTORIAL_PROMPTS.md</code>, <code>TareasPorHacer.md</code>) movidos a <code>docs/</code> (<strong>10 oct 2026:</strong> eliminados por obsoletos <code>ARCHITECTURE.md</code>, <code>BACKLOG_NEXT_SESSION.md</code>, <code>HANDOFF.md</code>, <code>PROJECT_MEMORY.md</code> y <code>TareasPorHacer.md</code>, que solo contenían punteros; recuperables desde Git); <code>seed-brand-doc.mjs</code> movido a <code>scripts/</code>; <code>synctest.txt</code> (residuo de prueba de sync de OneDrive) borrado. <code>CLAUDE.md</code> se dejó intacto en la raíz a propósito — Claude Code lo lee específicamente de ahí. Ejecutado vía script de PowerShell corrido por Reiner en la terminal local. Pendiente: commitear este cambio (queda separado del commit de RBAC de la 0.3, para no mezclar reorganización de archivos con cambios de seguridad en el mismo diff).</div>
+      </div>
+      <span class="tag tag-decided">hecho — pendiente de commit</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Migración de flujo de trabajo a OpenCode — archivos entregados (19 sep)</div>
+        <div class="check-desc">Reiner pidió reproducir en OpenCode (modelo GPT-5.6 &quot;Sol&quot;, app RAI Flow) el flujo que usaba en Claude Code: 5 skills personalizadas (<code>cc-mentor</code>, <code>bloques-info-tareas</code>, <code>git-buenas-practicas</code>, <code>checkpoint-limpieza-sesion-cli</code>, <code>cierre-continuidad-sesion</code>) más un prompt de Agente Orquestador autónomo cíclico basado en un roadmap. Entregado y copiado directo al repo vía Cowork (puente de dispositivo, sin shell): <code>AGENTS.md</code> (raíz, fusiona los 5 skills reales leídos del filesystem de skills — OpenCode no dispara por descripción como el Skill tool de Claude, así que queda todo siempre cargado), <code>ROADMAP.md</code> (raíz, pre-cargado con el backlog real de este mismo panel, no un template genérico), <code>.opencode/agent/orchestrator.md</code> (ciclo: leer roadmap → delegar en sub-agentes → validar → código final limpio y depurado sin excepción → marcar tarea y documentar → commit local), <code>.opencode/agent/{backend,frontend,qa}.md</code> (sub-agentes de dominio) y <code>.opencode/command/cierre.md</code> (equivalente a "New session"). Se sacó el modelo hardcodeado a Anthropic de los 4 agentes para que hereden el GPT-5.6 Sol ya seleccionado. <strong>Guardrails mantenidos a propósito</strong> pese a que el prompt original pedía autonomía total sin preguntar salvo error crítico: RLS (bloque 0 del roadmap) marcado no-autoejecutable, requiere Plan Mode explícito; <code>git push</code>, merge a <code>main</code> y <code>wrangler deploy</code> siempre piden confirmación (regla fija de <code>git-buenas-practicas</code>); <code>prisma migrate dev</code> contra <code>.env.local</code> bloqueado (<code>deny</code>) en el permission config. <strong>Sin confirmar todavía:</strong> resultado real del primer ciclo <code>@plan</code>/<code>@orchestrator</code>, y si el permission config de <code>bash</code> con patrones glob efectivamente frena push/merge/deploy en un caso real (sintaxis tomada de la documentación oficial de OpenCode, no verificada en producción). Nota aparte: existe también <code>docs/planning/roadmap-agentes-rai.html</code>, documento distinto de un proyecto separado (agente comercial WhatsApp/Instagram + asistente Telegram de RAI Agency) — no se fusionó con este panel porque son fuentes de verdad de proyectos distintos.</div>
+        <div class="check-desc"><strong>Actualización 25 sep 2026:</strong> primera corrida real confirmada con scopes separados y revisión QA posterior al autor. Los guardrails fueron corregidos para Vercel, migraciones, push/merge y comandos destructivos, y quedaron versionados junto con <code>AGENTS.md</code> en el commit local <code>36eaaf3</code>. <code>ROADMAP.md</code> queda deprecado; este panel es la única fuente de pendientes, y <code>roadmap-agentes-rai.html</code> describe exclusivamente el sistema de agentes de este CRM. No se ejecutaron push, merge, deploy ni migraciones.</div>
+      </div>
+      <span class="tag tag-decided">hecho — corrida real + 36eaaf3</span>
+    </div>
+  </div>
+
+  <div class="decision-grid" style="margin-top:20px;">
+    <div class="decision-card">
+      <h3>super_admin de plataforma</h3>
+      <p><strong>Elegido:</strong> env var <code>SUPER_ADMIN_EMAILS</code>, sin campo en <code>User</code>. <strong>Descartado:</strong> campo/rol en DB con migración. <strong>Motivo:</strong> evita migración en medio de Fase 0 crítica — revisar a campo en DB si crece el número de super admins o hace falta auditoría de altas/bajas desde UI.</p>
+    </div>
+    <div class="decision-card">
+      <h3>agency_owner — alcance</h3>
+      <p><strong>Elegido:</strong> todos los permisos, pero solo dentro de su propio workspace, sin bypass cross-tenant. <strong>Descartado:</strong> tratarlo como equivalente a super_admin. <strong>Motivo:</strong> cross-tenant queda exclusivo de super_admin — un agency_owner comprometido no debe poder ver otros tenants.</p>
+    </div>
+    <div class="decision-card">
+      <h3>staff — permisos</h3>
+      <p><strong>Elegido:</strong> sin acceso a Pagos; en Configuración, máximo lectura, nunca edición. <strong>Descartado:</strong> heredar los mismos permisos que agente/gerente sin diferenciar. <strong>Motivo:</strong> rol de menor confianza, no debe tocar dinero ni configuración crítica del workspace.</p>
+    </div>
+    <div class="decision-card">
+      <h3>Aislamiento multi-negocio: RAI Agency + Quadro Café</h3>
+      <p><strong>Elegido:</strong> un solo Postgres multi-tenant (<code>Workspace</code>/<code>WorkspaceMember</code>), no DBs separadas; Quadro Café espera hasta que RLS esté diseñado y probado antes de activarse. <strong>Descartado:</strong> DB separada por negocio y activar empleados de Quadro Café mientras RLS siga apagado. <strong>Motivo:</strong> preservar el aislamiento entre tenants antes de incorporar usuarios externos.</p>
+    </div>
+    <div class="decision-card">
+      <h3>staff — operaciones hoteleras</h3>
+      <p><strong>Elegido:</strong> permitir operaciones diarias sobre reservas y huéspedes, sin acceso a configuración de habitaciones ni tipos de habitación. <strong>Descartado:</strong> solo lectura y escritura completa del módulo hotel. <strong>Motivo:</strong> staff necesita operar el día a día sin poder alterar la configuración estructural del inventario.</p>
+    </div>
+    <div class="decision-card">
+      <h3>Auth real — registro</h3>
+      <p><strong>Elegido:</strong> registro solo por invitación. <strong>Descartado:</strong> registro público y alta manual sin enlace verificable. <strong>Motivo:</strong> impedir creación no autorizada de usuarios o workspaces y reutilizar el flujo de invitaciones del equipo.</p>
+    </div>
+    <div class="decision-card">
+      <h3>Auth real — registro (actualizado 1 oct 2026)</h3>
+      <p><strong>Elegido:</strong> auto-registro abierto — cualquiera que abra el link del producto se crea su cuenta y recibe un <code>Workspace</code> propio auto-provisionado (queda como owner, sin fila en <code>WorkspaceMember</code>, mismo patrón que ya resuelve <code>getRole()</code> para el ownership). <strong>Descartado:</strong> mantener registro solo por invitación (decisión original arriba) con 403 a quien no tenga invitación pendiente. <strong>Motivo:</strong> Reiner decidió que el producto necesita auto-onboarding estándar de SaaS — cualquier visitante del link se registra solo, sin fricción de invitación manual; la persistencia en DB de cada registro alcanza como respaldo, no se requiere notificación externa (Telegram u otro canal).</p>
+    </div>
+    <div class="decision-card">
+      <h3>staff en /generador-imagenes</h3>
+      <p><strong>Elegido:</strong> mantener la regla ya usada en contacts/snippets/notes — staff sin acceso de escritura, solo lectura, en las rutas <code>brand-doc</code> y <code>content-grids</code>. <strong>Descartado:</strong> dar a staff una excepción de escritura en este módulo. <strong>Motivo:</strong> consistencia con el patrón de permisos ya validado en Commit 3 — no crear un caso especial por módulo.</p>
+    </div>
+    <div class="decision-card">
+      <h3>Hallazgo C — Commit 4 separado de Commit 3</h3>
+      <p><strong>Elegido:</strong> corregir en un commit aparte ("Commit 4") las ~20 rutas ya migradas que no reconocen <code>super_admin</code> como rol de escalada. <strong>Descartado:</strong> incluir el fix dentro del mismo Commit 3. <strong>Motivo:</strong> no mezclar la reorganización de rutas (Commit 3) con un fix de seguridad (Commit 4) en el mismo diff.</p>
+    </div>
+    <div class="decision-card">
+      <h3>Migración de flujo Claude Code → OpenCode (19 sep)</h3>
+      <p><strong>Elegido:</strong> migrar el flujo de trabajo (skills + orquestador) a OpenCode con los guardrails de seguridad mantenidos intactos (RLS, push/merge/deploy, migrate dev siguen pidiendo confirmación explícita). <strong>Descartado:</strong> la "autonomía total, no preguntar salvo error crítico" tal como venía en el prompt de orquestador original que trajo Reiner. <strong>Motivo:</strong> las reglas de <code>git-buenas-practicas</code> y el hallazgo crítico de RLS ya estaban establecidas antes de hoy por motivos concretos (Reiner trabaja por capturas, RLS apagado en 41 tablas) — un prompt genérico de orquestador no las reemplaza.</p>
+    </div>
+    <div class="decision-card">
+      <h3>Base de la documentación de Hidromáticos (5 oct)</h3>
+      <p><strong>Elegido:</strong> rama <code>hidromaticos-docs-integracion-crm</code> creada desde <code>origin/security/fase-0</code> (<code>69277fb</code>) con un único archivo, sin mezclar con el login. <strong>Descartado:</strong> partir de <code>main</code> (<code>origin/main</code> <code>16d2476</code> solo añade el workflow <code>claude-review.yml</code> y no contiene <code>PLAN-RLS.md</code>, <code>AGENTS.md</code>, <code>rate-limit.ts</code> ni la ruta de login que el documento cita) y commitear en la rama del login. <strong>Reversible:</strong> sí, es una rama local sin publicar.</p>
+    </div>
+    <div class="decision-card">
+      <h3>Specs: login v4 + sistema visual premium aparte (10 oct)</h3>
+      <p><strong>Elegido:</strong> endurecer el login en <code>SPEC-login-registro-ui.md</code> (v4) y llevar los efectos premium de otras pantallas a <code>SPEC-sistema-visual-premium.md</code> (bloque posterior). <strong>Descartado:</strong> mezclar ambos en una sola spec. <strong>Motivo:</strong> mantener el bloque de login acotado y verificable; los efectos globales tocan todo el CRM y requieren su propia rama, criterios y capturas. Hidromáticos sigue pausado por decisión de Reiner.</p>
+    </div>
+  </div>
+</section>
 
 <!-- FASE 1 -->
 <section>
@@ -474,13 +895,13 @@ footer{
       </div>
       <span class="tag tag-decided">mergeado</span>
     </div>
-    <div class="check-item" data-status="pending">
+    <div class="check-item done" data-status="done">
       <div class="checkbox"></div>
       <div class="check-body">
-        <div class="check-title">RBAC no-owner desconectado del flujo real — PRIORIDAD ALTA (nuevo, 5 sep)</div>
-        <div class="check-desc"><code>getRoleContext</code> siempre resuelve al workspace propio del usuario autenticado — los roles gerente/agente/viewer no restringen nada todavía, todo usuario actúa como admin de facto de "su" workspace. No es fuga entre tenants distintos, pero no vender roles con permisos como funcionales hasta resolverlo. Reiner decidió (5 sep) priorizar el arreglo ya — requiere resolución de workspace activo para no-owners (cambio de arquitectura). Plan Mode entregado, pendiente de ejecutar. Incluye de paso las 13 rutas que filtran por <code>userId</code> en vez de <code>workspaceId</code> (mismo esfuerzo).</div>
+        <div class="check-title">RBAC no-owner desconectado del flujo real — resuelto estructuralmente en FASE 00</div>
+        <div class="check-desc"><code>getRoleContext</code> siempre resolvía al workspace propio del usuario autenticado — los roles gerente/agente/viewer no restringían nada, todo usuario actuaba como admin de facto de "su" workspace. Resuelto por <code>resolveActiveWorkspace()</code> (sub-fase 0.2 de FASE 00, ver más arriba): ahora exige ownership o membresía activa para operar sobre un workspace ajeno, nunca fallback silencioso. Falta completar la matriz de permisos por rol (<code>MODULE_ACCESS</code>/<code>PERMISSIONS_BY_ROLE</code>) para los 3 roles nuevos — eso sigue abierto en la sub-fase 0.3. Las 13 rutas que filtran por <code>userId</code> en vez de <code>workspaceId</code> siguen pendientes, ver ítem aparte en FASE 00.</div>
       </div>
-      <span class="tag tag-open">plan entregado, prioridad alta</span>
+      <span class="tag tag-decided">resuelto — ver FASE 00</span>
     </div>
     <div class="check-item" data-status="pending">
       <div class="checkbox"></div>
@@ -554,6 +975,454 @@ footer{
   </div>
 </section>
 
+<!-- CATALOGO GHL — DIAGNOSTICO 16 OCT -->
+<section>
+  <div class="section-head">
+    <span class="phase-num">GHL-DX</span>
+    <span class="section-title">Catálogo GHL — diagnóstico (16 oct)</span>
+    <span class="section-note">1 hecho — 13 pendientes; orden en 3 olas, ver el doc</span>
+  </div>
+  <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:680px;">Diagnóstico de qué funciones de HighLevel ya adoptamos, cuáles se eligieron y cuáles faltan, con el agente de voz IA como prioridad. Documento completo: <code>docs/planning/CATALOGO-GHL-DIAGNOSTICO.md</code>. Ya cubiertos por ítems existentes y por eso no se repiten aquí: inbox unificado con WhatsApp (BLOQUE 3), publicación real en Instagram/Facebook (programación IG), modo SaaS y planes (freemium), informes y firma electrónica (C10, E20, N3, N6) y facturación recurrente (E17).</p>
+  <div class="check-list">
+    <div class="check-item done" data-status="done" data-id="ghl-dx-diagnostico">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Diagnóstico del catálogo GHL redactado (35 módulos, 15 fichas, agente de voz, 3 olas)</div>
+        <div class="check-desc">Evidencia: <code>docs/planning/CATALOGO-GHL-DIAGNOSTICO.md</code>; 41 páginas de <code>help.gohighlevel.com</code> leídas y fuentes de precios de Twilio, Retell, Vapi y ElevenLabs citadas, con lo no verificado marcado. Páginas bloqueadas listadas en la sección 7, sin esquivarlas.</div>
+      </div>
+      <span class="tag tag-decided">hecho — documento local sin commit</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-voz-ia">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Agente de voz IA que contesta llamadas con base de conocimiento (GHL «Voice AI»)</div>
+        <div class="check-desc">Hoy: asistente de creación y simulador de texto (sin commit); faltan número/SIP, herramientas, transcripciones, resumen, transferencia y métricas. Propuesta: proveedor gestionado (Retell o Vapi) sobre un número de Twilio, con nuestras herramientas por API; piloto con llamada web primero. Detalle en la sección 4 del doc. Antes de producción: RLS, aviso de IA y de grabación, revisión legal.</div>
+      </div>
+      <span class="tag tag-open">pendiente — avance en la sección «Ola 3 — 16 oct» (Retell, modo simulado); la voz real espera a Reiner</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-conversation-ai-produccion">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Conversation AI en producción: bot sobre conversaciones reales (modo Sugerido primero)</div>
+        <div class="check-desc">Ya existen modos, bot principal y chat de prueba; falta el puente mensaje entrante → agente → respuesta y la red de seguridad (queja fuerza traspaso, límite de respuestas, horario). Ficha 3.2; depende del canal WhatsApp y de la base de conocimiento.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 1</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-kb-rag">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Base de conocimiento con RAG (pgvector), probador de recuperación y lagunas de conocimiento</div>
+        <div class="check-desc">Hoy hay bases y fuentes (faq, texto, tabla, archivo, URL) sin embeddings. Ficha 3.3: verificar pgvector en Supabase, varias bases por agente y bandeja de lagunas compartida entre chat y voz.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 1 (migración requiere aprobación)</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-handover">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Traspaso a humano y seguimiento automático (Ficha #1 del catálogo)</div>
+        <div class="check-desc">Tres disparadores, tarea, etiqueta, pausa del bot y resumen de 3 líneas para el humano; escalamiento reutilizando <code>conversation.sla_overdue</code>. Ficha 3.4; requiere notificaciones al equipo.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 1; bloqueado por el bot real</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-workflows-nativos">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Workflows: acciones nativas de SMS, email y WhatsApp, If/Else con ramas y disparadores nuevos</div>
+        <div class="check-desc">Hoy el envío es <code>send_webhook</code> hacia n8n y hay 6 acciones. Añadir envío nativo, ramas, disparadores (formulario, pago, reseña, llamada, cambio de etapa) y simulación previa «a quién afectaría». Ficha 3.6; el cron de Vercel Hobby corre una vez al día (usar el worker de Render o cron externo).</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 1</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-oportunidades">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Oportunidades y pipelines genéricos con Kanban y plantillas por nicho</div>
+        <div class="check-desc">No existe modelo <code>Opportunity</code>/<code>Pipeline</code>; <code>/clientes-potenciales</code> tiene varios botones «Próximamente». Distinto del kanban de asesores (B8). Ficha 3.7.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 1 (migración requiere aprobación)</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-calendarios-avanzados">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Calendarios avanzados: round robin, servicios, colectivos y sincronización con Google Calendar</div>
+        <div class="check-desc">Hoy hay calendarios, citas, reserva pública y reservas hoteleras; sin evidencia de round robin ni servicios, y calendarios externos figuran «próximamente». Ficha 3.8.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 2</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-reputacion">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Reputación: solicitudes de reseña automáticas, respuestas sugeridas por IA y widget</div>
+        <div class="check-desc">El módulo es un marcador de posición y está en el plan de 49 USD. Sin filtrar solo a clientes satisfechos (revisar políticas de plataformas, sin verificar). Ficha 3.9.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 2</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-formularios">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Formularios y encuestas públicos conectados al CRM (lógica condicional, una pregunta a la vez)</div>
+        <div class="check-desc">No existe modelo de formulario; B5 cubre solo el formulario de asesores. Consentimiento y aviso de privacidad desde el diseño. Ficha 3.10.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 2 (migración requiere aprobación)</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-facturas-enlaces-pago">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Facturas, presupuestos y enlaces de pago con comprobante (disparador <code>payment.paid</code>)</div>
+        <div class="check-desc">Hoy hay pagos con comprobante y aprobación, sin pasarela ni facturas. Depende de P3 de la spec de planes y de decisiones fiscales (sin verificar). Distinto de E17 (facturación recurrente de la agencia). Ficha 3.11.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 2</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-copiloto-agentes-evento">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Copiloto del operador (tareas programadas, MCP) y agentes por evento en versión reducida</div>
+        <div class="check-desc">Fichas #5 y #6 del catálogo: ADOPTAR sin canvas visual; construir una sola vez las «skills» compartidas. Hoy solo existe la paleta Ctrl+K de navegación.</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 3</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-pwa">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">PWA instalable (manifest, lectura sin conexión, notificaciones push)</div>
+        <div class="check-desc">Propuesta nueva: no hay manifest en el repo. Aprovecha el trabajo responsive ya verificado de 320 a 1440 px. El artículo de GHL sobre su app móvil no se pudo leer (bloqueado).</div>
+      </div>
+      <span class="tag tag-open">pendiente — Ola 3, sin spec</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ghl-dx-retargeting-reconciliar">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Reconciliar Retargeting Fase 1: el código descrito como construido no está en este clon</div>
+        <div class="check-desc">Sin evidencia local: no hay modelos <code>SmartList</code>/<code>AdAudience</code>/<code>AdConversionEvent</code>, ni ramas ni commits con «retarget». Localizar la rama (otra máquina o repositorio) antes de seguir con credenciales de Meta y Google.</div>
+      </div>
+      <span class="tag tag-open">pendiente — requiere a Reiner</span>
+    </div>
+  </div>
+</section>
+
+<!-- OLA 3 — 16 OCT -->
+<section>
+  <div class="section-head">
+    <span class="phase-num">OLA-3</span>
+    <span class="section-title">Ola 3 — 16 oct (voz, inicio, campaña y generador)</span>
+    <span class="section-note">6 hechos — 8 pendientes; decisión: voz real primero, luego Configuración general</span>
+  </div>
+  <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:680px;">Registro de la tercera ola de trabajo de la sesión del 16 oct (no confundir con la «Ola 3» del orden de funciones GHL de la sección anterior). Cuatro commits locales sin push: voz <code>4c49cb8</code>, inicio <code>5e75580</code>, campaña <code>11e03e9</code> y generador <code>9938a33</code>. Decisión de Reiner: primero la voz real con Retell y un número de Venezuela; después, Configuración general.</p>
+  <div class="check-list">
+    <div class="check-item done" data-status="done" data-id="ola3-voz-retell" data-commit="4c49cb8">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Agente de voz entrante con Retell (modo simulado por defecto)</div>
+        <div class="check-desc">Evidencia: commit <code>4c49cb8</code>. <code>src/lib/voice/*</code>, rutas <code>/api/voice/{webhook,kb-search,status,calls,agents}</code> y centro <code>/agentes-ia/voz</code>. Cada llamada es una <code>Conversation</code> de canal <code>voice</code>; webhook firmado e idempotente. <code>VOICE_MODE=simulated</code> por defecto (cero gasto). Documentos: <code>docs/planning/VOZ-RETELL-PLAN.md</code> y <code>docs/planning/VOZ-VENEZUELA-LEGAL.md</code>. Verificado con tsc, eslint, 737 tests y <code>next build</code>.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push) — modo simulado</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola3-inicio" data-commit="5e75580">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Inicio: Hoy, KPIs con periodo y delta, accesos fijables y Guía de Inicio con anillos</div>
+        <div class="check-desc">Evidencia: commit <code>5e75580</code>. <code>/api/dashboard/summary</code> (caché de 10 s y 60 s para KPIs; <code>fresh=1</code>), <code>launchpad-steps.ts</code> como fuente única de pasos, «Más tarde», filtro, <code>?paso=</code>, atajos N / R 7 3 P. GHL adoptado: widgets de citas, conversaciones y tareas, y rango de fechas; descartado: constructor de widgets, plantillas de dashboard y clonación. Verificado: tsc, eslint, vitest y build.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola3-campana" data-commit="11e03e9">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Nueva Campaña: página dividida en 11 componentes, plantillas, costo en vivo y checklist</div>
+        <div class="check-desc">Evidencia: commit <code>11e03e9</code>. <code>/campaign/new</code> pasa de 1131 a 191 líneas (11 componentes, 7 hooks, 10 módulos <code>campaign-*.ts</code>); 8 plantillas por negocio, reutilizar campañas previas, costo en vivo, resumen del plan editable, compositor fijo y chat sin scroll propio. GHL adoptado: checklist del Social Planner, plantillas y duplicar; descartado: A/B, mejor hora y CSV masivo. Verificado: tsc, eslint, vitest y build.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola3-generador" data-commit="9938a33">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Generador de imágenes: plantillas de grilla, duplicar, semana con progreso, calidad de copy y exportación</div>
+        <div class="check-desc">Evidencia: commit <code>9938a33</code>. 4 plantillas de grilla, favoritas, copy por día con puntaje de calidad, exportar .txt/.csv/.json e imágenes, enviar a Contenido IG (<code>campaignRef</code> <code>generador-&lt;id&gt;</code>) y wizard <code>[id]</code> sin scrollers anidados. Corregido el import de <code>wizard.css</code>. Verificado: tsc, eslint, vitest y build.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola3-verificacion" data-commit="9938a33">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Verificación automática de la Ola 3: tsc 0, eslint 0, 737 tests, build de 72 páginas</div>
+        <div class="check-desc">Verificado el 16 oct con <code>tsc --noEmit</code> (0 errores), ESLint (0), Vitest (737 tests) y <code>next build</code> (72 páginas). Cuatro commits locales sin push: <code>4c49cb8</code>, <code>5e75580</code>, <code>11e03e9</code> y <code>9938a33</code>.</div>
+      </div>
+      <span class="tag tag-decided">hecho</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola3-incidente-build-dev" data-commit="9938a33">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Regla: no ejecutar <code>next build</code> con <code>next dev</code> abierto sobre la misma carpeta <code>.next</code></div>
+        <div class="check-desc">Evidencia del incidente: el CSS de localhost se rompió al mezclar ambos. Procedimiento: detener el servidor de desarrollo, borrar <code>.next</code> y reiniciar; para probar producción, usar otro puerto y otra terminal sin mezclar. Verificado después de aplicarlo.</div>
+      </div>
+      <span class="tag tag-decided">hecho — regla documentada</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-decision-voz-primero">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Decisión de Reiner: voz real primero (Retell, número de Venezuela); después, Configuración general</div>
+        <div class="check-desc">Orden acordado el 16 oct. Pasos manuales de Reiner: crear la cuenta de Retell y cargar solo el tope; poner las variables <code>VOICE_PUBLIC_URL</code>, <code>RETELL_API_KEY</code>, <code>VOICE_KB_SECRET</code>, <code>RETELL_VOICE_ID</code>, <code>VOICE_MONTHLY_CAP_USD</code> y <code>VOICE_WEBHOOK_SECRET</code> en Vercel o el entorno; tramitar el número; cambiar a <code>VOICE_MODE=live</code> y pulsar «Activar con Retell». Piloto: tope recomendado de US$ 100 en 2 semanas (aviso a US$ 80; ≈ US$ 91 estimado con ~525 min a 0,14 USD/min, US$ 12 del número y pruebas).</div>
+      </div>
+      <span class="tag tag-open">pendiente — requiere a Reiner</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-voz-numero-ve">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Número venezolano para la voz: local VE en Telnyx por SIP hacia Retell</div>
+        <div class="check-desc">Requiere registro mercantil y comprobante de dirección en Venezuela (~72 h). Mientras tanto, probar con un número de EE. UU. Sin confirmar: tarifas entrantes de Venezuela en Telnyx y desvíos desde CANTV, Movistar y Digitel.</div>
+      </div>
+      <span class="tag tag-open">pendiente — requiere a Reiner; datos sin verificar</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-voz-legal">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Revisión legal de la voz (grabación, aviso de IA, datos personales)</div>
+        <div class="check-desc">Todo lo legal requiere abogado; los documentos no son asesoría. Detalle en <code>docs/planning/VOZ-VENEZUELA-LEGAL.md</code>.</div>
+      </div>
+      <span class="tag tag-open">pendiente — requiere abogado</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-voz-deuda">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Deuda de la voz: ajustes en localStorage, metadatos de llamada en un Message, SDK de llamada web y corte al tope</div>
+        <div class="check-desc">Los ajustes de voz viven en localStorage; los metadatos de la llamada van dentro de un <code>Message</code>; la llamada de prueba web requiere la dependencia <code>retell-client-js-sdk</code>; no hay corte automático al tope (el corte duro es el crédito prepago de Retell).</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-configuracion-general">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Configuración general (<code>/settings</code>) con los ajustes que pide la voz</div>
+        <div class="check-desc">Incluye horario, número de transferencia, grabación, tope mensual e idioma. Siguiente en el orden, después de la voz real (decisión de Reiner).</div>
+      </div>
+      <span class="tag tag-open">pendiente — siguiente tras la voz real</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-rainer-staging">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Corregir el nombre «Rainer» por «Reiner» en los datos de staging</div>
+        <div class="check-desc">El nombre viene de la base de datos de staging, no del código; se corrige solo en los datos.</div>
+      </div>
+      <span class="tag tag-open">pendiente — requiere a Reiner</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-scrollers-anidados">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Quitar los scrollers anidados restantes: conversaciones, contactos, clientes-potenciales, ContentIGTab y .terminal de settings</div>
+        <div class="check-desc">Ya resueltos en Nueva Campaña y en el wizard del Generador. Deuda menor: los contadores «N+» tienen tope, el aviso sin campañas cambia de altura, el brief no se autollena desde el chat y las clases <code>.cn-chips</code>, <code>.cn-input</code> y <code>.cn-starters</code> quedaron sin uso en <code>globals.css</code>.</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3-verificacion-visual">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Verificación visual de Inicio, Campaña, Generador y Voz, más Automatización (320 a 1440 px)</div>
+        <div class="check-desc">Falta la pasada visual de las cuatro pantallas nuevas y de Automatización, que no se verificó visualmente. Deuda del Generador: variantes lado a lado (la API reemplaza la imagen).</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
+    </div>
+    <div class="check-item blocked" data-status="blocked" data-id="ola3-bloqueos">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Push, merge, migraciones remotas, producción y <code>IG_PUBLISH_MODE=live</code> siguen bloqueados</div>
+        <div class="check-desc">Los cuatro commits de la Ola 3 son locales. Se necesita autorización explícita de Reiner para cualquiera de estos pasos.</div>
+      </div>
+      <span class="tag tag-blocked">bloqueado — espera a Reiner</span>
+    </div>
+  </div>
+</section>
+
+<!-- OLA 3b — 17 OCT -->
+<section>
+  <div class="section-head">
+    <span class="phase-num">OLA-3B</span>
+    <span class="section-title">Ola 3b — 17 oct (marketing, multimedia y automatización)</span>
+    <span class="section-note">3 hechos — 3 pendientes; commits locales sin push</span>
+  </div>
+  <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:680px;">Continuación de la «Ola 3 — 16 oct». Tres commits locales sin push: marketing <code>74a8b91</code>, multimedia <code>0f62089</code> y automatización <code>a481ecd</code>. Quedan decisiones y verificación visual a cargo de Reiner.</p>
+  <div class="check-list">
+    <div class="check-item done" data-status="done" data-id="ola3b-marketing" data-commit="74a8b91">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Marketing real: planificador, fragmentos, enlaces, cuenta atrás, marca, correos locales, UTM/anuncios y prospección</div>
+        <div class="check-desc">Evidencia: commit <code>74a8b91</code>. Pestañas reales: planificador, fragmentos, enlaces, cuenta atrás, marca, correos locales, UTM/anuncios y prospección. Pestañas limitadas (sin integración real): envío masivo de correos, Meta/Google/TikTok Ads y búsqueda de leads.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola3b-multimedia" data-commit="0f62089">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Multimedia real, sin subida de archivos</div>
+        <div class="check-desc">Evidencia: commit <code>0f62089</code>. Pantalla de Multimedia funcional con visor sin blur; la subida de archivos queda a la espera de la decisión de almacenamiento.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola3b-automatizacion" data-commit="a481ecd">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Automatización completada: 19 plantillas, actividad en servidor y exportación CSV</div>
+        <div class="check-desc">Evidencia: commit <code>a481ecd</code>. 19 plantillas, actividad registrada en el servidor y exportación a CSV.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3b-decision-almacenamiento">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Decisión de almacenamiento multimedia: modelo <code>MediaAsset</code> y R2 con URL firmada</div>
+        <div class="check-desc">Propuesta y comparación en <code>docs/DECISION-ALMACENAMIENTO-MULTIMEDIA.md</code>. Sin esta decisión no hay subida de archivos en Multimedia.</div>
+      </div>
+      <span class="tag tag-open">pendiente — decide Reiner</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3b-verificacion-visual">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Verificación visual de 320 a 1440 px de las 7 pantallas nuevas</div>
+        <div class="check-desc">Falta la pasada visual en anchos de 320 a 1440 px de las siete pantallas entregadas en las Olas 3 y 3b.</div>
+      </div>
+      <span class="tag tag-open">pendiente — requiere a Reiner</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola3b-endpoints-faltantes">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Reintentar la ejecución de automatización y editar fragmentos y enlaces</div>
+        <div class="check-desc">Faltan los endpoints de servidor para reintentar una ejecución fallida de Automatización y para editar fragmentos y enlaces de Marketing.</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
+    </div>
+  </div>
+</section>
+
+<!-- OLA 4B — 17 OCT (TARDE) -->
+<section>
+  <div class="section-head">
+    <span class="phase-num">OLA-4B</span>
+    <span class="section-title">Ola 4b — 17 oct (tarde): arquitectura, limpieza, base de conocimiento y arreglo del planificador</span>
+    <span class="section-note">8 hechos — 7 pendientes; commits locales sin push</span>
+  </div>
+  <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:680px;">Registro de lo hecho tras la Ola 3b y de la lista de código por limpiar. Detalle técnico en <code>docs/ARQUITECTURA-ECOSISTEMA-CRM.md</code>, <code>_revisar-obsoletos/LEEME.md</code> y <code>docs/planning/roadmap-agentes-rai.html</code>.</p>
+  <div class="check-list">
+    <div class="check-item done" data-status="done" data-id="ola4b-arquitectura" data-commit="f1248f3">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Documento de arquitectura del ecosistema CRM (módulos, contratos, ADR, KPIs)</div>
+        <div class="check-desc">Evidencia: commit <code>f1248f3</code>, <code>docs/ARQUITECTURA-ECOSISTEMA-CRM.md</code>. Monolito modular con eventos (outbox), 16 diagramas, 14 decisiones. Las tablas nuevas son <strong>propuestas</strong> hasta que Reiner apruebe la compuerta de la Fase 2.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola4b-limpieza" data-commit="deafea9">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Código obsoleto movido a una sola carpeta de revisión: <code>_revisar-obsoletos/</code></div>
+        <div class="check-desc">Evidencia: commit <code>deafea9</code>. 7 archivos y 49 reglas CSS sin uso movidos con ruta de restauración en <code>_revisar-obsoletos/LEEME.md</code>. Nada se borró: Reiner decide.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola4b-base-conocimiento" data-commit="f1248f3">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Base de conocimiento reutilizable en <code>roadmap-agentes-rai.html</code> (42 tecnologías, 80 efectos, 17 prácticas, 11 marcos legales)</div>
+        <div class="check-desc">Evidencia: commit <code>f1248f3</code>. Exportable en JSON para pasarlo como referencia a otros proyectos.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola4b-fix-planificador" data-commit="7ef2a05">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Planificador de redes: el calendario ya no desaparece cuando falta la tabla <code>ScheduledPost</code></div>
+        <div class="check-desc">Evidencia: commit <code>7ef2a05</code>. Causa: el error 503 reemplazaba todo el planificador por un estado vacío. Ahora el calendario queda visible con aviso guiado y «Reintentar», y las acciones de escritura se desactivan. Falta que Reiner aplique la tabla (ver siguiente punto).</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola4b-premium-6-modulos" data-commit="48f4e90">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Mejora premium de Conversaciones, Contactos, Clientes Potenciales, Calendarios, Facturación e Informes</div>
+        <div class="check-desc">Evidencia: commits <code>48f4e90</code>, <code>22e5377</code>, <code>8444ae8</code>, <code>3230978</code>. Seis monolitos (hasta 1440 líneas) divididos en módulos de menos de 300 líneas, sin <code>any</code>, con 190 pruebas nuevas; <code>tsc</code> 0, ESLint 0, Vitest 917–960 y build correcto en copias aparte. Kit reutilizable en <code>src/components/module-kit/</code>.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola4b-spinner-conversaciones" data-commit="48f4e90">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Spinner infinito en Conversaciones corregido</div>
+        <div class="check-desc">Evidencia: commit <code>48f4e90</code>. Causa: <code>GET /api/contacts</code> sin plazo ni abort; ahora corta a los 20 s y la lista acaba en datos, vacío o error con «Reintentar». La causa de fondo del cuelgue en staging (Prisma/Supabase o compilación en frío) sigue sin confirmar.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item done" data-status="done" data-id="ola4b-seo-noindex" data-commit="4b0d3a0">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">El CRM privado no se indexa en buscadores</div>
+        <div class="check-desc">Evidencia: commit <code>4b0d3a0</code>. Metadata <code>robots</code> en <code>layout.tsx</code> y <code>src/app/robots.ts</code> con <code>disallow: /</code>. Si algún día hay páginas públicas (sitios de clientes), se excluyen de esta regla.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola4b-brechas-api">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Brechas de API halladas al rediseñar</div>
+        <div class="check-desc">No existen <code>/api/opportunities</code> (las oportunidades viven en memoria), facturas, productos ni cupones; Tareas, Empresas y Acciones en lote no tienen endpoint de listado. <code>GET /api/contacts</code> no pagina; <code>POST /api/contacts</code> ignora <code>tags</code>; <code>POST /api/calendars</code> ignora <code>bookingEnabled</code> y no valida <code>durationMins</code> (500); <code>POST /api/activation-links</code> acepta esquemas como <code>javascript:</code>; no hay endpoint para crear una conversación. La lista de conversaciones ordena nulos primero.</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola4b-deuda-ui-6">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Deuda de los 6 módulos nuevos</div>
+        <div class="check-desc">Botón «simular respuesta del cliente» aún en Conversaciones; estrella y adjuntar deshabilitados; calendarios sin color ni zona horaria guardados; <code>ModulePlaceholder</code> sigue en Marketplace y Reputación (migrar al kit); capturas en <code>.tmpwork/</code> (ignoradas por git) por borrar.</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola4b-aplicar-scheduledpost">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Aplicar <code>docs/planning/staging-scheduledpost.sql</code> en Supabase (solo esquema <code>staging</code>), luego <code>npx prisma generate</code> y reiniciar con <code>.env.staging</code></div>
+        <div class="check-desc">Sin esta tabla el planificador no guarda ni muestra publicaciones. Verificación posterior: <code>node --env-file=.env.staging scripts/check-db-tables.mjs</code> debe decir «OK: todas las tablas existen».</div>
+      </div>
+      <span class="tag tag-open">pendiente — lo aplica Reiner</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola4b-verificar-tablas">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Verificar que ningún otro módulo dependa de una tabla ausente</div>
+        <div class="check-desc">Script de solo lectura <code>scripts/check-db-tables.mjs</code> (commit <code>7ef2a05</code>) compara los modelos de Prisma con las tablas reales de la base conectada. Pendiente de correr por Reiner: desde el entorno de Claude no se alcanza la base de staging.</div>
+      </div>
+      <span class="tag tag-open">pendiente — corre Reiner</span>
+    </div>
+        <div class="check-item done" data-status="done" data-id="ola4b-premium-modulos" data-commit="c7e8b2c">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Mejora premium de Marketing, Contenido multimedia, Automatización y Sitios</div>
+        <div class="check-desc">Evidencia: commits <code>c7e8b2c</code> (Marketing), <code>bf8c2fe</code> (Multimedia), <code>c7af74e</code> (Automatización; <code>ContentIGTab</code> de ~1200 a 115 líneas) y <code>3304851</code> (Sitios). Sin blur, solo transform y opacity, errores en línea que no reemplazan la pantalla, estados vacíos con vista previa. <code>tsc</code> 0, ESLint 0 en <code>src</code>, Vitest 848–870 en copias aparte y build correcto. Falta la revisión visual de Reiner a 320–1440 px.</div>
+      </div>
+      <span class="tag tag-decided">hecho local (sin push)</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola4b-revisar-obsoletos">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Reiner revisa <code>_revisar-obsoletos/</code> y la lista «dudoso» de su <code>LEEME.md</code></div>
+        <div class="check-desc">Dudosos sin mover: <code>InventoryScanner.tsx</code>, rutas API <code>audit</code>, <code>automations/templates</code> y <code>executions/[id]</code>, 4 imágenes de login, clases utilitarias CSS, 2 docs de brainstorm y 6 ramas locales ya contenidas.</div>
+      </div>
+      <span class="tag tag-open">pendiente — decide Reiner</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola4b-compuerta-fase2">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Compuerta de la Fase 2: aprobar tablas propuestas, dependencias nuevas y hosting del worker</div>
+        <div class="check-desc">Ver <code>docs/ARQUITECTURA-ECOSISTEMA-CRM.md</code> §4.6 y anexos. Sin aprobación no se toca el esquema de Prisma ni se instalan dependencias.</div>
+      </div>
+      <span class="tag tag-open">pendiente — decide Reiner</span>
+    </div>
+    <div class="check-item" data-status="pending" data-id="ola4b-deuda-codigo">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Código por limpiar (deuda registrada)</div>
+        <div class="check-desc"><code>ContentIGTab.tsx</code> (~1200 líneas, dividir por responsabilidad); <code>base-conocimiento/[id]</code> (645 líneas); ajustes de voz en <code>localStorage</code> (mover al servidor); endpoint de reintento de ejecuciones y PATCH de fragmentos y enlaces; <code>ad-research</code> depende de Playwright en servidor; «Rainer» en <code>User.displayName</code> de staging (debe ser «Reiner»); aviso previo de <code>panel-check</code> por tareas hechas sin evidencia; 15 avisos de <code>no-console</code> en <code>scripts/e2e-automations.ts</code>; permisos: <code>/api/snippets</code> y <code>/api/activation-links</code> excluyen <code>staff</code> pero la interfaz le muestra formularios, <code>/api/research/competitors</code> exige <code>CAMPAIGN_ROLES</code>, <code>tours.ts</code> describe Sitios como «páginas web y embudos»; <code>BrandCard</code> lee PDF/DOC con <code>readAsText</code>; tipos <code>Record&lt;string, any&gt;</code> en pasos de flujo; <code>test-results/sitios-bundle.tgz</code> por borrar.</div>
+      </div>
+      <span class="tag tag-open">pendiente</span>
+    </div>
+  </div>
+</section>
+
 <!-- RETARGETING FASE 1 -->
 <section>
   <div class="section-head">
@@ -611,7 +1480,74 @@ footer{
     <div class="check-item done" data-status="done"><div class="checkbox"></div><div class="check-body"><div class="check-title">PR #11 y PR #10 confirmados mergeados a <code>main</code></div><div class="check-desc"><a href="https://github.com/reinerramos2702-jpg/crm-rai-agency/pull/11" target="_blank">PR #11</a> (commit a64e528, centralización de <code>docs/planning/</code> y <code>docs/ESTADO-SESION.md</code>) y <a href="https://github.com/reinerramos2702-jpg/crm-rai-agency/pull/10" target="_blank">PR #10</a> (commit 480500c, fix de progreso real de Launchpad + limpieza de las 2 campañas demo en producción). <code>git pull origin main</code> confirmado en esta laptop, ambos sets de archivos presentes en el árbol.</div></div><span class="tag tag-decided">confirmado</span></div>
     <div class="check-item done" data-status="done"><div class="checkbox"></div><div class="check-body"><div class="check-title">Sede única del proyecto pasa a ser esta laptop</div><div class="check-desc"><code>C:\Users\PC\Documents\RAI Agency\CRM RAI Agency</code> es ahora el único working directory activo del repo. La carpeta de la computadora vieja (<code>C:\Users\RAI Agency\crm-rai-agency</code>) queda de respaldo, sin uso activo de aquí en adelante.</div></div><span class="tag tag-decided">decidido</span></div>
     <div class="check-item done" data-status="done"><div class="checkbox"></div><div class="check-body"><div class="check-title"><code>GITHUB_TOKEN</code> inválido en la compu vieja — resuelto</div><div class="check-desc">Ver ficha en Hallazgos de sesión más arriba.</div></div><span class="tag tag-decided">resuelto</span></div>
-    <div class="check-item" data-status="pending"><div class="checkbox"></div><div class="check-body"><div class="check-title">Crear el <code>.env</code> real en esta laptop</div><div class="check-desc">En curso — Reiner pasa los valores reales por fuera del chat/repo. Sin esto la laptop no puede correr el proyecto localmente pese a tener el código al día.</div></div><span class="tag tag-open">en curso</span></div>
+    <div class="check-item" data-status="pending"><div class="checkbox"></div><div class="check-body"><div class="check-title">Crear el <code>.env</code> real en esta laptop</div><div class="check-desc">Parcial — <code>.env.production</code> ya existe local con <code>DATABASE_URL</code>/<code>DIRECT_URL</code> reales (ver sesión 15 sep). Faltan las demás vars: <code>UPSTASH_REDIS_REST_URL</code>/<code>TOKEN</code>, <code>R2_*</code>, <code>JWT_SECRET</code>, <code>DEV_BYPASS_AUTH</code>, <code>KEYS_ENCRYPTION_KEY</code>, <code>HARD_CAP_USD_PER_EXECUTION</code>, <code>N8N_WEBHOOK_URL</code> (opcional), <code>NEXT_PUBLIC_APP_URL</code>, <code>META_SHARED_APP_ID</code>/<code>SECRET</code>/<code>OAUTH_REDIRECT_URI</code>.</div></div><span class="tag tag-open">en curso</span></div>
+  </div>
+</section>
+
+<!-- SESION 15 SEP -->
+<section>
+  <div class="section-head">
+    <span class="phase-num">15 SEP</span>
+    <span class="section-title">Sesión 15 sep — migración a producción e incidente de credenciales</span>
+    <span class="section-note">producción restablecida — 1 hallazgo sin resolver (backups de Supabase)</span>
+  </div>
+  <div class="check-list">
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">3 migraciones de Prisma pendientes aplicadas contra producción (incluye <code>Workspace.launchpadManual</code>)</div>
+        <div class="check-desc">Bloqueador: <code>npx prisma migrate deploy</code> fallaba con <code>P1001: Can't reach database server</code> desde esta laptop pese a que el handshake TCP crudo (<code>Test-NetConnection</code>) sí conectaba en los puertos 5432 y 6543 — diagnosticado por Claude Code local como firewall/DPI bloqueando específicamente el protocolo Postgres, no el puerto. Workaround: SQL de las 3 migraciones aplicado directo vía Supabase MCP/API (sin pasar por el driver de Prisma), más inserción manual de las filas correspondientes en <code>_prisma_migrations</code> con sus checksums SHA-256 correctos — equivalente en resultado a <code>prisma migrate deploy</code>. Verificado: columna <code>launchpadManual</code> presente en <code>Workspace</code>, <code>prisma generate</code> corrió limpio en local.</div>
+      </div>
+      <span class="tag tag-decided">aplicado</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Incidente de password de Supabase — 3 resets hasta dar con la causa</div>
+        <div class="check-desc">La password original nunca quedó guardada: ni Vercel (variables marcadas "Sensitive" no se pueden copiar ni leer vía <code>vercel env pull</code>, devuelve <code>[SENSITIVE]</code>) ni Supabase (el password de DB no es visible después de creado, solo reseteable) la exponían. Reset 1: perdida por no copiarla del modal de revelado único antes de navegar fuera. Reset 2: pegado por error el placeholder literal <code>[YOUR-PASSWORD]</code> del template de la pestaña ORM en vez del valor real. Reset 3: generada sin caracteres especiales (solo letras/números) para descartar corrupción del connection string por símbolos sin URL-encodear — <strong>esa fue la causa raíz confirmada</strong> del <code>PrismaClientInitializationError: Authentication failed</code> que venía devolviendo producción.</div>
+      </div>
+      <span class="tag tag-decided">resuelto</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title"><code>DATABASE_URL</code>/<code>DIRECT_URL</code> actualizadas en Vercel — producción confirmada sana</div>
+        <div class="check-desc"><code>DATABASE_URL</code> (pooler modo transacción, puerto 6543, con <code>?pgbouncer=true</code>) y <code>DIRECT_URL</code> (pooler modo sesión, puerto 5432, sin <code>pgbouncer</code>) reconstruidas con la password limpia del reset 3, guardadas en Vercel → Environment Variables → redeploy. <code>GET /api/me</code> contra <code>crm-rai-agency.vercel.app</code> confirmado <code>200 OK</code>, devuelve <code>{"userId":"dev-user-001","role":"admin","workspaceId":"cmq7cxoh3000111520w1ar79p","workspaceName":"Default Workspace"}</code> — sesión de <code>DEV_BYPASS_AUTH</code>, no auth real (esperado, ver hallazgo abajo).</div>
+      </div>
+      <span class="tag tag-decided">confirmado</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title"><code>.env.production</code> confirmado protegido — nunca expuesto en el repo</div>
+        <div class="check-desc">Verificado por Claude Code local: <code>.env.production</code> ya estaba cubierto en <code>.gitignore</code> (línea explícita + patrón <code>.env*</code>), <code>git check-ignore -v .env.production</code> lo confirma ignorado. <code>git log --all --full-history -- .env.production</code> no devolvió ningún commit — la password nueva (texto plano en ese archivo) nunca se subió al historial, ni siquiera en un commit viejo. No hace falta rotar nada por este motivo.</div>
+      </div>
+      <span class="tag tag-decided">verificado</span>
+    </div>
+    <div class="check-item blocked" data-status="blocked">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Proyecto Supabase sin backups configurados</div>
+        <div class="check-desc"><code>bskdozxkgbxifftuulvc</code> muestra "Last backup: No backups" en el dashboard. Señalado como riesgo durante el workaround de migración (si algo salía mal aplicando SQL a mano, no había respaldo del cual restaurar) — no bloqueó la tarea de hoy, pero sigue sin resolverse.</div>
+      </div>
+      <span class="tag tag-blocked">sin resolver</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Auditoría del número "33" (funciones/módulos GHL) — descartado</div>
+        <div class="check-desc">Reiner recordaba un conteo de "33 funciones/módulos GHL" de alguna sesión pasada. Búsqueda exhaustiva (sin filtrar extensión) en todo el repo, incluyendo este panel: <code>ghl-capturas/</code> tiene <strong>18</strong> carpetas de módulos capturados (00-sidebar a 17-facturacion); <code>MEMORY.md</code> §4 "Módulos del CRM" lista <strong>24</strong> filas; este panel tiene <strong>49</strong> ítems de checklist (<code>.check-item</code>) y <strong>53</strong> tarjetas de funcionalidad propuesta (<code>.feature-card</code>, repartidas en 21 del módulo Calendario de Contenido + 22 de Captación de Asesores/Equipo/Fidelización + 8 de N1-N8). Ninguno de estos conteos, ni sumados, da 33 — y no hay coincidencia literal de "33" en ningún <code>.md</code> ni en este HTML. <strong>Conclusión: el 33 no corresponde a ningún conteo real del repo, se descarta como fuente de verdad.</strong></div>
+      </div>
+      <span class="tag tag-decided">descartado</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Investigación de bug "0%" fijo en tarjetas de leads/KPI — sin bug nuevo encontrado</div>
+        <div class="check-desc">Sospecha: reaparición del patrón de <a href="https://github.com/reinerramos2702-jpg/crm-rai-agency/pull/10" target="_blank">PR #10</a> (progreso calculado contra <code>localStorage</code> en vez de la DB) en otro componente. Barrido completo de <code>src/</code> por <code>%</code>, <code>leads</code>, <code>localStorage</code>, patrones <code>/total*100</code>: <code>/launchpad</code> ya está arreglado (PR #10, confirmado por <code>git log</code>) — el mecanismo de cálculo (13/22 pasos posibles en vivo por <code>workspaceId</code>) fue confirmado leyendo el código, no midiendo producción en ese momento. El "0%" de la captura de pantalla corresponde al botón de categoría "Marketing y generación de leads" del sidebar de <code>/launchpad</code> (label truncado visualmente) — sus 3 ítems (<code>redes-sociales</code>, <code>anuncios-meta</code>, <code>campana-sms</code>) son 100% manuales (<code>src/lib/launchpad-items.ts</code>), sin señal automática en el schema de Prisma. Verificación posterior en vivo contra la DB real de producción (Supabase MCP directo desde Cowork, workspace <code>cmq7cxoh3000111520w1ar79p</code>): Contactos 0, Campañas 0, Workflows 0, Citas 0, Pagos 0, Miembros 0, Settings 0, Integraciones 0, Meta 0, <code>launchpadManual</code> vacío (Agentes IA 1 y Content Grids 1 no forman parte del checklist de 22 pasos) — confirma que el workspace real está genuinamente en 0/22, no hay bug de caché ni de cálculo. El único otro "0%" hardcodeado encontrado es el tab Pronóstico de <code>/clientes-potenciales</code> (línea ~722 de <code>page.tsx</code>) — stub estático intencional del protocolo de replicación GHL (frontend sin lógica), no el bug de PR #10.</div>
+      </div>
+      <span class="tag tag-decided">sin bug encontrado</span>
+    </div>
   </div>
 </section>
 
@@ -798,6 +1734,108 @@ footer{
   </div>
 </section>
 
+<!-- OPERACION AUTONOMA Y MANTENIMIENTO -->
+<section>
+  <div class="section-head">
+    <span class="phase-num">OPS</span>
+    <span class="section-title">Orquestación autónoma, calidad y limpieza continua</span>
+    <span class="section-note">Definido 25 sep 2026 — alcance nocturno seguro, no equivale a autorización de producción</span>
+  </div>
+  <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:720px;">Objetivo: permitir que el orquestador avance durante una sesión larga mediante sub-agentes especializados, cierre tareas atómicas con evidencia y deje este panel actualizado. “100%” significa <strong>100% del trabajo local autónomamente ejecutable</strong>; credenciales, CAPTCHA, pagos, RLS, migraciones remotas, merge a <code>main</code> y producción nunca se marcan completados sin evidencia y aprobación humana. El proceso solo continúa mientras la sesión y la computadora permanezcan activas; no existe ejecución invisible después de cerrar OpenCode.</p>
+
+  <div class="check-list">
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Recuperar el árbol local y sincronizarlo con la rama publicada</div>
+        <div class="check-desc"><strong>Cerrado 25 sep 2026:</strong> archivos rastreados restaurados desde <code>d2989f0</code>; login, registro, CI, migración y pruebas recuperados. <code>HEAD</code> local coincide con <code>origin/security/fase-0</code>; los archivos nuevos sin seguimiento se conservaron.</div>
+      </div>
+      <span class="tag tag-decided">cerrado — d2989f0</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Preparar el ciclo nocturno del orquestador</div>
+        <div class="check-desc"><strong>Cerrado 25 sep 2026 con una corrida real:</strong> el orquestador leyó este panel, delegó scopes separados a backend/frontend/QA y QA revisó después del autor. Se cerraron dos cambios atómicos en commits locales sin push: aislamiento del inventario (<code>21b2f5f</code>) y lint 0/0 (<code>9e3d3aa</code>). Validación final: 189/189 tests, TypeScript limpio y build de 62 páginas. No se ejecutaron acciones de producción.</div>
+      </div>
+      <span class="tag tag-decided">cerrado — primera corrida validada</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Crear registro permanente de deuda técnica y código temporal</div>
+        <div class="check-desc"><strong>Cerrado 25 sep 2026:</strong> el registro visible de esta sección usa ID, módulo/evidencia, riesgo y estado/acción. Los hallazgos se documentan antes de remediarlos y no se elimina código por antigüedad; una corrección exige alcance propio y validación.</div>
+      </div>
+      <span class="tag tag-decided">cerrado — registro OPS activo</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Cerrar lectura arbitraria del filesystem desde el inventario</div>
+        <div class="check-desc"><strong>Cerrado en commit local <code>21b2f5f</code>:</strong> <code>INVENTORY_ALLOWED_ROOTS</code> define bases administradas y cada workspace queda limitado a <code>&lt;base&gt;/&lt;workspaceId&gt;</code>. Se bloquean traversal, prefix bypass y symlinks hacia el exterior; los errores no filtran rutas. QA verificó tests de endpoint y helper dentro de la suite final de 189/189, además de TypeScript, ESLint y build.</div>
+      </div>
+      <span class="tag tag-decided">cerrado — 21b2f5f</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Automatizar mantenimiento semanal en modo informe/PR</div>
+        <div class="check-desc">Ejecutar TypeScript, Vitest, ESLint, build, dependencias y código posiblemente muerto; generar informe y, cuando el cambio sea verificable, abrir una rama y PR. El mantenimiento no borra, mergea ni despliega automáticamente. Las advertencias legacy se reducen por lotes con tests, no en un cambio masivo.</div>
+      </div>
+      <span class="tag tag-open">pendiente — mantenimiento</span>
+    </div>
+    <div class="check-item done" data-status="done">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Investigar Jev de TypeSafe AI</div>
+        <div class="check-desc"><strong>Cerrado 25 sep 2026:</strong> Jev es un System One Model de decisiones estructuradas (<code>choice</code>, <code>score</code>, <code>noul</code>), disponible en Cloudflare Workers AI como <code>typesafe/jev</code> con cero retención. No genera texto ni código y no reemplaza al modelo de OpenCode. Uso propuesto: clasificar hallazgos, prioridad, riesgo y routing; el LLM de código realiza el cambio y QA lo valida.</div>
+      </div>
+      <span class="tag tag-decided">investigación cerrada</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Pilotar Jev con decisiones reversibles y datos no sensibles</div>
+        <div class="check-desc">Crear adaptador desacoplado, fijar versión, probar 50-100 casos en español, medir precisión/confianza/costo, usar feature flag y fallback humano. Primeros candidatos: prioridad de leads, routing de soporte y triage de deuda técnica. Prohibido usarlo como autoridad final para pagos, borrados, permisos, migraciones o producción.</div>
+      </div>
+      <span class="tag tag-open">pendiente — piloto controlado</span>
+    </div>
+    <div class="check-item" data-status="pending">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Diseñar skills propias tomando SkillsMP solo como referencia</div>
+        <div class="check-desc">No instalar skills externas. Revisar alcance, pasos y checklists públicos; reescribir versiones mínimas para CRM RAI Agency y auditarlas antes de activarlas. Prioridades detectadas: refactor seguro, deuda técnica, React/Next.js, Prisma/Postgres/RLS, testing de migraciones, UI/UX, Wix/CMS, operaciones CRM y revisión de seguridad.</div>
+      </div>
+      <span class="tag tag-open">pendiente — seguridad por diseño</span>
+    </div>
+    <div class="check-item blocked" data-status="blocked">
+      <div class="checkbox"></div>
+      <div class="check-body">
+        <div class="check-title">Completar y desplegar el 100% sin intervención humana</div>
+        <div class="check-desc">No es ejecutable de forma honesta: RLS y migraciones cambian producción; Meta/Google/Hostinger/Cloudflare pueden exigir login, 2FA o CAPTCHA; faltan secretos de Vercel; Stripe requiere rotación manual; el merge a <code>main</code> y los deploys necesitan aprobación explícita. El orquestador sí puede dejar todo el código local, tests, documentación, commits y PRs preparados.</div>
+      </div>
+      <span class="tag tag-blocked">bloqueado por guardrails humanos</span>
+    </div>
+  </div>
+
+  <div class="feature-group" style="margin-top:24px;">
+    <div class="feature-group-title">Registro permanente de deuda técnica</div>
+    <div class="decision-grid">
+      <div class="decision-card open"><h3>DT-001 · BullMQ / Valkey</h3><p><strong>Módulo/evidencia:</strong> build exitoso con warning por paquete opcional <code>@valkey/valkey-glide</code>. <strong>Riesgo:</strong> bajo. <strong>Estado/acción:</strong> abierto; revisar únicamente si se adopta Valkey Glide.</p></div>
+      <div class="decision-card"><h3>DT-002 · Symlinks seguros</h3><p><strong>Módulo/evidencia:</strong> inventario omite symlinks, incluso cuando apuntan dentro de la raíz permitida. <strong>Riesgo:</strong> bajo. <strong>Estado/acción:</strong> aceptado; documentar el comportamiento.</p></div>
+      <div class="decision-card open"><h3>DT-003 · Carpetas Día N</h3><p><strong>Módulo/evidencia:</strong> carpetas <code>Día N</code> ilegibles aparecen vacías en el inventario. <strong>Riesgo:</strong> bajo. <strong>Estado/acción:</strong> abierto; conservar evidencia y revisar el tratamiento de lectura.</p></div>
+      <div class="decision-card open"><h3>DT-004 · Raíces de inventario por entorno</h3><p><strong>Módulo/evidencia:</strong> el deploy necesita <code>INVENTORY_ALLOWED_ROOTS</code> y la estructura <code>&lt;base&gt;/&lt;workspaceId&gt;</code> configuradas. <strong>Riesgo:</strong> alto. <strong>Estado/acción:</strong> bloqueado por entorno humano; configurar y validar antes de deploy.</p></div>
+    </div>
+  </div>
+
+  <div class="decision-grid" style="margin-top:20px;">
+    <div class="decision-card"><h3>Fuente única del CRM</h3><p><strong>Elegido:</strong> este <code>panel-control.html</code>. <strong>Descartado:</strong> duplicar pendientes en <code>ROADMAP.md</code>. <strong>Motivo:</strong> impedir estados contradictorios y pérdida de contexto.</p></div>
+    <div class="decision-card"><h3>Alcance del segundo HTML</h3><p><strong>Elegido:</strong> <code>roadmap-agentes-rai.html</code> solo para capacidades, madurez y tareas del sistema de agentes. <strong>Descartado:</strong> copiar todo el backlog del CRM. <strong>Motivo:</strong> separar producto CRM de plataforma de agentes.</p></div>
+    <div class="decision-card"><h3>Limpieza de código</h3><p><strong>Elegido:</strong> evidencia estática + pruebas + PR. <strong>Descartado:</strong> borrar por edad o por decisión aislada de IA. <strong>Motivo:</strong> preservar comportamiento y trazabilidad.</p></div>
+    <div class="decision-card"><h3>Jev</h3><p><strong>Elegido:</strong> clasificador auxiliar con confianza y fallback. <strong>Descartado:</strong> usarlo como agente programador. <strong>Motivo:</strong> Jev no escribe código ni conversa; solo devuelve decisiones tipadas.</p></div>
+  </div>
+</section>
+
 <!-- FLUJO DE TRABAJO -->
 <section>
   <div class="section-head">
@@ -806,21 +1844,33 @@ footer{
   </div>
   <div class="workflow">
     <div class="workflow-step">
-      <div class="eyebrow">01 — CHAT</div>
-      <h4>Planeación y estrategia</h4>
-      <p>Aquí decidimos qué construir, en qué orden, y por qué. No se escribe código de producción en este chat.</p>
+      <div class="eyebrow">01 — PLANIFICACIÓN</div>
+      <h4>Fuente de verdad</h4>
+      <p>Este panel define prioridad, alcance, bloqueos y evidencia esperada sin duplicar el backlog en otros documentos.</p>
     </div>
     <div class="workflow-arrow">→</div>
     <div class="workflow-step">
-      <div class="eyebrow">02 — COWORK</div>
-      <h4>Carpeta de proyecto</h4>
-      <p>Cowork edita archivos directo en la carpeta del repo. Organiza qué toca cada cosa para que Claude Code sepa dónde está todo.</p>
+      <div class="eyebrow">02 — ORQUESTADOR OPENCODE</div>
+      <h4>Descomposición y control</h4>
+      <p>Selecciona una tarea acotada, fija scopes, aplica guardrails y coordina la evidencia sin ampliar el alcance.</p>
     </div>
     <div class="workflow-arrow">→</div>
     <div class="workflow-step">
-      <div class="eyebrow">03 — CLAUDE CODE (terminal)</div>
-      <h4>Ejecución</h4>
-      <p>Recibe los prompts ya preparados, construye, y tú revisas el resultado con ayuda de Cowork antes de aceptar.</p>
+      <div class="eyebrow">03 — SUBAGENTES</div>
+      <h4>Ejecución especializada</h4>
+      <p>Backend, frontend y QA trabajan con responsabilidades y archivos separados; el autor no se autoaprueba.</p>
+    </div>
+    <div class="workflow-arrow">→</div>
+    <div class="workflow-step">
+      <div class="eyebrow">04 — QA + COMMIT LOCAL</div>
+      <h4>Validación trazable</h4>
+      <p>QA revisa después del autor, ejecuta controles pertinentes y solo entonces se crea un commit local atómico.</p>
+    </div>
+    <div class="workflow-arrow">→</div>
+    <div class="workflow-step">
+      <div class="eyebrow">05 — APROBACIÓN HUMANA</div>
+      <h4>Push, merge y deploy</h4>
+      <p>Reiner autoriza explícitamente cada paso externo. Vercel, producción, RLS y migraciones nunca avanzan por inferencia.</p>
     </div>
   </div>
 </section>
@@ -829,7 +1879,7 @@ footer{
 
 <footer>
   <span>RAI AGENCY CRM — PANEL VIVO</span>
-  <span>Marca cada casilla al completar. Pide a Claude que regenere este archivo cuando avancen los bloqueadores.</span>
+  <span>Marca cada casilla al completar. Pide al orquestador OpenCode que actualice este archivo cuando exista evidencia nueva.</span>
 </footer>
 
 <script>

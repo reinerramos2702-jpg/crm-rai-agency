@@ -1,0 +1,53 @@
+/* Contenido multimedia — barra de acciones en lote (sin desenfoque; ver media.css). */
+
+.mm-batch {
+  position: sticky;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 60;
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 10px 12px;
+  background: var(--rai-card);
+  border: 1px solid color-mix(in srgb, var(--rai-gold) 45%, var(--rai-border));
+  border-radius: var(--radius-md);
+  box-shadow: var(--fx-elev-3);
+}
+.mm-batch-main { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.mm-batch-count {
+  margin-right: auto;
+  padding-left: 4px;
+  font-size: 13px;
+  color: var(--rai-text);
+}
+.mm-batch-count strong { font-size: 15px; font-variant-numeric: tabular-nums; color: var(--rai-gold); }
+.mm-act { min-height: 36px; }
+
+.mm-batch-tag { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.mm-batch-tag input { flex: 1 1 200px; width: auto; min-height: 36px; }
+
+/* ---------- Confirmación ---------- */
+.mm-confirm-title { margin: 0 0 8px; font-size: 17px; }
+.mm-confirm-text { margin: 0 0 18px; font-size: 14px; }
+.mm-confirm-actions { justify-content: flex-end; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .mm-batch { animation: mm-batch-in 200ms ease-out backwards; }
+  @keyframes mm-batch-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+}
+
+/* En pantallas angostas los botones quedan solo con icono (el nombre sigue disponible para lectores y como ayuda) */
+@media (max-width: 720px) {
+  .mm-batch { bottom: calc(8px + env(safe-area-inset-bottom, 0px)); padding: 10px; }
+  .mm-batch-count { flex: 1 1 100%; }
+  .mm-act { flex: 1 1 0; min-width: 44px; min-height: 44px; }
+  .mm-act-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}

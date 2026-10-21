@@ -1,5 +1,4 @@
-import { prisma } from '@/lib/db';
-import { decrypt } from '@/lib/crypto';
+import { resolveApiKey } from '@/lib/llm-providers';
 import { ingestUrl } from '@/lib/r2';
 import type { AgentOutput, MasterJson, ContentItem } from '@/lib/master-json-schema';
 
@@ -9,7 +8,7 @@ import type { AgentOutput, MasterJson, ContentItem } from '@/lib/master-json-sch
  * VERIFY: Suno API es no oficial; verificar provider actual antes de prod.
  */
 export async function runMusicAgent(args: {
-  userId: string;
+  workspaceId: string;
   executionId: string;
   taskId: string;
   master: MasterJson;
@@ -32,10 +31,8 @@ export async function runMusicAgent(args: {
   }
 
   try {
-    const stored = await prisma.apiKey.findFirst({
-      where: { userId: args.userId, provider: 'suno', validated: true },
-    });
-    if (!stored) {
+    const apiKey = await resolveApiKey(args.workspaceId, 'suno');
+    if (!apiKey) {
       return {
         agent: 'music',
         itemId: item.id,
@@ -47,7 +44,6 @@ export async function runMusicAgent(args: {
       };
     }
 
-    const apiKey = decrypt(stored.ciphertext, stored.iv, stored.authTag);
     const musicPrompt = buildMusicPrompt(master, item, args.copyOutput);
 
     // VERIFY: este endpoint es ilustrativo; cambiar al gateway real de Suno

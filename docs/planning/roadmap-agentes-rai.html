@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAI Agency — Roadmap de Agentes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg:#090c11; --panel:#111720; --raised:#18212c; --line:#263241;
+  --text:#edf2f7; --muted:#8c9aaa; --cyan:#5ec8e8; --green:#45d483;
+  --amber:#f2a93b; --red:#ff6474; --violet:#a68bff; --blue:#61a5fa;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh;color:var(--text);font-family:Inter,sans-serif;
+  background:
+    linear-gradient(rgba(9,12,17,.97),rgba(9,12,17,.97)),
+    repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(94,200,232,.07) 39px,rgba(94,200,232,.07) 40px),
+    repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(94,200,232,.07) 39px,rgba(94,200,232,.07) 40px);
+  padding-bottom:70px;
+}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.wrap{max-width:1180px;margin:auto;padding:0 28px}
+header{padding:52px 0 30px;border-bottom:1px solid var(--line)}
+.eyebrow,.mono{font-family:'JetBrains Mono',monospace}
+.eyebrow{color:var(--cyan);font-size:11px;letter-spacing:.15em;text-transform:uppercase}
+h1{font:700 clamp(30px,5vw,52px)/1.05 'Space Grotesk',sans-serif;margin-top:12px;letter-spacing:-.035em}
+.lead{max-width:760px;color:var(--muted);line-height:1.65;margin-top:16px;font-size:15px}
+.meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.pill{border:1px solid var(--line);background:var(--panel);padding:7px 10px;font:11px 'JetBrains Mono',monospace;color:var(--muted)}
+.pill strong{color:var(--text);font-weight:500}
+
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:28px 0 14px}
+.metric{background:var(--panel);border:1px solid var(--line);padding:18px}
+.metric b{display:block;font:700 28px 'Space Grotesk',sans-serif}
+.metric span{font:11px 'JetBrains Mono',monospace;color:var(--muted);text-transform:uppercase}
+.progress{height:8px;border:1px solid var(--line);background:var(--raised);overflow:hidden}
+.progress>div{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--green));transition:.25s}
+
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:24px 0 10px}
+.btn{background:var(--panel);color:var(--muted);border:1px solid var(--line);padding:9px 12px;font-size:12px}
+.btn:hover,.btn.active{border-color:var(--cyan);color:var(--text)}
+.btn.primary{background:var(--cyan);border-color:var(--cyan);color:var(--bg);font-weight:700}
+.spacer{flex:1}
+
+section{margin-top:46px}
+.section-head{display:flex;gap:12px;align-items:center;padding-bottom:13px;border-bottom:1px dashed var(--line);margin-bottom:18px}
+.section-code{font:600 11px 'JetBrains Mono',monospace;color:var(--bg);background:var(--cyan);padding:4px 8px}
+h2{font:600 22px 'Space Grotesk',sans-serif}
+.section-note{margin-left:auto;color:var(--muted);font-size:12px}
+
+.architecture{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.node{position:relative;background:var(--panel);border:1px solid var(--line);padding:18px;min-height:150px}
+.node:not(:last-child)::after{content:'→';position:absolute;right:-12px;top:44%;z-index:2;color:var(--cyan);font:600 18px 'JetBrains Mono',monospace}
+.node small{font:10px 'JetBrains Mono',monospace;color:var(--cyan);text-transform:uppercase;letter-spacing:.1em}
+.node h3{font:600 16px 'Space Grotesk',sans-serif;margin:9px 0}
+.node p{font-size:12.5px;line-height:1.5;color:var(--muted)}
+
+.decisions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.decision{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--green);padding:16px}
+.decision.pending{border-left-color:var(--amber)}
+.decision strong{display:block;font-size:14px;margin-bottom:5px}
+.decision span{color:var(--muted);font-size:12.5px;line-height:1.45}
+
+.roadmap{display:flex;flex-direction:column;gap:12px}
+.phase{background:var(--panel);border:1px solid var(--line)}
+.phase.hidden{display:none}
+.phase-top{display:grid;grid-template-columns:70px 1fr auto;gap:16px;align-items:center;padding:18px;border-bottom:1px solid var(--line)}
+.phase-number{font:700 25px 'Space Grotesk',sans-serif;color:var(--cyan)}
+.phase-title h3{font:600 17px 'Space Grotesk',sans-serif}
+.phase-title p{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.45}
+.status{font:600 10px 'JetBrains Mono',monospace;text-transform:uppercase;padding:5px 8px;border:1px solid}
+.status.pending{color:var(--muted);border-color:var(--line)}
+.status.progress{color:var(--amber);border-color:rgba(242,169,59,.45)}
+.status.blocked{color:var(--red);border-color:rgba(255,100,116,.45)}
+.status.done{color:var(--green);border-color:rgba(69,212,131,.45)}
+.tasks{padding:8px 18px 14px}
+.task{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid rgba(38,50,65,.7)}
+.task:last-child{border-bottom:none}
+.state-dot{width:20px;height:20px;border:1px solid var(--line);background:var(--raised);color:var(--muted);display:grid;place-items:center;font-size:11px}
+.task[data-status="done"] .state-dot{background:var(--green);border-color:var(--green);color:var(--bg)}
+.task[data-status="progress"] .state-dot{border-color:var(--amber);color:var(--amber)}
+.task[data-status="blocked"] .state-dot{border-color:var(--red);color:var(--red)}
+.task h4{font-size:13.5px;font-weight:600}
+.task p{font-size:12px;color:var(--muted);line-height:1.5;margin-top:4px}
+.owner{font:10px 'JetBrains Mono',monospace;color:var(--muted);border:1px solid var(--line);padding:3px 6px;white-space:nowrap}
+.phase-actions{display:flex;gap:8px;padding:0 18px 16px}
+.phase-actions button{background:transparent;border:1px solid var(--line);color:var(--muted);padding:6px 9px;font-size:11px}
+.phase-actions button:hover{color:var(--text);border-color:var(--cyan)}
+
+.human-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.human-card{padding:15px;background:var(--panel);border:1px solid var(--line)}
+.human-card strong{font-size:13px}.human-card p{color:var(--muted);font-size:12px;line-height:1.5;margin-top:5px}
+
+.notes{width:100%;min-height:140px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:14px;resize:vertical;line-height:1.5}
+.notes:focus{outline:none;border-color:var(--cyan)}
+.saved{font:11px 'JetBrains Mono',monospace;color:var(--green);margin-top:7px;min-height:16px}
+
+footer{margin-top:55px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--muted);font:11px 'JetBrains Mono',monospace}
+input[type=file]{display:none}
+
+/* Base de conocimiento y tecnologías (sin desenfoques) */
+.kb-intro{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--cyan);padding:16px;color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:14px}
+.kb-intro strong{color:var(--text)}
+.kb-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 12px}
+.kb-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.kb-search{flex:1;min-width:210px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:9px 11px;font-size:13px}
+.kb-search:focus,.kb-select:focus{outline:none;border-color:var(--cyan)}
+.kb-select{background:var(--panel);border:1px solid var(--line);color:var(--text);padding:9px 10px;font-size:12px}
+.kb-count{margin-left:auto;font:11px 'JetBrains Mono',monospace;color:var(--muted)}
+.kb-chips{display:flex;gap:6px;flex-wrap:wrap}
+.kb-chip{background:transparent;border:1px solid var(--line);color:var(--muted);padding:6px 9px;font:11px 'JetBrains Mono',monospace}
+.kb-chip:hover,.kb-chip[aria-pressed="true"]{border-color:var(--cyan);color:var(--text)}
+.kb-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.kb-card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--line);padding:14px}
+.kb-card[data-estado="adoptado"],.kb-card[data-estado="en-uso"]{border-left-color:var(--green)}
+.kb-card[data-estado="parcial"]{border-left-color:var(--cyan)}
+.kb-card[data-estado="candidato"],.kb-card[data-estado="propuesta"]{border-left-color:var(--amber)}
+.kb-card[data-estado="rechazado"]{border-left-color:var(--red)}
+.kb-card[data-estado="referencia"]{border-left-color:var(--violet)}
+.kb-card h4{font-size:13.5px;font-weight:600;line-height:1.35}
+.kb-id{font:10px 'JetBrains Mono',monospace;color:var(--muted);margin-bottom:4px}
+.kb-badges{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.kb-badge{font:10px 'JetBrains Mono',monospace;border:1px solid var(--line);padding:2px 6px;color:var(--muted);text-transform:uppercase}
+.kb-badge.adoptado,.kb-badge.en-uso{color:var(--green);border-color:rgba(69,212,131,.45)}
+.kb-badge.parcial{color:var(--cyan);border-color:rgba(94,200,232,.45)}
+.kb-badge.candidato,.kb-badge.propuesta{color:var(--amber);border-color:rgba(242,169,59,.45)}
+.kb-badge.rechazado,.kb-badge.blur{color:var(--red);border-color:rgba(255,100,116,.45)}
+.kb-badge.referencia{color:var(--violet);border-color:rgba(166,139,255,.45)}
+.kb-card p{font-size:12px;color:var(--muted);line-height:1.5}
+.kb-meta{font:11px 'JetBrains Mono',monospace;color:var(--cyan);margin-top:7px;line-height:1.45}
+.kb-note{font-size:11.5px;color:var(--muted);margin-top:7px;padding-top:7px;border-top:1px dashed var(--line);line-height:1.45}
+.kb-warn{border-left:3px solid var(--amber);background:var(--panel);padding:12px 14px;color:var(--muted);font-size:12px;line-height:1.55;margin-bottom:12px}
+.kb-prompt{white-space:pre-wrap;background:var(--raised);border:1px solid var(--line);padding:14px;font:12px/1.65 'JetBrains Mono',monospace;color:var(--text);margin:10px 0}
+.kb-empty{padding:26px;text-align:center;color:var(--muted);border:1px dashed var(--line);font-size:13px}
+@media(max-width:620px){.kb-count{margin-left:0;width:100%}.kb-list{grid-template-columns:1fr}}
+
+@media(max-width:850px){
+  .summary,.architecture{grid-template-columns:repeat(2,1fr)}
+  .node::after{display:none}
+}
+@media(max-width:620px){
+  .wrap{padding:0 16px}.summary,.architecture,.decisions,.human-grid{grid-template-columns:1fr}
+  .phase-top{grid-template-columns:46px 1fr}.phase-top .status{grid-column:2;width:max-content}
+  .task{grid-template-columns:24px 1fr}.owner{grid-column:2;width:max-content}
+  .section-note{display:none}.spacer{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Documento vivo · sistema jerárquico de agentes del CRM</div>
+    <h1>Roadmap de Agentes<br>RAI Agency</h1>
+    <p class="lead">Mapa de capacidades, madurez y tareas del sistema jerárquico que mantiene CRM RAI Agency. La fuente única del backlog de producto y seguridad es <code>docs/planning/panel-control.html</code>; este documento no lo replica ni lo reemplaza. Además es una <strong>base de conocimiento reutilizable</strong> (efectos, prácticas de ingeniería, marco legal y tecnologías) pensada para pasarla como referencia a proyectos nuevos: ver las secciones <a href="#tech" style="color:var(--cyan)">Tecnologías</a> y <a href="#kb" style="color:var(--cyan)">Base de conocimiento</a>.</p>
+    <div class="meta">
+      <div class="pill">ACTUALIZADO: <strong id="updated">17 oct 2026 · fase 12 (fiabilidad y mejora premium), arquitectura, tecnologías y base de conocimiento</strong></div>
+      <div class="pill">ORQUESTACIÓN: <strong>OpenCode + subagentes especializados</strong></div>
+      <div class="pill">CRM: <strong>Next.js + Prisma + Supabase + Vercel</strong></div>
+      <div class="pill">ESTADO: <strong>Agentes versionados · rama de seguridad publicada</strong></div>
+    </div>
+    <div class="summary">
+      <div class="metric"><b id="pct">0%</b><span>avance total</span></div>
+      <div class="metric"><b id="doneCount">0</b><span>completadas</span></div>
+      <div class="metric"><b id="progressCount">0</b><span>en curso</span></div>
+      <div class="metric"><b id="blockedCount">0</b><span>bloqueadas</span></div>
+    </div>
+    <div class="progress"><div id="progressBar"></div></div>
+  </header>
+
+  <div class="toolbar">
+    <button class="btn active" data-filter="all">Todo</button>
+    <button class="btn" data-filter="progress">En curso</button>
+    <button class="btn" data-filter="pending">Pendiente</button>
+    <button class="btn" data-filter="blocked">Bloqueado</button>
+    <button class="btn" data-filter="done">Completado</button>
+    <span class="spacer"></span>
+    <a class="btn" href="#tech">Tecnologías</a>
+    <a class="btn" href="#kb">Base de conocimiento</a>
+    <button class="btn" id="copySummary">Copiar resumen</button>
+    <button class="btn" id="exportState">Exportar estado</button>
+    <label class="btn" for="importFile">Importar estado</label>
+    <input id="importFile" type="file" accept="application/json">
+  </div>
+
+  <main>
+    <section>
+      <div class="section-head"><span class="section-code">MAPA</span><h2>Arquitectura acordada</h2><span class="section-note">Simple, separada y mantenible</span></div>
+      <div class="architecture">
+        <div class="node"><small>01 · Coordinación</small><h3>Orquestador OpenCode</h3><p>Lee la fuente de verdad, divide el trabajo, asigna una tarea acotada y consolida evidencia sin eludir aprobaciones humanas.</p></div>
+        <div class="node"><small>02 · Especialistas</small><h3>Backend · Frontend · QA</h3><p>Subagentes con alcance mínimo, contexto explícito y salida verificable. QA revisa; no aprueba su propio cambio.</p></div>
+        <div class="node"><small>03 · Producto</small><h3>CRM RAI Agency</h3><p>Next.js y Prisma sobre Supabase; Vercel es el destino de despliegue del CRM.</p></div>
+        <div class="node"><small>04 · Clasificación opcional</small><h3>Jev</h3><p>Clasificador desacoplado para decisiones reversibles. <code>typesafe/jev</code> podría consumirse mediante Cloudflare, sujeto a benchmark y aprobación.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><span class="section-code">DECISIONES</span><h2>Base ya definida</h2></div>
+      <div class="decisions">
+        <div class="decision"><strong>Una sola fuente de verdad</strong><span><code>docs/planning/panel-control.html</code> decide el backlog de producto y seguridad. Aquí solo se registra la capacidad operativa de los agentes.</span></div>
+        <div class="decision"><strong>Separación de responsabilidades</strong><span>El orquestador coordina; backend, frontend y QA trabajan con permisos y archivos acotados. Ningún agente se autoaprueba.</span></div>
+        <div class="decision"><strong>Estado verificable, no aspiracional</strong><span>“Completado” exige evidencia en el repositorio. Credenciales, migraciones remotas, merges y despliegues permanecen pendientes hasta validación humana.</span></div>
+        <div class="decision"><strong>Definition of Done obligatoria</strong><span>Cada tarea termina con alcance cumplido, diff revisado, validaciones pertinentes, evidencia y documentación sincronizada; sin código muerto ni secretos.</span></div>
+        <div class="decision"><strong>Skills propias y auditadas</strong><span>SkillsMP aporta referencias, no instalaciones. Cada patrón útil se reescribe, reduce, prueba y versiona como skill interna.</span></div>
+        <div class="decision pending"><strong>Jev sigue siendo un piloto</strong><span>No genera código ni toma decisiones irreversibles. Requiere benchmark, feature flag, trazabilidad, umbral de confianza y fallback humano.</span></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><span class="section-code">ROADMAP</span><h2>Fases del proyecto</h2><span class="section-note">Haz clic en cada tarea para cambiar su estado</span></div>
+      <div class="roadmap" id="roadmap">
+
+        <article class="phase" data-phase="0">
+          <div class="phase-top"><div class="phase-number">00</div><div class="phase-title"><h3>Base de orquestación</h3><p>Establecer la jerarquía, los contratos de delegación y los límites de cada agente.</p></div><span class="status progress">En curso</span></div>
+          <div class="tasks">
+            <div class="task" data-id="0-1" data-status="done"><button class="state-dot">✓</button><div><h4>Crear los cuatro agentes OpenCode</h4><p>Orquestador, backend, frontend y QA están definidos en <code>.opencode/agent/</code> y versionados en <code>36eaaf3</code>. DoD: cuatro archivos legibles, rastreados y con roles separados.</p></div><span class="owner">OPENCODE</span></div>
+            <div class="task" data-id="0-2" data-status="done"><button class="state-dot">✓</button><div><h4>Revisar definiciones y guardrails locales</h4><p>Las definiciones fueron revisadas y corregidas para Vercel, migraciones, push/merge y comandos destructivos; quedaron versionadas en <code>36eaaf3</code>. DoD: diff revisado y archivos rastreados en la rama activa.</p></div><span class="owner">ORQUESTADOR</span></div>
+            <div class="task" data-id="0-3" data-status="done"><button class="state-dot">✓</button><div><h4>Formalizar el contrato de delegación</h4><p>La corrida asignó scopes separados al orquestador y a backend, frontend y QA, con salida y evidencia delimitadas. DoD: contrato aplicado sin solapamientos en una corrida real.</p></div><span class="owner">ARQUITECTURA</span></div>
+            <div class="task" data-id="0-4" data-status="done"><button class="state-dot">✓</button><div><h4>Impedir la autoaprobación</h4><p>QA revisó los cambios después del agente autor y antes de los commits locales. DoD: separación autor/revisor demostrada; aprobación humana sigue reservada para acciones externas.</p></div><span class="owner">QA</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="1">
+          <div class="phase-top"><div class="phase-number">01</div><div class="phase-title"><h3>Contexto y documentación</h3><p>Entregar a cada agente el contexto mínimo correcto sin crear una segunda fuente de backlog.</p></div><span class="status progress">En curso</span></div>
+          <div class="tasks">
+            <div class="task" data-id="1-1" data-status="done"><button class="state-dot">✓</button><div><h4>Publicar la rama de seguridad</h4><p>La rama <code>security/fase-0</code> existe y está publicada. DoD: rama remota verificable y trabajo fuera de <code>main</code>.</p></div><span class="owner">GIT</span></div>
+            <div class="task" data-id="1-2" data-status="done"><button class="state-dot">✓</button><div><h4>Definir reglas operativas del repositorio</h4><p><code>AGENTS.md</code> quedó versionado en <code>36eaaf3</code> con reglas de Git, seguridad, continuidad y fuente de verdad. DoD: reglas rastreadas y disponibles para próximas sesiones.</p></div><span class="owner">DOCUMENTACIÓN</span></div>
+            <div class="task" data-id="1-3" data-status="done"><button class="state-dot">✓</button><div><h4>Alinear este mapa con la fuente de verdad</h4><p>La corrida tomó prioridades de <code>docs/planning/panel-control.html</code> y este mapa conserva solo capacidades y madurez de agentes. DoD: backlog único explícito y sin duplicación de pendientes de producto.</p></div><span class="owner">ORQUESTADOR</span></div>
+            <div class="task" data-id="1-4" data-status="done"><button class="state-dot">✓</button><div><h4>Crear paquetes de contexto por dominio</h4><p>Backend, frontend y QA recibieron scopes separados con rutas, restricciones y evidencia esperada durante la corrida. DoD: cada especialista trabajó dentro del contexto asignado.</p></div><span class="owner">DOCUMENTACIÓN</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="2">
+          <div class="phase-top"><div class="phase-number">02</div><div class="phase-title"><h3>Backend, API, Prisma y RLS</h3><p>Delegar cambios de datos con aislamiento multi-tenant y migraciones controladas.</p></div><span class="status pending">Pendiente</span></div>
+          <div class="tasks">
+            <div class="task" data-id="2-1" data-status="pending"><button class="state-dot">·</button><div><h4>Crear checklist backend por tarea</h4><p>Incluir autenticación, workspace, validación, errores, auditoría y rate limit según aplique. DoD: checklist usado y evidenciado en un PR.</p></div><span class="owner">BACKEND</span></div>
+            <div class="task" data-id="2-2" data-status="pending"><button class="state-dot">·</button><div><h4>Normalizar el flujo Prisma</h4><p>Analizar esquema, generar migración revisable y usar <code>prisma migrate deploy</code> contra la base remota. DoD: SQL revisado, respaldo definido y plan de reversión escrito.</p></div><span class="owner">BACKEND</span></div>
+            <div class="task" data-id="2-3" data-status="blocked"><button class="state-dot">!</button><div><h4>Validar RLS en Supabase</h4><p>Comprobar políticas con tenants distintos y mínimo privilegio. DoD: matriz allow/deny aprobada; bloqueado hasta contar con entorno y acceso autorizados.</p></div><span class="owner">SEGURIDAD</span></div>
+            <div class="task" data-id="2-4" data-status="done"><button class="state-dot">✓</button><div><h4>Exigir pruebas de regresión de aislamiento</h4><p>El commit local <code>21b2f5f</code> limita el inventario a <code>&lt;base&gt;/&lt;workspaceId&gt;</code> y añade pruebas de endpoint/helper para traversal, prefix bypass, symlink exterior y errores sin rutas. DoD: pruebas incluidas en la suite 189/189.</p></div><span class="owner">BACKEND + QA</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="3">
+          <div class="phase-top"><div class="phase-number">03</div><div class="phase-title"><h3>Frontend, UX y accesibilidad</h3><p>Aplicar patrones compartidos del CRM y validar estados completos de interfaz.</p></div><span class="status pending">Pendiente</span></div>
+          <div class="tasks">
+            <div class="task" data-id="3-1" data-status="pending"><button class="state-dot">·</button><div><h4>Inventariar patrones visuales reutilizables</h4><p>Identificar layout, navegación, formularios, feedback, carga y estados vacíos antes de crear componentes. DoD: decisión de reutilización registrada por tarea.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="3-2" data-status="pending"><button class="state-dot">·</button><div><h4>Definir checklist responsive</h4><p>Validar móvil, tableta y escritorio sin desbordes ni controles inaccesibles. DoD: evidencia visual en tres anchos y navegación completa.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="3-3" data-status="pending"><button class="state-dot">·</button><div><h4>Incorporar accesibilidad al cierre</h4><p>Revisar HTML semántico, teclado, foco, nombres accesibles, contraste y mensajes de error. DoD: revisión manual más chequeo automatizado sin fallos críticos.</p></div><span class="owner">FRONTEND + QA</span></div>
+            <div class="task" data-id="3-4" data-status="pending"><button class="state-dot">·</button><div><h4>Prohibir estados de progreso locales ficticios</h4><p>El progreso operativo del CRM debe venir de la base de datos; <code>localStorage</code> solo sirve para preferencias o documentos autónomos como este. DoD: revisión de persistencia aprobada.</p></div><span class="owner">ARQUITECTURA</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="4">
+          <div class="phase-top"><div class="phase-number">04</div><div class="phase-title"><h3>QA, CI y E2E</h3><p>Convertir cada entrega en evidencia repetible antes de solicitar aprobación.</p></div><span class="status progress">En curso</span></div>
+          <div class="tasks">
+            <div class="task" data-id="4-1" data-status="done"><button class="state-dot">✓</button><div><h4>Contar con CI y ESLint en HEAD</h4><p>CI ejecuta Prisma generate, TypeScript, ESLint y Vitest. El commit local <code>9e3d3aa</code> redujo lint de 67 a 0 warnings sin cambio funcional; QA final: 0 errores/0 warnings, typecheck limpio y build exitoso de 62 páginas.</p></div><span class="owner">QA</span></div>
+            <div class="task" data-id="4-2" data-status="done"><button class="state-dot">✓</button><div><h4>Contar con pruebas unitarias y E2E</h4><p>La suite final terminó 189/189, incluidas pruebas de aislamiento del inventario; el repositorio conserva especificaciones Playwright. Único aviso no bloqueante: BullMQ busca el paquete opcional <code>@valkey/valkey-glide</code>.</p></div><span class="owner">QA</span></div>
+            <div class="task" data-id="4-3" data-status="pending"><button class="state-dot">·</button><div><h4>Crear matriz de validación por tipo de cambio</h4><p>Relacionar documentación, UI, API, Prisma y seguridad con comandos y revisión manual. DoD: el orquestador no puede cerrar una tarea sin la evidencia exigida.</p></div><span class="owner">QA</span></div>
+            <div class="task" data-id="4-4" data-status="pending"><button class="state-dot">·</button><div><h4>Agregar pruebas E2E a flujos críticos faltantes</h4><p>Priorizar según <code>panel-control.html</code>, sin duplicar aquí su backlog. DoD: escenarios críticos aprobados, estables y aislados de producción.</p></div><span class="owner">QA + PRODUCTO</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="5">
+          <div class="phase-top"><div class="phase-number">05</div><div class="phase-title"><h3>Mantenimiento y deuda técnica</h3><p>Detectar, clasificar y resolver deuda sin convertir el mantenimiento en cambios ilimitados.</p></div><span class="status pending">Pendiente</span></div>
+          <div class="tasks">
+            <div class="task" data-id="5-1" data-status="done"><button class="state-dot">✓</button><div><h4>Adoptar el protocolo de deuda</h4><p><code>panel-control.html</code> contiene el registro visible DT-001 a DT-004 con módulo/evidencia, riesgo y estado/acción. DoD: los cuatro hallazgos reales quedaron trazables sin inventar deuda adicional.</p></div><span class="owner">ORQUESTADOR</span></div>
+            <div class="task" data-id="5-2" data-status="done"><button class="state-dot">✓</button><div><h4>Separar observación de remediación</h4><p>La deuda abierta, aceptada y bloqueada quedó documentada aparte de cualquier corrección; DT-004 exige acción humana antes del deploy. DoD: registro sin remediaciones fuera del alcance aprobado.</p></div><span class="owner">QA</span></div>
+            <div class="task" data-id="5-3" data-status="pending"><button class="state-dot">·</button><div><h4>Programar auditoría periódica</h4><p>Revisar TypeScript, lint, tests, build, dependencias, duplicación y código muerto. DoD: informe fechado con comandos, resultados y límites conocidos.</p></div><span class="owner">MANTENIMIENTO</span></div>
+            <div class="task" data-id="5-4" data-status="pending"><button class="state-dot">·</button><div><h4>Definir presupuesto de deuda por iteración</h4><p>Reservar capacidad sin desplazar prioridades de <code>panel-control.html</code>. DoD: cupo aprobado y tareas cerradas con pruebas de no regresión.</p></div><span class="owner">PRODUCTO</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="6">
+          <div class="phase-top"><div class="phase-number">06</div><div class="phase-title"><h3>Skills internas auditadas</h3><p>Convertir patrones útiles en instrucciones propias, pequeñas y comprobables.</p></div><span class="status pending">Pendiente</span></div>
+          <div class="tasks">
+            <div class="task" data-id="6-1" data-status="pending"><button class="state-dot">·</button><div><h4>Priorizar catálogo interno</h4><p>Seleccionar necesidades repetidas: Next.js, Prisma/RLS, pruebas, UI accesible, deuda y operación segura. DoD: prioridad justificada por frecuencia y riesgo.</p></div><span class="owner">ORQUESTADOR</span></div>
+            <div class="task" data-id="6-2" data-status="pending"><button class="state-dot">·</button><div><h4>Investigar referencias en SkillsMP</h4><p>Leer patrones públicos sin instalar ni copiar código opaco. DoD: referencias, licencia, riesgos y piezas descartadas documentadas.</p></div><span class="owner">INVESTIGACIÓN</span></div>
+            <div class="task" data-id="6-3" data-status="pending"><button class="state-dot">·</button><div><h4>Reescribir y reducir cada skill</h4><p>Crear instrucciones propias con permisos mínimos, entradas y salidas claras. DoD: revisión de seguridad y ausencia de secretos o dependencias innecesarias.</p></div><span class="owner">SEGURIDAD</span></div>
+            <div class="task" data-id="6-4" data-status="pending"><button class="state-dot">·</button><div><h4>Evaluar antes de activar</h4><p>Probar casos normales, ambiguos y adversos; comparar contra trabajo sin skill. DoD: criterios de activación cumplidos y versión fijada.</p></div><span class="owner">QA</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="7">
+          <div class="phase-top"><div class="phase-number">07</div><div class="phase-title"><h3>Piloto Jev</h3><p>Evaluar un clasificador opcional sin convertirlo en programador ni autoridad final.</p></div><span class="status pending">Pendiente</span></div>
+          <div class="tasks">
+            <div class="task" data-id="7-1" data-status="pending"><button class="state-dot">·</button><div><h4>Definir caso reversible</h4><p>Elegir clasificación o enrutamiento sin pagos, permisos, borrados ni migraciones. DoD: entradas, clases, fallback y daño máximo aprobados.</p></div><span class="owner">PRODUCTO + QA</span></div>
+            <div class="task" data-id="7-2" data-status="pending"><button class="state-dot">·</button><div><h4>Construir benchmark en español</h4><p>Preparar corpus etiquetado y medir precisión, confianza, latencia, costo y sesgos. DoD: umbral de aceptación definido antes de ejecutar.</p></div><span class="owner">QA</span></div>
+            <div class="task" data-id="7-3" data-status="blocked"><button class="state-dot">!</button><div><h4>Validar proveedor y privacidad</h4><p>Evaluar <code>typesafe/jev</code> mediante Cloudflare, retención y tratamiento de datos. DoD: revisión legal/técnica y credenciales aprobadas; bloqueado hasta autorización.</p></div><span class="owner">SEGURIDAD</span></div>
+            <div class="task" data-id="7-4" data-status="pending"><button class="state-dot">·</button><div><h4>Implementar adaptador con feature flag</h4><p>Registrar versión, resultado, score y fallback humano sin datos sensibles. DoD: apagado instantáneo, observabilidad y pruebas de degradación.</p></div><span class="owner">BACKEND + QA</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="8">
+          <div class="phase-top"><div class="phase-number">08</div><div class="phase-title"><h3>Operación nocturna</h3><p>Permitir corridas largas únicamente con límites, observabilidad y parada segura.</p></div><span class="status blocked">Bloqueado</span></div>
+          <div class="tasks">
+            <div class="task" data-id="8-1" data-status="done"><button class="state-dot">✓</button><div><h4>Definir una cola finita de trabajo</h4><p>La primera corrida se limitó a dos cambios locales verificables y terminó con QA y commits atómicos <code>21b2f5f</code>/<code>9e3d3aa</code>. DoD: alcance cerrado, sin credenciales ni producción.</p></div><span class="owner">ORQUESTADOR</span></div>
+            <div class="task" data-id="8-2" data-status="done"><button class="state-dot">✓</button><div><h4>Aplicar guardrails nocturnos</h4><p>Las definiciones corrigieron límites para Vercel, migraciones, push/merge y comandos destructivos y quedaron versionadas en <code>36eaaf3</code>. La corrida no ejecutó ninguna de esas acciones. DoD: guardrails rastreados y respetados.</p></div><span class="owner">SEGURIDAD</span></div>
+            <div class="task" data-id="8-3" data-status="pending"><button class="state-dot">·</button><div><h4>Registrar heartbeat y checkpoints</h4><p>Guardar tarea activa, resultado, errores, consumo y siguiente paso sin secretos. DoD: una interrupción permite reanudar sin repetir cambios.</p></div><span class="owner">PLATAFORMA</span></div>
+            <div class="task" data-id="8-4" data-status="blocked"><button class="state-dot">!</button><div><h4>Validar operación supervisada extendida</h4><p>La corrida demuestra trabajo prolongado dentro de una sesión activa, pero no puede garantizar operación después de cerrar la sesión. DoD pendiente: equipo conectado, sin suspensión, sesión activa y revisión humana del resultado.</p></div><span class="owner">REINER + QA</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="9">
+          <div class="phase-top"><div class="phase-number">09</div><div class="phase-title"><h3>Gobernanza Git y Vercel</h3><p>Hacer que cada cambio llegue al CRM mediante revisión, evidencia y aprobación explícita.</p></div><span class="status pending">Pendiente</span></div>
+          <div class="tasks">
+            <div class="task" data-id="9-1" data-status="done"><button class="state-dot">✓</button><div><h4>Normalizar ramas y commits</h4><p>La corrida trabajó en <code>security/fase-0</code> y produjo commits de alcance único para inventario, lint, configuración y guardrails. El push autorizado sincronizó la rama con GitHub hasta <code>c418bef</code>; no hubo merge ni deploy.</p></div><span class="owner">GIT</span></div>
+            <div class="task" data-id="9-2" data-status="pending"><button class="state-dot">·</button><div><h4>Exigir revisión previa al push</h4><p>Mostrar diff, pruebas y riesgos; no subir hasta confirmación humana. DoD: aprobación registrada y solo archivos previstos en el commit.</p></div><span class="owner">ORQUESTADOR</span></div>
+            <div class="task" data-id="9-3" data-status="blocked"><button class="state-dot">!</button><div><h4>Validar preview de Vercel</h4><p>Revisar build, variables, rutas críticas, logs y cambios visuales en un entorno aislado. DoD: preview aprobado; bloqueado hasta disponer de acceso y despliegue autorizado.</p></div><span class="owner">QA + HUMANO</span></div>
+            <div class="task" data-id="9-4" data-status="blocked"><button class="state-dot">!</button><div><h4>Autorizar merge y producción</h4><p>Solo después de CI verde, revisión, plan de reversión y aprobación explícita. DoD: merge confirmado, Vercel saludable y entrega registrada; bloqueado hasta decisión humana.</p></div><span class="owner">REINER</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="10">
+          <div class="phase-top"><div class="phase-number">10</div><div class="phase-title"><h3>Agentes IA del CRM (producto)</h3><p>Agentes de chat y voz que forman parte del producto, con activación gradual, tope de gasto y control humano.</p></div><span class="status progress">En curso</span></div>
+          <div class="tasks">
+            <div class="task" data-id="10-1" data-status="done"><button class="state-dot">✓</button><div><h4>Agentes de chat con asistente propio</h4><p>Los agentes de chat tienen un asistente propio («Nuevo agente») separado del de voz; commit <code>1ed71c1</code>. DoD: chat y voz configurables por separado, sin compartir ajustes.</p></div><span class="owner">AGENTES IA</span></div>
+            <div class="task" data-id="10-2" data-status="done"><button class="state-dot">✓</button><div><h4>Agente de voz entrante con Retell</h4><p>Código, webhook firmado e idempotente, herramienta de búsqueda en la base de conocimiento y centro <code>/agentes-ia/voz</code>; modo simulado por defecto y cero gasto; commit <code>4c49cb8</code>. DoD: flujo completo probado en modo simulado sin llamadas reales.</p></div><span class="owner">BACKEND + QA</span></div>
+            <div class="task" data-id="10-3" data-status="pending"><button class="state-dot">·</button><div><h4>Activar la voz real</h4><p>Pasos manuales de Reiner: cuenta Retell con crédito solo del tope, número de Venezuela por Telnyx/SIP, variables de entorno y <code>VOICE_MODE=live</code>. Tope recomendado: US$ 100 en 2 semanas; requiere revisión legal previa. DoD: una llamada real de prueba dentro del tope y con la revisión legal aprobada.</p></div><span class="owner">REINER</span></div>
+            <div class="task" data-id="10-4" data-status="pending"><button class="state-dot">·</button><div><h4>Base de conocimiento con búsqueda semántica (RAG)</h4><p>Hoy la búsqueda es por palabras clave; falta la búsqueda semántica y un probador de recuperación. DoD: probador que muestre los fragmentos recuperados y su relevancia en casos reales en español.</p></div><span class="owner">BACKEND</span></div>
+            <div class="task" data-id="10-5" data-status="pending"><button class="state-dot">·</button><div><h4>Conversation AI en producción</h4><p>Activarla primero en modo «Sugerido», donde la IA propone y una persona aprueba. DoD: sugerencias revisadas por un humano antes de pasar a respuesta automática.</p></div><span class="owner">AGENTES IA + QA</span></div>
+            <div class="task" data-id="10-6" data-status="pending"><button class="state-dot">·</button><div><h4>Traspaso a humano y seguimiento automático</h4><p>Definir cuándo el agente cede la conversación a una persona y qué seguimiento se programa solo. DoD: traspaso con contexto completo y sin conversaciones sin responsable.</p></div><span class="owner">AGENTES IA</span></div>
+            <div class="task" data-id="10-7" data-status="done"><button class="state-dot">✓</button><div><h4>Orquestación por subagentes con propiedad de archivos disjunta</h4><p>Ola 3 (Voz, Inicio, Campaña, Generador) y Ola 3b (Marketing, Multimedia, Automatización), con verificación independiente en una copia aparte. DoD: ningún archivo con dos propietarios y revisión ajena al autor.</p></div><span class="owner">ORQUESTADOR</span></div>
+            <div class="task" data-id="10-8" data-status="done"><button class="state-dot">✓</button><div><h4>Spec cerrada y prompt maestro de la Ola 4</h4><p><code>docs/SPEC-ola4-entorno-sesion-configuracion-modulos.md</code> y <code>docs/planning/PROMPT-MAESTRO-OLA4.md</code>; commit <code>85dc085</code>. DoD: spec sin decisiones abiertas y prompt listo para ejecución autónoma.</p></div><span class="owner">DOCUMENTACIÓN</span></div>
+            <div class="task" data-id="10-9" data-status="pending"><button class="state-dot">·</button><div><h4>Script de entorno seguro <code>run-staging</code></h4><p>Slice S0 de la Ola 4: evita la fuga de <code>.env.production</code> y el choque de <code>.next</code> entre <code>dev</code> y <code>build</code>. DoD: staging arranca con <code>.env.staging</code> sin tocar producción y con prueba de no regresión.</p></div><span class="owner">PLATAFORMA</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="11">
+          <div class="phase-top"><div class="phase-number">11</div><div class="phase-title"><h3>Arquitectura del ecosistema y base de conocimiento</h3><p>Cuatro módulos como un solo producto (Generador, Automatización, Multimedia, Sitios Web), repositorio limpio y conocimiento reutilizable entre proyectos.</p></div><span class="status progress">En curso</span></div>
+          <div class="tasks">
+            <div class="task" data-id="11-1" data-status="done"><button class="state-dot">✓</button><div><h4>Documento de arquitectura del ecosistema (4 módulos)</h4><p><code>docs/ARQUITECTURA-ECOSISTEMA-CRM.md</code>: visión, patrones, contratos de API, Clean Code, arquitectura y experiencia de Generador, Automatización, Multimedia y Sitios Web, hoja de ruta en 4 fases, KPIs y 14 ADR. DoD: modelos nuevos marcados como propuesta y ninguna medición inventada.</p></div><span class="owner">ARQUITECTURA</span></div>
+            <div class="task" data-id="11-2" data-status="done"><button class="state-dot">✓</button><div><h4>Registro de tecnologías y base de conocimiento reutilizable en este HTML</h4><p>Secciones «Tecnologías» y «Base de conocimiento» con 80 efectos, 17 prácticas de ingeniería, 11 puntos legales y 42 tecnologías, filtrables y exportables en JSON. DoD: cada efecto indica su estado en el CRM y si requiere desenfoque.</p></div><span class="owner">DOCUMENTACIÓN</span></div>
+            <div class="task" data-id="11-3" data-status="done"><button class="state-dot">✓</button><div><h4>Limpieza de obsoletos en una sola carpeta de revisión</h4><p><code>_revisar-obsoletos/</code> con 6 componentes sin uso, 1 documento histórico y 49 reglas CSS muertas (nada borrado; restaurable). DoD: <code>tsc</code> 0, ESLint 0, 848 pruebas y build correcto después de moverlos; lo dudoso queda sin mover y listado en <code>LEEME.md</code>.</p></div><span class="owner">QA</span></div>
+            <div class="task" data-id="11-4" data-status="pending"><button class="state-dot">·</button><div><h4>Compuerta: aprobaciones de Reiner antes de la Fase 2</h4><p>Revisar <code>_revisar-obsoletos/</code>; aprobar las tablas propuestas (<code>OutboxEvent</code>, <code>ImageJob</code>, <code>MediaAsset</code> y variantes, modelos de Sitios Web, idempotencia de ejecuciones), cada dependencia nueva y el hosting del worker. DoD: decisión registrada por ADR.</p></div><span class="owner">REINER</span></div>
+            <div class="task" data-id="11-5" data-status="pending"><button class="state-dot">·</button><div><h4>Fase 1 · Core y Estado</h4><p>Núcleo compartido (errores, logger, <code>withApi</code>, store con historial, actualizaciones optimistas), fronteras entre contextos en CI, TypeScript escalones 1–2, puerto de proveedores de imagen y registro de acciones. DoD: puertas de calidad en verde sin cambio visible.</p></div><span class="owner">BACKEND + QA</span></div>
+            <div class="task" data-id="11-6" data-status="pending"><button class="state-dot">·</button><div><h4>Fase 2 · Módulos Backend</h4><p>Outbox, cola y worker de imágenes, motor de automatización v2 (grafo), activos multimedia con subida directa y dominio de Sitios Web, detrás de banderas. DoD: equivalencia con las 19 plantillas y cero trabajos perdidos.</p></div><span class="owner">BACKEND</span></div>
+            <div class="task" data-id="11-7" data-status="pending"><button class="state-dot">·</button><div><h4>Fase 3 · Unificación UX</h4><p>Bandeja de trabajos, selector de medios, gestor de medios virtualizado, lienzo de flujos y editor web por incrementos. DoD: matriz de coherencia completa y capturas a 320, 768 y 1440 px.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="11-8" data-status="pending"><button class="state-dot">·</button><div><h4>Fase 4 · Optimización y performance</h4><p>Medición real de LCP, INP, CLS y latencia de API (hoy no existe medición de producción), presupuestos en CI y auditoría de accesibilidad. DoD: línea base documentada y KPIs de la arquitectura cumplidos.</p></div><span class="owner">QA</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+
+        <article class="phase" data-phase="12">
+          <div class="phase-top"><div class="phase-number">12</div><div class="phase-title"><h3>Fiabilidad y mejora premium de módulos</h3><p>Arreglos de pantallas que se rompían, verificación de conexión con la base y pulido visual de Multimedia, Marketing, Automatización y Sitios.</p></div><span class="status progress">En curso</span></div>
+          <div class="tasks">
+            <div class="task" data-id="12-1" data-status="done"><button class="state-dot">✓</button><div><h4>Planificador de redes: el calendario ya no desaparece</h4><p>Commit <code>7ef2a05</code>. El 503 por tabla <code>ScheduledPost</code> ausente ya no reemplaza la pantalla: el calendario queda visible con aviso guiado y «Reintentar». DoD: <code>tsc</code> 0 y ESLint 0 advertencias.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="12-2" data-status="pending"><button class="state-dot">·</button><div><h4>Aplicar la tabla <code>ScheduledPost</code> en staging y verificar tablas</h4><p>Reiner aplica <code>docs/planning/staging-scheduledpost.sql</code> (solo esquema <code>staging</code>), ejecuta <code>npx prisma generate</code> y corre <code>node --env-file=.env.staging scripts/check-db-tables.mjs</code>. DoD: «OK: todas las tablas existen».</p></div><span class="owner">REINER</span></div>
+            <div class="task" data-id="12-3" data-status="done"><button class="state-dot">✓</button><div><h4>Marketing premium (8 pestañas)</h4><p>Planificador, correos, fragmentos, cuenta atrás, enlaces, marca, anuncios y prospección: jerarquía visual, estados vacíos y de error que no destruyen la vista, micro-interacciones solo con transform y opacity. DoD: 320–1440 px sin scroll horizontal ni blur. Commit <code>c7e8b2c</code>.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="12-4" data-status="done"><button class="state-dot">✓</button><div><h4>Contenido multimedia premium</h4><p>Cuadrícula, visor, filtros y estados de carga con esqueletos; subida de archivos sigue a la espera de la decisión de almacenamiento. DoD: igual que 12-3. Commit <code>bf8c2fe</code>.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="12-5" data-status="done"><button class="state-dot">✓</button><div><h4>Automatización premium (flujos, plantillas, contenido IG, actividad, configuración)</h4><p>Separar <code>ContentIGTab.tsx</code> (~1200 líneas) por responsabilidades y pulir tarjetas, estados y feedback. DoD: sin regresión en 848 pruebas y build correcto. Commit <code>c7af74e</code>.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="12-6" data-status="done"><button class="state-dot">✓</button><div><h4>Sitios premium</h4><p>Registro de sedes con tarjetas, filtros y detalle más claros; sin tocar el modelo <code>Site</code>. DoD: igual que 12-3. Commit <code>3304851</code>.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="12-7" data-status="pending"><button class="state-dot">·</button><div><h4>Código por limpiar</h4><p><code>base-conocimiento/[id]</code> (645 líneas), ajustes de voz en <code>localStorage</code>, endpoints de reintento y PATCH de fragmentos y enlaces, «Rainer» en staging, lista «dudoso» de <code>_revisar-obsoletos/LEEME.md</code>. DoD: cada ítem resuelto o aceptado por Reiner.</p></div><span class="owner">CALIDAD</span></div>
+            <div class="task" data-id="12-8" data-status="done"><button class="state-dot">✓</button><div><h4>Premium en Conversaciones, Contactos, Clientes Potenciales, Calendarios, Facturación e Informes</h4><p>Commits <code>48f4e90</code>, <code>22e5377</code>, <code>8444ae8</code>, <code>3230978</code>. Monolitos divididos, spinner infinito corregido, estados vacíos con vista previa y honestidad sobre lo que es real. DoD: <code>tsc</code> 0, ESLint 0, Vitest y build verdes.</p></div><span class="owner">FRONTEND</span></div>
+            <div class="task" data-id="12-9" data-status="done"><button class="state-dot">✓</button><div><h4>El CRM privado no se indexa</h4><p>Commit <code>4b0d3a0</code>: metadata <code>robots</code> y <code>robots.ts</code>.</p></div><span class="owner">SEO</span></div>
+            <div class="task" data-id="12-10" data-status="pending"><button class="state-dot">·</button><div><h4>Cerrar brechas de API halladas</h4><p>Oportunidades persistentes, paginación de contactos, validaciones de calendarios y enlaces, endpoint de conversaciones. Requiere aprobar esquema (compuerta Fase 2). Detalle en el panel, OLA-4B.</p></div><span class="owner">BACKEND</span></div>
+          </div>
+          <div class="phase-actions"><button data-phase-status="progress">Marcar fase en curso</button><button data-phase-status="done">Completar fase</button></div>
+        </article>
+      </div>
+    </section>
+
+
+    <section id="tech">
+      <div class="section-head"><span class="section-code">TECNOLOGÍAS</span><h2>Registro de tecnologías y técnicas</h2><span class="section-note">En uso, propuestas y de referencia</span></div>
+      <div class="kb-intro"><strong>Una sola tabla de consulta.</strong> Lo que el CRM usa hoy, lo que la arquitectura propone (cada paquete nuevo requiere aprobación de Reiner) y lo que solo sirve como referencia para otros proyectos. Cuando se adopte o descubra una técnica nueva, se añade aquí con su estado.</div>
+      <div class="kb-controls">
+        <div class="kb-chips" id="techChips" role="group" aria-label="Filtrar tecnologías por estado"></div>
+        <input class="kb-search" id="techSearch" type="search" placeholder="Buscar tecnología, categoría o nota…" aria-label="Buscar tecnologías">
+        <span class="kb-count" id="techCount"></span>
+      </div>
+      <div class="kb-list" id="techList"></div>
+    </section>
+
+    <section id="kb">
+      <div class="section-head"><span class="section-code">KB</span><h2>Base de conocimiento reutilizable</h2><span class="section-note">Efectos · Prácticas · Marco legal</span></div>
+      <div class="kb-intro"><strong>Referencia para proyectos futuros.</strong> Este HTML se pasa como ejemplo a cada proyecto nuevo para que adopte las mismas técnicas de calidad. Los efectos están catalogados con su costo de rendimiento, si requieren desenfoque y su estado en el CRM RAI Agency (<em>adoptado, parcial, candidato, rechazado, referencia</em>). Los datos están en un bloque JSON dentro del archivo (<code>#kb-data</code>), legible por cualquier asistente.</div>
+      <div class="human-card" style="margin-bottom:12px"><strong>Cómo reutilizar este HTML en otro proyecto</strong>
+        <div class="kb-prompt" id="reusePrompt">Te adjunto un HTML de referencia de otro proyecto (roadmap-agentes-rai.html). Úsalo como plantilla y como base de conocimiento:
+
+1. Estructura: replica el formato (fases con tareas de estados pendiente/en curso/completado/bloqueado, guardarraíles, bitácora verificable, notas guardadas en el navegador) pero con el contenido de ESTE proyecto: [nombre del proyecto, objetivo, stack, reglas innegociables].
+2. Base de conocimiento: lee la sección «Base de conocimiento reutilizable» (efectos, prácticas de ingeniería, marco legal y tecnologías). La columna «estado» describe las decisiones del CRM RAI Agency; NO las copies: reevalúa cada efecto y práctica con las reglas de este proyecto (por ejemplo, si aquí sí se permite el desenfoque).
+3. Propón qué efectos, prácticas y tecnologías adoptar, cuáles descartar y por qué, antes de implementarlos. Marca el costo de rendimiento y la accesibilidad de cada uno.
+4. Mantén el principio de fuente única de verdad y evidencia verificable: nada se marca «completado» sin prueba (código, pruebas, build o captura).
+5. Cada vez que descubramos una técnica nueva, regístrala en la misma sección (id, estado, nota) para que la base crezca.</div>
+        <div class="toolbar" style="padding:0"><button class="btn primary" id="copyReuse">Copiar instrucciones</button><button class="btn" id="copyKb">Copiar base (JSON)</button><button class="btn" id="downloadKb">Descargar base (.json)</button></div>
+      </div>
+      <div class="kb-tabs" role="tablist" aria-label="Secciones de la base de conocimiento">
+        <button class="btn active" role="tab" data-kb-tab="efectos">Efectos</button>
+        <button class="btn" role="tab" data-kb-tab="practicas">Prácticas de ingeniería</button>
+        <button class="btn" role="tab" data-kb-tab="legal">Marco legal</button>
+      </div>
+      <div id="kbWarn"></div>
+      <div class="kb-controls">
+        <div class="kb-chips" id="kbChips" role="group" aria-label="Filtrar por estado"></div>
+        <select class="kb-select" id="kbGroup" aria-label="Filtrar por grupo"></select>
+        <input class="kb-search" id="kbSearch" type="search" placeholder="Buscar por nombre, técnica o nota…" aria-label="Buscar en la base de conocimiento">
+        <span class="kb-count" id="kbCount"></span>
+      </div>
+      <div class="kb-list" id="kbList"></div>
+      <script type="application/json" id="kb-data">{"meta":{"fuente":"CRM RAI Agency — docs/planning/roadmap-agentes-rai.html","actualizado":"2026-10-17","nota_estado":"El campo estado describe la decisión tomada en el CRM RAI Agency. En otro proyecto, reevaluar cada elemento con sus propias reglas.","estados_efectos":["adoptado","parcial","candidato","rechazado","referencia"]},"gruposEfectos":{"crm-ui":"CRM · Interfaz (UI)","crm-ux":"CRM · Experiencia (UX)","crm-sys":"CRM · Sistema y configuración","scroll":"Scroll inmersivo (landing)","agencia":"Sitio de agencia IA"},"efectos":[{"id":"crm-ui-01","grupo":"crm-ui","nombre":"Bento Grid con expansión","que":"Tarjetas de KPI en rejilla modular que se amplían al pasar el cursor o hacer clic para mostrar el gráfico detallado.","tecnica":"CSS Grid + transform (evitar animar el layout)","costo":"medio","blur":false,"estado":"rechazado","nota":"Anima el layout, no solo transform/opacity. Alternativa: Bento estático con el detalle en un panel lateral."},{"id":"crm-ui-02","grupo":"crm-ui","nombre":"Inversión de contraste con mix-blend-mode","que":"Elementos fijos de navegación que invierten su color al cruzar fondos claros u oscuros.","tecnica":"mix-blend-mode: difference","costo":"medio","blur":false,"estado":"rechazado","nota":"Resultado impredecible entre tema claro y oscuro."},{"id":"crm-ui-03","grupo":"crm-ui","nombre":"Jerarquía con glassmorphism","que":"Capas translúcidas con desenfoque de fondo para jerarquizar ventanas y menús sin perder el contexto.","tecnica":"backdrop-filter","costo":"alto","blur":true,"estado":"rechazado","nota":"Requiere desenfoque. En el CRM la jerarquía se logra con elevación por borde y color de superficie."},{"id":"crm-ui-04","grupo":"crm-ui","nombre":"Shimmer de esqueleto","que":"Marcadores de carga con un barrido de luz sutil que reducen la percepción de espera en tablas y gráficos.","tecnica":"Gradiente con transform: translateX","costo":"bajo","blur":false,"estado":"adoptado","nota":"Clase .fx-shimmer y componente Skeleton (src/styles/effects.css)."},{"id":"crm-ui-05","grupo":"crm-ui","nombre":"Sparklines que se dibujan","que":"Minigráficos dentro de las filas de clientes que se trazan con una animación lineal al renderizar la vista.","tecnica":"SVG con stroke-dashoffset","costo":"bajo","blur":false,"estado":"candidato","nota":"Útil en tablas de contactos y KPIs; respetar prefers-reduced-motion."},{"id":"crm-ui-06","grupo":"crm-ui","nombre":"Sidebar colapsable con vidrio esmerilado","que":"Barra lateral que se contrae a solo iconos para ganar espacio de trabajo, con efecto difuminado.","tecnica":"Transición de ancho/transform + backdrop-filter","costo":"medio","blur":true,"estado":"parcial","nota":"Se adoptó el colapso a iconos; el vidrio se rechazó por el desenfoque."},{"id":"crm-ui-07","grupo":"crm-ui","nombre":"Cursor magnético en gráficos","que":"El puntero es atraído unos píxeles hacia los puntos clave de un gráfico lineal para leer valores exactos.","tecnica":"mousemove + cálculo del punto más cercano","costo":"medio","blur":false,"estado":"rechazado","nota":"Satura y estorba la precisión del puntero."},{"id":"crm-ui-08","grupo":"crm-ui","nombre":"Sombras de profundidad (eje Z)","que":"Varios niveles de elevación para diferenciar elementos flotantes del fondo estático.","tecnica":"box-shadow por tokens","costo":"bajo","blur":false,"estado":"adoptado","nota":"Tokens --fx-elev-1/2/3 con desenfoque corto y sin halos."},{"id":"crm-ui-09","grupo":"crm-ui","nombre":"Indicadores de estado con brillo suave","que":"Puntos LED de estado (en línea, trato ganado, soporte urgente) con un pulso discreto para captar atención sin saturar.","tecnica":"box-shadow / opacity animados","costo":"bajo","blur":false,"estado":"adoptado","nota":"Clase .fx-dot (+ --ok, --warn, --danger, --live); el anillo que respira solo existe en --live."},{"id":"crm-ui-10","grupo":"crm-ui","nombre":"Encabezados cinéticos de peso variable","que":"Títulos que cambian de peso tipográfico de forma fluida para confirmar selección o enfoque.","tecnica":"Fuentes variables + font-variation-settings","costo":"medio","blur":false,"estado":"rechazado","nota":"Evaluado el 17 oct 2026: anima tipografía (provoca reflujo) y no cumple la regla de solo transform/opacity."},{"id":"crm-ux-01","grupo":"crm-ux","nombre":"Atenuación de contexto en guías","que":"Al abrir un asistente o manual flotante se oscurece el resto de la interfaz para centrar el enfoque (el original también la desenfoca).","tecnica":"Capa con opacity","costo":"bajo","blur":true,"estado":"parcial","nota":"Atenuación adoptada en TourHost; el desenfoque se rechazó."},{"id":"crm-ux-02","grupo":"crm-ux","nombre":"Tarjetas Kanban elásticas","que":"Las tarjetas del embudo se estiran y rebotan con física al arrastrarse entre columnas.","tecnica":"Simulación de resorte","costo":"medio","blur":false,"estado":"rechazado","nota":"Satura; sin valor funcional."},{"id":"crm-ux-03","grupo":"crm-ux","nombre":"Fila que revela acciones","que":"Al pasar el cursor por una fila de la tabla aparecen los botones rápidos Llamar, Correo y Nota (el original expande la fila en altura).","tecnica":"opacity / transform bajo @media (hover:hover)","costo":"bajo","blur":false,"estado":"adoptado","nota":".fx-reveal + .fx-reveal-actions; no expande la altura; en táctil las acciones siempre son visibles."},{"id":"crm-ux-04","grupo":"crm-ux","nombre":"Virtualización con entrada suave","que":"Listas masivas que reciclan filas del DOM mientras las nuevas entran con un fundido rápido.","tecnica":"Ventana virtual (@tanstack/react-virtual)","costo":"medio","blur":false,"estado":"candidato","nota":"Propuesta en docs/ARQUITECTURA-ECOSISTEMA-CRM.md §3.3.6."},{"id":"crm-ux-05","grupo":"crm-ux","nombre":"Microinteracciones de validación","que":"Iconos con una microanimación específica al interactuar: sobre que se cierra al enviar, check que gira al completar.","tecnica":"Keyframes con transform","costo":"bajo","blur":false,"estado":"adoptado","nota":"Animación fx-pop en src/app/globals.css."},{"id":"crm-ux-06","grupo":"crm-ux","nombre":"Entrada escalonada de módulos","que":"Los módulos del perfil del cliente aparecen con retardos de milisegundos para marcar el orden de lectura.","tecnica":"animation-delay","costo":"bajo","blur":false,"estado":"adoptado","nota":"Animación fx-rise."},{"id":"crm-ux-07","grupo":"crm-ux","nombre":"Búsqueda global Cmd+K con morphing","que":"La barra de búsqueda se transforma en un panel modal con resultados agrupados por categoría.","tecnica":"Modal + atajo de teclado","costo":"medio","blur":false,"estado":"parcial","nota":"Paleta Cmd+K adoptada sin morphing (CommandPalette.tsx)."},{"id":"crm-ux-08","grupo":"crm-ux","nombre":"Panel lateral deslizante","que":"Hoja derecha para editar rápido un contacto sin abandonar la vista principal.","tecnica":"transform: translateX","costo":"bajo","blur":false,"estado":"candidato","nota":"Se estandariza como componente Inspector (ARQUITECTURA §3.5)."},{"id":"crm-ux-09","grupo":"crm-ux","nombre":"Campos de formulario progresivos","que":"Los campos secundarios aparecen solo cuando se completa el obligatorio anterior.","tecnica":"opacity / transform","costo":"bajo","blur":false,"estado":"adoptado","nota":".fx-field-in; la lógica condicional es de cada formulario."},{"id":"crm-ux-10","grupo":"crm-ux","nombre":"Botón flotante (FAB) con acople","que":"Botón de acción rápida (crear contacto o tarea) que se acopla a la barra de herramientas al hacer scroll.","tecnica":"position: sticky + transform","costo":"bajo","blur":false,"estado":"candidato","nota":""},{"id":"crm-sys-01","grupo":"crm-sys","nombre":"Transición de cámara entre workspaces","que":"Deslizamiento lateral al cambiar entre cuentas corporativas o entornos de trabajo.","tecnica":"transform","costo":"medio","blur":false,"estado":"rechazado","nota":"Movimiento grande y mareante; satura."},{"id":"crm-sys-02","grupo":"crm-sys","nombre":"Pulso de sincronización en tiempo real","que":"Destello perimetral fino alrededor de una tarjeta o celda cuando otro miembro del equipo actualiza el dato.","tecnica":"box-shadow / opacity","costo":"bajo","blur":false,"estado":"adoptado","nota":".fx-sync + .is-syncing."},{"id":"crm-sys-03","grupo":"crm-sys","nombre":"Conectores inteligentes con partículas","que":"Líneas elásticas entre nodos de automatización que evitan colisiones y muestran el sentido con partículas.","tecnica":"SVG / canvas","costo":"alto","blur":false,"estado":"rechazado","nota":"Las partículas son adorno con coste; los conectores sí se resuelven con @xyflow/react (propuesta)."},{"id":"crm-sys-04","grupo":"crm-sys","nombre":"Medidores con amortiguación","que":"Gráficos circulares de rendimiento de APIs con aguja estabilizada por física de amortiguación.","tecnica":"Simulación de resorte","costo":"medio","blur":false,"estado":"rechazado","nota":"Adorno; un número claro basta."},{"id":"crm-sys-05","grupo":"crm-sys","nombre":"Cascada de toasts con física","que":"Alertas que se apilan en una esquina empujando a las anteriores.","tecnica":"transform + cola de mensajes","costo":"medio","blur":false,"estado":"candidato","nota":"Pila simple, máximo 3 visibles y sin física (ARQUITECTURA §3.1.5)."},{"id":"crm-sys-06","grupo":"crm-sys","nombre":"Línea de tiempo de auditoría","que":"Control deslizante para ver cómo cambiaron los permisos de los roles a lo largo de los meses.","tecnica":"Slider + datos de AuditEvent","costo":"medio","blur":false,"estado":"candidato","nota":"Depende de registrar el estado anterior y el nuevo en AuditEvent."},{"id":"crm-sys-07","grupo":"crm-sys","nombre":"Medidor de cuota con onda líquida","que":"Indicador de almacenamiento que se llena como un líquido en movimiento.","tecnica":"SVG / canvas","costo":"alto","blur":false,"estado":"rechazado","nota":"Se usa una barra simple con desglose por tipo (ARQUITECTURA §3.3.6)."},{"id":"crm-sys-08","grupo":"crm-sys","nombre":"Intercambio de densidad de interfaz","que":"Interruptor Compacta / Estándar / Espaciosa que cambia padding y tamaño tipográfico con transiciones fluidas.","tecnica":"data-density + padding/gap","costo":"bajo","blur":false,"estado":"adoptado","nota":"html[data-density], src/lib/density.ts, DensityToggle."},{"id":"crm-sys-09","grupo":"crm-sys","nombre":"Halo de escaneo biométrico","que":"Halo de luz circular que escanea el contenedor mientras se confirma una acción crítica.","tecnica":"conic-gradient animado","costo":"medio","blur":false,"estado":"rechazado","nota":"Adorno; las confirmaciones críticas se resuelven con texto claro."},{"id":"crm-sys-10","grupo":"crm-sys","nombre":"Mapa interactivo del esquema de datos","que":"Grafo arrastrable que muestra cómo se relacionan las tablas del CRM en el panel de desarrollo.","tecnica":"@xyflow/react","costo":"medio","blur":false,"estado":"candidato","nota":"Herramienta interna; baja prioridad."},{"id":"scr-01","grupo":"scroll","nombre":"Vuelo de cámara 3D","que":"Recorrido continuo por un diorama isométrico o entorno 3D, con la velocidad controlada por el scroll.","tecnica":"Three.js + GSAP ScrollTrigger","costo":"alto","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-02","grupo":"scroll","nombre":"Zoom parallax (dive-in / dive-out)","que":"Zoom constante hacia dentro o fuera en imágenes y video que guía el recorrido.","tecnica":"transform: scale + ScrollTrigger","costo":"medio","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-03","grupo":"scroll","nombre":"Scroll en espiral 3D","que":"Elementos que rotan y se desplazan describiendo una espiral tridimensional.","tecnica":"CSS 3D o Three.js","costo":"alto","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-04","grupo":"scroll","nombre":"Entornos WebGL en tiempo real","que":"Escenas 3D que reaccionan a la vez al scroll y al cursor.","tecnica":"WebGL / Three.js","costo":"alto","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-05","grupo":"scroll","nombre":"Video sincronizado por fotogramas","que":"Clips que avanzan fotograma a fotograma ligados al scroll para transiciones cinemáticas.","tecnica":"Secuencia de imágenes en canvas o video.currentTime","costo":"alto","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-06","grupo":"scroll","nombre":"Morfing continuo de secciones","que":"Formas de fondo que mutan como líquido al cambiar de sección.","tecnica":"SVG morph / GSAP","costo":"medio","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-07","grupo":"scroll","nombre":"Transiciones por capas de color","que":"Capas de color contrastante que se deslizan al cambiar la temática visual.","tecnica":"transform","costo":"bajo","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-08","grupo":"scroll","nombre":"Cambio de tema claro/oscuro por sección","que":"El fondo pasa de claro a oscuro al cruzar un umbral, invirtiendo el contraste del texto.","tecnica":"IntersectionObserver + variables CSS","costo":"bajo","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-09","grupo":"scroll","nombre":"Scrollytelling integrado","que":"Revelación progresiva de datos técnicos o ilustraciones narrativas mientras se avanza.","tecnica":"ScrollTrigger con pin","costo":"medio","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-10","grupo":"scroll","nombre":"Rejilla escalonada al hacer scroll","que":"Bloques de un Bento Grid que aparecen con un retardo secuencial.","tecnica":"IntersectionObserver + animation-delay","costo":"bajo","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-11","grupo":"scroll","nombre":"Ticker sensible al scroll","que":"Marquesina de textos o logos que acelera, frena o invierte su dirección según el scroll.","tecnica":"transform con velocidad variable","costo":"bajo","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-12","grupo":"scroll","nombre":"Contenedores que rotan con el scroll","que":"Imágenes, textos circulares o logos que giran sobre su eje según la profundidad del scroll.","tecnica":"transform: rotate","costo":"bajo","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-13","grupo":"scroll","nombre":"Desenfoque progresivo por scroll","que":"Los elementos secundarios se desenfocan al alejarse del centro; solo el principal queda nítido.","tecnica":"filter: blur","costo":"alto","blur":true,"estado":"rechazado","nota":"Requiere desenfoque y es costoso. Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-14","grupo":"scroll","nombre":"Parallax multicapa","que":"Fondo, capas intermedias y frontales que se mueven a distinta velocidad para dar profundidad.","tecnica":"translate3d por capa","costo":"medio","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-15","grupo":"scroll","nombre":"Elementos flotantes que siguen el cursor","que":"Partículas o destellos que flotan con el scroll y se apartan o siguen al mouse.","tecnica":"mousemove + requestAnimationFrame","costo":"medio","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-16","grupo":"scroll","nombre":"Títulos con mix-blend-mode","que":"Texto fijo que cambia de color automáticamente según el fondo que cruza.","tecnica":"mix-blend-mode","costo":"medio","blur":false,"estado":"rechazado","nota":"Rechazado en el CRM (ver crm-ui-02). Puede usarse en una landing."},{"id":"scr-17","grupo":"scroll","nombre":"Scroll-snap por sección","que":"La pantalla encaja al inicio de cada sección evitando cortes a mitad de contenido en móvil.","tecnica":"CSS scroll-snap","costo":"bajo","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-18","grupo":"scroll","nombre":"Scroll horizontal anclado","que":"Bloquea el scroll vertical para recorrer una sección en horizontal (galerías, portafolios, líneas de tiempo).","tecnica":"position: sticky + translateX","costo":"medio","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-19","grupo":"scroll","nombre":"Tipografía cinética","que":"Titulares gigantes que cambian de escala, peso o textura a medida que se avanza.","tecnica":"Fuentes variables + scroll","costo":"medio","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"scr-20","grupo":"scroll","nombre":"Trazos que se dibujan solos","que":"Ilustraciones lineales SVG que parecen dibujarse al entrar en el visor.","tecnica":"SVG stroke-dashoffset","costo":"bajo","blur":false,"estado":"referencia","nota":"Solo landing o sitios de marca; en el CRM los efectos de scroll son informativos. Riesgos: accesibilidad (prefers-reduced-motion), INP/LCP y secuestro del scroll."},{"id":"ag-01","grupo":"agencia","nombre":"Red de nodos 3D de fondo","que":"Constelación de datos o red neuronal en 3D cuyos nodos reaccionan al cursor y aceleran con el scroll.","tecnica":"Three.js / WebGL","costo":"alto","blur":false,"estado":"referencia","nota":"Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-02","grupo":"agencia","nombre":"Bento hiperinteractivo","que":"Servicios en rejilla modular, cada celda con su propia microanimación (p. ej. un feed de código vivo en «Chatbots»).","tecnica":"CSS Grid + animaciones por celda","costo":"medio","blur":false,"estado":"candidato","nota":"Aplicable como bloque del constructor de Sitios Web."},{"id":"ag-03","grupo":"agencia","nombre":"Borde láser que sigue el cursor","que":"El borde de la tarjeta es un haz de luz que recorre el perímetro siguiendo la posición del mouse.","tecnica":"conic-gradient + variables CSS con la posición","costo":"medio","blur":false,"estado":"referencia","nota":"Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-04","grupo":"agencia","nombre":"Aura de cursor","que":"Círculo difuminado de color de acento que acompaña al cursor y revela elementos ocultos.","tecnica":"Elemento con blur siguiendo mousemove","costo":"medio","blur":true,"estado":"rechazado","nota":"Requiere desenfoque. Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-05","grupo":"agencia","nombre":"Peso variable según el scroll","que":"Titulares que pasan de Thin a Black al avanzar, con fuentes variables.","tecnica":"font-variation-settings","costo":"medio","blur":false,"estado":"referencia","nota":"Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-06","grupo":"agencia","nombre":"Modo oscuro con acentos neón y paneles de vidrio","que":"Negro profundo con paneles translúcidos y destellos de luz que guían la mirada hacia los CTA.","tecnica":"backdrop-filter + gradientes","costo":"alto","blur":true,"estado":"rechazado","nota":"Requiere desenfoque. Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-07","grupo":"agencia","nombre":"Fondo líquido en movimiento","que":"Formas orgánicas que se deforman lentamente y cambian de color según la sección.","tecnica":"SVG / WebGL","costo":"alto","blur":false,"estado":"referencia","nota":"Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-08","grupo":"agencia","nombre":"Shimmer de carga estilo escaneo","que":"Barrido de luz sobre los contenedores que simula procesamiento de datos.","tecnica":"Gradiente + translateX","costo":"bajo","blur":false,"estado":"adoptado","nota":"Mismo patrón que crm-ui-04."},{"id":"ag-09","grupo":"agencia","nombre":"Indicadores micro-LED de integraciones","que":"Puntos con brillo suave junto a cada tecnología («Supabase conectado», «API operativa»).","tecnica":"box-shadow / opacity","costo":"bajo","blur":false,"estado":"adoptado","nota":"Mismo patrón que crm-ui-09 (.fx-dot)."},{"id":"ag-10","grupo":"agencia","nombre":"Botones magnéticos de conversión","que":"El botón principal se desplaza hacia el cursor cuando este se acerca.","tecnica":"mousemove + transform","costo":"bajo","blur":false,"estado":"referencia","nota":"Rechazado en pantallas del CRM (ver crm-ui-07); válido en una landing. Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-11","grupo":"agencia","nombre":"Terminal simulada de voz a texto","que":"Componente en el Hero que simula transcribir una orden a una terminal de IA, limpiando repeticiones.","tecnica":"Máquina de estados + texto animado","costo":"medio","blur":false,"estado":"referencia","nota":"Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-12","grupo":"agencia","nombre":"Flujo infinito de código virtualizado","que":"Líneas de código real corriendo en bucle sin penalizar el rendimiento del navegador.","tecnica":"Ventana virtual + requestAnimationFrame","costo":"medio","blur":false,"estado":"referencia","nota":"Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-13","grupo":"agencia","nombre":"Lienzo de automatización arrastrable","que":"Los prospectos conectan nodos (Formulario → IA → WhatsApp) para diseñar su propia automatización antes de contactar.","tecnica":"@xyflow/react","costo":"medio","blur":false,"estado":"candidato","nota":"Demo comercial; reutiliza el lienzo del módulo Automatización."},{"id":"ag-14","grupo":"agencia","nombre":"Scroll horizontal anclado en proyectos","que":"Casos de éxito recorridos en horizontal con transición cinemática antes de seguir hacia abajo.","tecnica":"sticky + translateX","costo":"medio","blur":false,"estado":"referencia","nota":"Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-15","grupo":"agencia","nombre":"Centro de comandos Cmd+K","que":"Búsqueda global para servicios, agendar llamadas y abrir documentación (el original oscurece con desenfoque).","tecnica":"Modal + teclado","costo":"medio","blur":false,"estado":"parcial","nota":"Cmd+K adoptado en el CRM sin desenfoque."},{"id":"ag-16","grupo":"agencia","nombre":"Panel lateral de especificaciones técnicas","que":"Al elegir un servicio se desliza un panel con arquitectura, base de datos y APIs integradas.","tecnica":"translateX","costo":"bajo","blur":false,"estado":"candidato","nota":"Mismo patrón Inspector (crm-ux-08)."},{"id":"ag-17","grupo":"agencia","nombre":"Formulario estilo prompt de IA","que":"El contacto simula un cuadro de prompt; cada respuesta desliza el siguiente campo.","tecnica":"opacity / transform","costo":"bajo","blur":false,"estado":"candidato","nota":"Aplicable al bloque Formulario del constructor de Sitios Web."},{"id":"ag-18","grupo":"agencia","nombre":"Scrollytelling con desarme de capas 3D","que":"Maquetas de apps o dashboards que se desarman en capas y se vuelven a unir con el scroll.","tecnica":"CSS 3D + ScrollTrigger","costo":"alto","blur":false,"estado":"referencia","nota":"Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-19","grupo":"agencia","nombre":"Video fotograma a fotograma","que":"Clips de automatizaciones o chats que avanzan con precisión milimétrica según la rueda del ratón.","tecnica":"Secuencia en canvas","costo":"alto","blur":false,"estado":"referencia","nota":"Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-20","grupo":"agencia","nombre":"Atenuación de contexto en chat y calendario","que":"Al usar el widget de chat o el calendario de citas, el resto de la página baja de brillo.","tecnica":"Capa con opacity","costo":"bajo","blur":false,"estado":"parcial","nota":"Atenuación sin desenfoque, como en TourHost."},{"id":"ag-21","grupo":"agencia","nombre":"Destello de sincronización de API","que":"Un destello perimetral indica que la acción del usuario fue validada y procesada.","tecnica":"box-shadow / opacity","costo":"bajo","blur":false,"estado":"adoptado","nota":"Mismo patrón que crm-sys-02 (.fx-sync)."},{"id":"ag-22","grupo":"agencia","nombre":"Medidores de rendimiento amortiguados","que":"Widgets circulares con el tiempo de respuesta de los agentes o la eficiencia del software.","tecnica":"Simulación de resorte","costo":"medio","blur":false,"estado":"rechazado","nota":"Rechazado en el CRM (ver crm-sys-04). Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-23","grupo":"agencia","nombre":"Densidades Cinemática / Developer","que":"Selector que cambia el sitio entre una vista visual y espaciada y otra compacta orientada a datos y código.","tecnica":"data-density","costo":"bajo","blur":false,"estado":"adoptado","nota":"Mismo patrón que crm-sys-08."},{"id":"ag-24","grupo":"agencia","nombre":"Mapa interactivo de infraestructura","que":"Nodos arrastrables que explican cómo conecta Vercel con Supabase.","tecnica":"@xyflow/react","costo":"medio","blur":false,"estado":"candidato","nota":"Sección técnica del sitio de agencia o herramienta interna."},{"id":"ag-25","grupo":"agencia","nombre":"Cascada de toasts","que":"Alertas internas en la esquina inferior que empujan a las anteriores.","tecnica":"transform + cola","costo":"medio","blur":false,"estado":"candidato","nota":"Ver crm-sys-05."},{"id":"ag-26","grupo":"agencia","nombre":"Transiciones de cámara entre espacios","que":"Cambios laterales ultrarrápidos al explorar áreas del ecosistema, como en plataformas premium.","tecnica":"transform","costo":"medio","blur":false,"estado":"rechazado","nota":"Rechazado en el CRM (ver crm-sys-01). Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-27","grupo":"agencia","nombre":"Onda líquida de almacenamiento","que":"Animación radial que representa la escalabilidad y el almacenamiento en la nube.","tecnica":"SVG / canvas","costo":"alto","blur":false,"estado":"rechazado","nota":"Rechazado en el CRM (ver crm-sys-07). Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-28","grupo":"agencia","nombre":"Halo de verificación biométrica","que":"El botón de envío proyecta un halo circular que simula una verificación de seguridad.","tecnica":"conic-gradient animado","costo":"medio","blur":false,"estado":"rechazado","nota":"Rechazado en el CRM (ver crm-sys-09). Pensado para el sitio web de una agencia de IA o landings premium; no aplica a pantallas de trabajo del CRM."},{"id":"ag-29","grupo":"agencia","nombre":"Línea de tiempo con control deslizable","que":"Historia de la agencia o evolución del producto que transforma gráficos e interfaces mes a mes.","tecnica":"Slider + estado por hito","costo":"medio","blur":false,"estado":"candidato","nota":"Aplicable a la sección de historia del sitio de agencia."},{"id":"ag-30","grupo":"agencia","nombre":"Feed de contenido generado en vivo","que":"Tarjetas que se reorganizan solas con transiciones de ordenamiento cuando llega contenido nuevo.","tecnica":"FLIP / View Transitions","costo":"medio","blur":false,"estado":"candidato","nota":"Idea para la sección de casos o actividad en vivo."}],"gruposPracticas":{"rendimiento":"Rendimiento de datos y UI","ux":"Usabilidad corporativa","robustez":"Robustez, concurrencia y trazabilidad"},"practicas":[{"id":"perf-01","grupo":"rendimiento","titulo":"Virtualización de tablas","regla":"Nunca renderizar miles de filas en el DOM: montar solo las visibles y reutilizar nodos al hacer scroll.","estado":"candidato","donde":"Propuesta con @tanstack/react-virtual (ARQUITECTURA §3.3.6)."},{"id":"perf-02","grupo":"rendimiento","titulo":"Paginación por cursor","regla":"Consultar por cursor y no por offset: la base responde en tiempo constante sin importar el tamaño de la tabla.","estado":"candidato","donde":"Contrato Page<T> propuesto en ARQUITECTURA §1.5.2."},{"id":"perf-03","grupo":"rendimiento","titulo":"Actualizaciones optimistas","regla":"Mover la tarjeta al instante y revertir con aviso discreto si el servidor falla.","estado":"candidato","donde":"mutateOptimistic propuesto en ARQUITECTURA §2.3.2."},{"id":"perf-04","grupo":"rendimiento","titulo":"Debounce en búsquedas y filtros","regla":"No consultar por cada tecla: esperar unos 300 ms sin escribir antes de pedir datos al servidor.","estado":"candidato","donde":"La arquitectura propone filtrar en cliente al instante y consultar al servidor tras 150 ms."},{"id":"perf-05","grupo":"rendimiento","titulo":"Suscripciones en tiempo real acotadas","regla":"Suscribirse solo a lo que muestra la vista actual y cancelar al cambiar de módulo.","estado":"candidato","donde":"El progreso de trabajos usa SSE sobre Redis (api/events)."},{"id":"perf-06","grupo":"rendimiento","titulo":"Caché stale-while-revalidate","regla":"Mostrar al instante lo ya visitado desde memoria y revalidar en segundo plano.","estado":"adoptado","donde":"swr-cache.ts, use-cached-json.ts, route-data.ts (precarga al pasar el cursor)."},{"id":"perf-07","grupo":"rendimiento","titulo":"Web Workers para cómputo pesado","regla":"Mover cálculos y reportes grandes fuera del hilo principal para sostener 60 FPS.","estado":"candidato","donde":""},{"id":"ux-01","grupo":"ux","titulo":"Densidad de interfaz nativa","regla":"Ofrecer vista compacta para analistas y espaciosa para usuarios casuales.","estado":"adoptado","donde":"html[data-density], DensityToggle."},{"id":"ux-02","grupo":"ux","titulo":"Navegación completa por teclado","regla":"Operar sin ratón: Cmd+K para buscar, N para nuevo contacto, Esc para cerrar paneles, con foco visible.","estado":"parcial","donde":"Cmd+K adoptado; faltan los atajos N y Esc."},{"id":"ux-03","grupo":"ux","titulo":"Microinteracciones pasivas cortas","regla":"Animaciones de 150 a 200 ms con curvas ease-out para una sensación ejecutiva, no de entretenimiento.","estado":"adoptado","donde":"Regla del proyecto: 150–250 ms, solo transform y opacity (docs/DISENO-EFECTOS.md)."},{"id":"rob-01","grupo":"robustez","titulo":"Seguridad a nivel de fila (RLS)","regla":"Cada tabla con políticas por espacio de trabajo para que nadie lea, altere o escuche registros ajenos.","estado":"candidato","donde":"Pendiente crítico: RLS desactivado en la base; requiere Plan Mode y pruebas con un tenant de prueba."},{"id":"rob-02","grupo":"robustez","titulo":"Bloqueo optimista","regla":"Columna de versión o updated_at: si otra persona guardó antes, detener y pedir resolución de conflicto.","estado":"candidato","donde":"draftRevision + If-Match propuestos (ARQUITECTURA §1.5.2)."},{"id":"rob-03","grupo":"robustez","titulo":"Esquemas staging y public separados","regla":"Aislar las cargas de prueba del esquema de producción con roles de mínimo privilegio.","estado":"adoptado","donde":"Esquema staging y entorno .env.staging."},{"id":"rob-04","grupo":"robustez","titulo":"Eventos y colas para tareas masivas","regla":"Importaciones y envíos masivos van a una cola o a un servicio externo, nunca al hilo de la base principal.","estado":"parcial","donde":"BullMQ y n8n-dispatcher en uso; Transactional Outbox propuesto."},{"id":"rob-05","grupo":"robustez","titulo":"Filtro de respuestas automatizadas","regla":"Capa que limpia caracteres extraños y valida variables como {{contact.first_name}} antes de enviar por WhatsApp o correo.","estado":"candidato","donde":""},{"id":"rob-06","grupo":"robustez","titulo":"Auditoría centralizada e inmutable","regla":"Registrar usuario, fecha, IP, acción y estado anterior frente al nuevo en cada cambio crítico.","estado":"parcial","donde":"AuditEvent registra IP y meta; faltan el estado anterior/nuevo y la cobertura de login y cambios de rol."},{"id":"rob-07","grupo":"robustez","titulo":"Simuladores de latencia y pruebas de estrés","regla":"Probar con red lenta artificial que esqueletos y shimmer se comportan bien; probar carga antes de escalar.","estado":"candidato","donde":"k6 y red limitada en Playwright planeados en la fase 4."}],"legal":[{"id":"leg-01","titulo":"GDPR (Europa)","resumen":"Derecho al olvido, portabilidad en formatos universales y roles claros: la agencia es Procesador y el cliente es Responsable del tratamiento.","implementacion":"Endpoints de exportación (JSON/CSV) y borrado total; contrato de encargo de tratamiento (DPA).","estado":"candidato"},{"id":"leg-02","titulo":"CCPA/CPRA (California)","resumen":"Cláusulas de no venta de datos personales y flujo claro de exclusión voluntaria (opt-out).","implementacion":"Interruptor de opt-out y registro del consentimiento.","estado":"candidato"},{"id":"leg-03","titulo":"Venezuela y Latinoamérica","resumen":"Protección del honor, la reputación y la vida privada (art. 60 de la Constitución venezolana): consentimiento informado, explícito e inequívoco.","implementacion":"Casilla de consentimiento obligatoria en formularios; ver docs/planning/VOZ-VENEZUELA-LEGAL.md para voz.","estado":"parcial"},{"id":"leg-04","titulo":"Retención cero con proveedores de IA (ZDR)","resumen":"Los datos enviados en prompts no deben usarse para entrenar modelos públicos; acuerdos comerciales que eliminen logs tras procesar.","implementacion":"Configuración y contratos por proveedor (BYOK por espacio).","estado":"candidato"},{"id":"leg-05","titulo":"Transparencia de agentes automáticos","resumen":"Los chatbots y agentes salientes deben identificarse como IA ante el usuario final.","implementacion":"Frase de identificación en los prompts base de chat y voz.","estado":"candidato"},{"id":"leg-06","titulo":"Propiedad intelectual del contenido generado","resumen":"Los términos de uso deben dejar claro quién es dueño de textos, reportes y correos generados; por norma, el cliente que paga.","implementacion":"Cláusula en los Términos de Servicio.","estado":"candidato"},{"id":"leg-07","titulo":"Notificación de brechas en 72 horas","resumen":"Ante una filtración de datos personales hay que avisar a la autoridad y a los afectados en un máximo de 72 horas desde la detección.","implementacion":"Protocolo técnico y legal de respuesta a incidentes.","estado":"candidato"},{"id":"leg-08","titulo":"Cifrado en reposo y en tránsito","resumen":"Datos sensibles (credenciales, tokens, registros financieros) cifrados con algoritmos como AES-256 y comunicación solo por TLS.","implementacion":"BYOK con AES-256-GCM (modelo ApiKey); TLS gestionado por Vercel y Supabase.","estado":"parcial"},{"id":"leg-09","titulo":"Limitación de responsabilidad","resumen":"Tope de indemnización ante fallos o pérdida de datos, habitualmente igual a lo pagado por el cliente en el último año.","implementacion":"Cláusula en los Términos de Servicio.","estado":"candidato"},{"id":"leg-10","titulo":"Acuerdo de nivel de servicio (SLA)","resumen":"Disponibilidad comprometida (p. ej. 99,9 % mensual) y compensaciones definidas, excluyendo mantenimientos avisados.","implementacion":"Documento de SLA y página de estado.","estado":"candidato"},{"id":"leg-11","titulo":"Indemnidad por mal uso","resumen":"El cliente mantiene indemne a la agencia si usa la plataforma para actividades ilícitas, spam masivo (CAN-SPAM) o datos prohibidos de menores.","implementacion":"Cláusula en los Términos de Servicio y política de uso aceptable.","estado":"candidato"}],"avisoLegal":"Texto de referencia, no es asesoría legal: validar con un abogado de datos y privacidad antes de publicar. Algunas afirmaciones del material de origen (por ejemplo, «AES-256 obligatorio por ley») son prácticas recomendadas de debida diligencia más que requisitos literales de cada norma.","tecnologias":[{"id":"tec-01","categoria":"Framework","nombre":"Next.js 14.2 (App Router)","nota":"Aplicación completa: páginas, Route Handlers y Server Components.","estado":"en-uso","fase":""},{"id":"tec-02","categoria":"Framework","nombre":"React 18.3","nota":"Interfaz; useSyncExternalStore para stores sin dependencias.","estado":"en-uso","fase":""},{"id":"tec-03","categoria":"Lenguaje","nombre":"TypeScript (strict)","nota":"Endurecimiento por escalones propuesto (noUncheckedIndexedAccess y siguientes).","estado":"en-uso","fase":""},{"id":"tec-04","categoria":"Datos","nombre":"Prisma 5.20","nota":"ORM; el esquema solo cambia con aprobación de Reiner.","estado":"en-uso","fase":""},{"id":"tec-05","categoria":"Datos","nombre":"Supabase (Postgres)","nota":"Staging y producción; RLS pendiente (punto crítico).","estado":"en-uso","fase":""},{"id":"tec-06","categoria":"Validación","nombre":"Zod 3.23","nota":"Fuente única de tipos y validación en los límites del sistema.","estado":"en-uso","fase":""},{"id":"tec-07","categoria":"Colas","nombre":"BullMQ 5.20 + ioredis 5.4 (Redis)","nota":"Cola content-pipeline y worker; base de las colas de imágenes y automatización.","estado":"en-uso","fase":""},{"id":"tec-08","categoria":"Almacenamiento","nombre":"Cloudflare R2 (@aws-sdk/client-s3 + presigner)","nota":"Objetos y URL firmadas; lo usan hoy los agentes de IA y el Generador.","estado":"en-uso","fase":""},{"id":"tec-09","categoria":"IA","nombre":"Vercel AI SDK (@ai-sdk/anthropic, openai, google, deepseek) y @anthropic-ai/sdk","nota":"Modelos de lenguaje; claves BYOK por espacio.","estado":"en-uso","fase":""},{"id":"tec-10","categoria":"IA","nombre":"Gemini / OpenAI / Stability AI (imágenes)","nota":"Proveedores de imagen detrás de visual-agent.ts; se formalizan como puerto ImageProvider.","estado":"en-uso","fase":""},{"id":"tec-11","categoria":"Integraciones","nombre":"Meta Graph API (Instagram)","nota":"Publicación programada; modo simulado por defecto (IG_PUBLISH_MODE).","estado":"en-uso","fase":""},{"id":"tec-12","categoria":"Integraciones","nombre":"Retell + Telnyx (voz)","nota":"Agente de voz entrante sobre número de Venezuela; modo simulado por defecto (VOICE_MODE).","estado":"en-uso","fase":""},{"id":"tec-13","categoria":"Integraciones","nombre":"n8n (despachador)","nota":"Webhooks hacia automatizaciones externas.","estado":"en-uso","fase":""},{"id":"tec-14","categoria":"Calidad","nombre":"Vitest 5","nota":"848 pruebas en 94 archivos al cierre del 17 oct.","estado":"en-uso","fase":""},{"id":"tec-15","categoria":"Calidad","nombre":"Playwright","nota":"E2E y revisión visual.","estado":"en-uso","fase":""},{"id":"tec-16","categoria":"Calidad","nombre":"ESLint + GitHub Actions","nota":"Lint a 0 advertencias; ci.yml y publish-scheduled.yml.","estado":"en-uso","fase":""},{"id":"tec-17","categoria":"Despliegue","nombre":"Vercel","nota":"Despliegue del CRM; nada se despliega sin aprobación explícita.","estado":"en-uso","fase":""},{"id":"tec-18","categoria":"Patrón","nombre":"Stale-while-revalidate propio","nota":"swr-cache.ts, use-cached-json.ts y route-data.ts (precarga).","estado":"en-uso","fase":""},{"id":"tec-19","categoria":"Patrón","nombre":"TtlCache y role-context-cache","nota":"Cachés de servidor para lecturas costosas.","estado":"en-uso","fase":""},{"id":"tec-20","categoria":"Patrón","nombre":"Publicación idempotente con reintentos","nota":"ScheduledPost: clave única, contenedor guardado antes de publicar, bloqueo caducable.","estado":"en-uso","fase":""},{"id":"tec-21","categoria":"Patrón","nombre":"Webhooks firmados e idempotentes","nota":"Webhook de voz con firma; se generaliza para webhooks salientes.","estado":"en-uso","fase":""},{"id":"tec-22","categoria":"Patrón","nombre":"BYOK cifrado (AES-256-GCM)","nota":"Claves de proveedores guardadas cifradas por espacio de trabajo.","estado":"en-uso","fase":""},{"id":"tec-23","categoria":"Diseño","nombre":"Sistema de efectos (effects.css, fx-*)","nota":"Tokens --rai-*, Skeleton, EmptyState, PageSkeleton, ClickFx, DensityToggle; sin desenfoque.","estado":"en-uso","fase":""},{"id":"tec-24","categoria":"Proceso","nombre":"Claude Code / Cowork + OpenCode","nota":"Subagentes con propiedad de archivos disjunta; verificación independiente en copia aparte.","estado":"en-uso","fase":""},{"id":"tec-25","categoria":"Proceso","nombre":"Obsidian (segundo cerebro)","nota":"Bóveda de consulta con estado, cierres, plan y documentación técnica.","estado":"en-uso","fase":""},{"id":"tec-26","categoria":"Proceso","nombre":"panel-control.html y roadmap-agentes-rai.html","nota":"Backlog único y mapa de agentes; este HTML es además base de conocimiento reutilizable.","estado":"en-uso","fase":""},{"id":"tec-27","categoria":"Herramientas de desarrollo","nombre":"dependency-cruiser","nota":"Hacer cumplir las fronteras entre contextos y detectar ciclos.","estado":"propuesta","fase":"Fase 1"},{"id":"tec-28","categoria":"Herramientas de desarrollo","nombre":"knip","nota":"Detectar código, archivos y dependencias sin uso.","estado":"propuesta","fase":"Fase 1"},{"id":"tec-29","categoria":"Herramientas de desarrollo","nombre":"jscpd","nota":"Medir duplicación de código (umbral 3 %).","estado":"propuesta","fase":"Fase 1"},{"id":"tec-30","categoria":"Herramientas de desarrollo","nombre":"@asteasolutions/zod-to-openapi","nota":"Generar OpenAPI desde los esquemas Zod.","estado":"propuesta","fase":"Fase 2"},{"id":"tec-31","categoria":"Medios","nombre":"sharp","nota":"Variantes de imagen en el worker.","estado":"propuesta","fase":"Fase 2"},{"id":"tec-32","categoria":"Medios","nombre":"blurhash","nota":"Marcador de carga sin desenfoque CSS.","estado":"propuesta","fase":"Fase 2"},{"id":"tec-33","categoria":"Medición","nombre":"web-vitals","nota":"Medir LCP, INP y CLS reales en el navegador.","estado":"propuesta","fase":"Fase 4"},{"id":"tec-34","categoria":"Medición","nombre":"@lhci/cli y size-limit","nota":"Lighthouse CI y presupuestos de tamaño por ruta.","estado":"propuesta","fase":"Fase 4"},{"id":"tec-35","categoria":"Interfaz","nombre":"@xyflow/react","nota":"Lienzo de flujos de automatización con minimapa y zoom.","estado":"propuesta","fase":"Fase 3"},{"id":"tec-36","categoria":"Interfaz","nombre":"@tanstack/react-virtual","nota":"Cuadrícula virtualizada de la biblioteca de medios.","estado":"propuesta","fase":"Fase 3"},{"id":"tec-37","categoria":"Interfaz","nombre":"@dnd-kit/core","nota":"Arrastrar y soltar accesible (puntero, teclado y táctil).","estado":"propuesta","fase":"Fase 3"},{"id":"tec-38","categoria":"Interfaz","nombre":"@tiptap/react","nota":"Texto enriquecido en el editor web, con carga diferida.","estado":"propuesta","fase":"Fase 3"},{"id":"tec-39","categoria":"Animación (referencia)","nombre":"GSAP + ScrollTrigger","nota":"Animación por scroll para landings; fuera del CRM.","estado":"referencia","fase":""},{"id":"tec-40","categoria":"Animación (referencia)","nombre":"Three.js / WebGL","nota":"Escenas 3D de landings; fuera del CRM.","estado":"referencia","fase":""},{"id":"tec-41","categoria":"Constructores (referencia)","nombre":"Webflow / Framer","nota":"Alternativas de construcción de landings mencionadas en el material de origen.","estado":"referencia","fase":""},{"id":"tec-42","categoria":"Tiempo real (referencia)","nombre":"Supabase Realtime / WebSockets","nota":"Suscripciones acotadas a la vista actual; hoy el CRM usa SSE sobre Redis.","estado":"referencia","fase":""}]}</script>
+    </section>
+
+    <section>
+      <div class="section-head"><span class="section-code">GUARDRAILS</span><h2>Intervenciones y límites obligatorios</h2></div>
+      <div class="human-grid">
+        <div class="human-card"><strong>Identidad, secretos y permisos</strong><p>Login, 2FA, tokens, variables de entorno y ampliaciones de acceso siempre quedan en manos humanas; nunca se copian al roadmap.</p></div>
+        <div class="human-card"><strong>Datos y migraciones</strong><p>RLS, datos reales, restauraciones y <code>prisma migrate deploy</code> remoto requieren respaldo, revisión y aprobación explícita.</p></div>
+        <div class="human-card"><strong>Git</strong><p>Ningún agente hace push, merge, borrado, reversión o reescritura de historial sin confirmación. QA no aprueba su propio cambio.</p></div>
+        <div class="human-card"><strong>Vercel</strong><p>Preview antes de producción; variables, logs, build, smoke tests y rollback deben verificarse antes de autorizar el despliegue.</p></div>
+        <div class="human-card"><strong>Operación nocturna</strong><p>Cola finita, sesión activa, equipo sin suspensión, límites de tiempo, checkpoints y parada ante error, ambigüedad o cambio de alcance.</p></div>
+        <div class="human-card"><strong>Definition of Done global</strong><p>Alcance cumplido, diff limpio, validaciones verdes, evidencia, documentación sincronizada y cero secretos, imports sin usar o componentes muertos.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><span class="section-code">CORRIDA</span><h2>Bitácora verificable · 25 sep 2026</h2><span class="section-note">Evidencia fija del repositorio · sin secretos</span></div>
+      <div class="human-grid">
+        <div class="human-card"><strong><code>21b2f5f</code> · Seguridad del inventario</strong><p><code>INVENTORY_ALLOWED_ROOTS</code> usa bases administradas y limita cada tenant a <code>&lt;base&gt;/&lt;workspaceId&gt;</code>. Bloquea traversal, prefix bypass y symlink exterior; los errores no filtran rutas. Incluye tests de endpoint y helper.</p></div>
+        <div class="human-card"><strong><code>9e3d3aa</code> · Lint limpio</strong><p>ESLint pasó de 67 a 0 warnings sin cambio funcional. La rama fue publicada con aprobación; no fue fusionada ni desplegada.</p></div>
+        <div class="human-card"><strong>QA final</strong><p>189/189 tests, <code>tsc --noEmit</code> limpio, ESLint 0 errores/0 warnings y build exitoso de 62 páginas. Warning no bloqueante: paquete opcional <code>@valkey/valkey-glide</code> de BullMQ.</p></div>
+        <div class="human-card"><strong><code>36eaaf3</code> · Jerarquía y guardrails</strong><p>Orquestador, backend, frontend y QA quedaron versionados después de trabajar con scopes separados y revisión QA posterior al autor. Los permisos exigen aprobación para Vercel, migraciones, push/merge y comandos destructivos.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><span class="section-code">CORRIDA</span><h2>Bitácora verificable · 16–17 oct 2026</h2><span class="section-note">Agentes IA y Olas 3/3b · sin secretos</span></div>
+      <div class="human-grid">
+        <div class="human-card"><strong><code>1ed71c1</code> · Agentes de chat</strong><p>Agentes de chat con asistente propio («Nuevo agente»), separado del de voz.</p></div>
+        <div class="human-card"><strong><code>4c49cb8</code> · Voz entrante con Retell</strong><p>Webhook firmado e idempotente, búsqueda en la base de conocimiento y centro de voz; modo simulado por defecto y cero gasto.</p></div>
+        <div class="human-card"><strong><code>5e75580</code> · Inicio</strong><p>Pantalla de Inicio real, entregada por su subagente con archivos propios.</p></div>
+        <div class="human-card"><strong><code>11e03e9</code> · Campaña</strong><p>Módulo Campaña completado en la Ola 3.</p></div>
+        <div class="human-card"><strong><code>9938a33</code> · Generador</strong><p>Módulo Generador completado en la Ola 3.</p></div>
+        <div class="human-card"><strong><code>74a8b91</code> · Marketing</strong><p>Marketing real: planificador, fragmentos, enlaces, cuenta atrás, marca, correos locales, UTM/anuncios y prospección. Envío masivo, anuncios de plataformas y búsqueda de leads siguen limitados.</p></div>
+        <div class="human-card"><strong><code>0f62089</code> · Multimedia</strong><p>Multimedia real, sin subida de archivos hasta decidir el almacenamiento.</p></div>
+        <div class="human-card"><strong><code>a481ecd</code> · Automatización</strong><p>Automatización completada: 19 plantillas, actividad en servidor y exportación CSV.</p></div>
+        <div class="human-card"><strong><code>85dc085</code> · Spec y prompt de la Ola 4</strong><p>Spec cerrada y prompt maestro de la Ola 4 (entorno, sesión, configuración y módulos).</p></div>
+        <div class="human-card"><strong>Calidad de la jornada</strong><p><code>tsc</code> 0 errores, ESLint 0, Vitest 848/848 y build correcto de 72 páginas. Sin push: todo queda en commits locales.</p></div>
+      </div>
+    </section>
+
+
+    <section>
+      <div class="section-head"><span class="section-code">CORRIDA</span><h2>Bitácora verificable · 17 oct 2026 (tarde)</h2><span class="section-note">Arquitectura, limpieza y conocimiento · sin secretos</span></div>
+      <div class="human-grid">
+        <div class="human-card"><strong>Arquitectura del ecosistema</strong><p><code>docs/ARQUITECTURA-ECOSISTEMA-CRM.md</code>: 16 diagramas Mermaid, contratos REST/SSE/webhooks, 14 ADR y hoja de ruta de 4 fases. El módulo «Sitios» actual administra sedes (hoteles, restaurantes…); el constructor de páginas se define como contexto nuevo.</p></div>
+        <div class="human-card"><strong>Limpieza de obsoletos</strong><p><code>_revisar-obsoletos/</code>: 6 componentes sin uso, 1 documento histórico y 49 reglas CSS muertas, sin borrar nada. Dudosos sin mover: ver <code>LEEME.md</code> de esa carpeta.</p></div>
+        <div class="human-card"><strong>Calidad tras la limpieza</strong><p><code>tsc</code> 0 errores, ESLint 0 advertencias, Vitest 848/848 (94 archivos) y build correcto, verificado en una copia aparte.</p></div>
+        <div class="human-card"><strong>Conocimiento reutilizable</strong><p>Este HTML incorpora 80 efectos, 17 prácticas, 11 puntos legales y 42 tecnologías, con filtros y exportación JSON. Obsidian actualizado como segundo cerebro de consulta.</p></div>
+        <div class="human-card"><strong>Seis módulos premium</strong><p>Commits <code>48f4e90</code>, <code>22e5377</code>, <code>8444ae8</code>, <code>3230978</code> y <code>4b0d3a0</code> (noindex). Spinner infinito de Conversaciones corregido; brechas de API en el panel, OLA-4B.</p></div>
+        <div class="human-card"><strong>Planificador arreglado</strong><p>Commit <code>7ef2a05</code>: si falta la tabla <code>ScheduledPost</code> el calendario sigue visible con un aviso guiado. Nuevo <code>scripts/check-db-tables.mjs</code> (solo lectura) compara modelos de Prisma con tablas reales. Detalle en el panel, sección OLA-4B.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><span class="section-code">BITÁCORA</span><h2>Novedades y pendientes</h2><span class="section-note">Se guarda automáticamente en este navegador</span></div>
+      <textarea class="notes" id="notes" placeholder="Ejemplo: 25 sep — QA validó la fase 00. Evidencia: diff revisado y pruebas verdes. Pendiente aprobación para versionar..."></textarea>
+      <div class="saved" id="saved"></div>
+    </section>
+  </main>
+
+  <footer><span>RAI AGENCY · ROADMAP DE AGENTES</span><span>Capacidades y madurez de agentes · backlog único en docs/planning/panel-control.html · base de conocimiento reutilizable · estados guardados localmente</span></footer>
+</div>
+
+<script>
+const STORAGE_KEY='rai-agents-roadmap-v3';
+const order=['pending','progress','done','blocked'];
+const icons={pending:'·',progress:'→',done:'✓',blocked:'!'};
+const labels={pending:'Pendiente',progress:'En curso',done:'Completado',blocked:'Bloqueado'};
+
+function snapshot(){
+  return {
+    updated:new Date().toISOString(),
+    notes:document.getElementById('notes').value,
+    tasks:Object.fromEntries([...document.querySelectorAll('.task')].map(t=>[t.dataset.id,t.dataset.status]))
+  };
+}
+function save(show=true){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(snapshot()));
+  if(show){const el=document.getElementById('saved');el.textContent='Guardado';setTimeout(()=>el.textContent='',1200)}
+}
+function load(data){
+  if(!data)return;
+  document.getElementById('notes').value=data.notes||'';
+  Object.entries(data.tasks||{}).forEach(([id,status])=>{
+    const task=document.querySelector(`.task[data-id="${id}"]`);
+    if(task)setTask(task,status,false);
+  });
+  refresh();
+}
+function setTask(task,status,persist=true){
+  task.dataset.status=status;
+  task.querySelector('.state-dot').textContent=icons[status];
+  if(persist){save();refresh()}
+}
+function refresh(){
+  const tasks=[...document.querySelectorAll('.task')];
+  const counts=Object.fromEntries(order.map(s=>[s,tasks.filter(t=>t.dataset.status===s).length]));
+  const pct=Math.round((counts.done/tasks.length)*100);
+  document.getElementById('pct').textContent=pct+'%';
+  document.getElementById('doneCount').textContent=counts.done;
+  document.getElementById('progressCount').textContent=counts.progress;
+  document.getElementById('blockedCount').textContent=counts.blocked;
+  document.getElementById('progressBar').style.width=pct+'%';
+  document.querySelectorAll('.phase').forEach(phase=>{
+    const children=[...phase.querySelectorAll('.task')];
+    let state='pending';
+    if(children.every(t=>t.dataset.status==='done'))state='done';
+    else if(children.some(t=>t.dataset.status==='blocked'))state='blocked';
+    else if(children.some(t=>['progress','done'].includes(t.dataset.status)))state='progress';
+    const badge=phase.querySelector('.status');
+    badge.className='status '+state;badge.textContent=labels[state];
+    phase.dataset.status=state;
+  });
+}
+
+document.querySelectorAll('.task').forEach(task=>task.querySelector('.state-dot').addEventListener('click',()=>{
+  const next=order[(order.indexOf(task.dataset.status)+1)%order.length];setTask(task,next);
+}));
+document.querySelectorAll('[data-phase-status]').forEach(btn=>btn.addEventListener('click',()=>{
+  btn.closest('.phase').querySelectorAll('.task').forEach(t=>setTask(t,btn.dataset.phaseStatus,false));save();refresh();
+}));
+document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('[data-filter]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  const f=btn.dataset.filter;document.querySelectorAll('.phase').forEach(p=>p.classList.toggle('hidden',f!=='all'&&p.dataset.status!==f));
+}));
+document.getElementById('notes').addEventListener('input',()=>save(false));
+document.getElementById('exportState').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(snapshot(),null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='roadmap-agentes-rai-estado.json';a.click();URL.revokeObjectURL(a.href);
+});
+document.getElementById('importFile').addEventListener('change',async e=>{
+  try{load(JSON.parse(await e.target.files[0].text()));save()}catch{alert('El archivo de estado no es válido.')}e.target.value='';
+});
+document.getElementById('copySummary').addEventListener('click',async()=>{
+  const data=snapshot();const lines=['ROADMAP RAI AGENCY — RESUMEN'];
+  document.querySelectorAll('.phase').forEach(p=>{
+    lines.push(`\n${p.querySelector('.phase-number').textContent} · ${p.querySelector('h3').textContent} — ${p.querySelector('.status').textContent}`);
+    p.querySelectorAll('.task').forEach(t=>lines.push(`- [${icons[t.dataset.status]}] ${t.querySelector('h4').textContent}`));
+  });
+  if(data.notes.trim())lines.push('\nBITÁCORA\n'+data.notes.trim());
+  await navigator.clipboard.writeText(lines.join('\n'));const b=document.getElementById('copySummary');b.textContent='Resumen copiado';setTimeout(()=>b.textContent='Copiar resumen',1400);
+});
+
+try{load(JSON.parse(localStorage.getItem(STORAGE_KEY)))}catch{refresh()}
+refresh();
+
+/* ===== Base de conocimiento y tecnologías ===== */
+(function(){
+  const node=document.getElementById('kb-data');
+  if(!node)return;
+  let KB;try{KB=JSON.parse(node.textContent)}catch{return}
+  const norm=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const ESTADO_LABEL={adoptado:'Adoptado',parcial:'Parcial',candidato:'Candidato',rechazado:'Rechazado',referencia:'Referencia','en-uso':'En uso',propuesta:'Propuesta'};
+  const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n};
+  const badge=(txt,cls)=>el('span','kb-badge '+(cls||''),txt);
+
+  function chips(container,values,state,onChange){
+    container.textContent='';
+    values.forEach(v=>{
+      const b=el('button','kb-chip',v.label);b.type='button';
+      b.setAttribute('aria-pressed',String(state.value===v.key));
+      b.addEventListener('click',()=>{state.value=v.key;chips(container,values,state,onChange);onChange()});
+      container.appendChild(b);
+    });
+  }
+  function emptyMsg(list){list.appendChild(el('div','kb-empty','Sin resultados para ese filtro.'))}
+
+  /* --- Tecnologías --- */
+  const tState={value:'todo'},tSearch=document.getElementById('techSearch'),tList=document.getElementById('techList'),tCount=document.getElementById('techCount');
+  function renderTech(){
+    const q=norm(tSearch.value);tList.textContent='';
+    const rows=KB.tecnologias.filter(t=>(tState.value==='todo'||t.estado===tState.value)&&(!q||norm([t.nombre,t.categoria,t.nota,t.fase].join(' ')).includes(q)));
+    rows.forEach(t=>{
+      const c=el('div','kb-card');c.dataset.estado=t.estado;
+      c.appendChild(el('div','kb-id',t.id+' · '+t.categoria));
+      c.appendChild(el('h4','',t.nombre));
+      const b=el('div','kb-badges');b.appendChild(badge(ESTADO_LABEL[t.estado]||t.estado,t.estado));if(t.fase)b.appendChild(badge(t.fase));c.appendChild(b);
+      c.appendChild(el('p','',t.nota));tList.appendChild(c);
+    });
+    if(!rows.length)emptyMsg(tList);
+    tCount.textContent=rows.length+' de '+KB.tecnologias.length;
+  }
+  const tValues=[{key:'todo',label:'Todo'},{key:'en-uso',label:'En uso'},{key:'propuesta',label:'Propuestas'},{key:'referencia',label:'Referencia'}];
+  chips(document.getElementById('techChips'),tValues,tState,renderTech);
+  tSearch.addEventListener('input',renderTech);renderTech();
+
+  /* --- Base de conocimiento --- */
+  const kState={tab:'efectos',estado:{value:'todo'}},kSearch=document.getElementById('kbSearch'),kList=document.getElementById('kbList'),kCount=document.getElementById('kbCount'),kGroup=document.getElementById('kbGroup'),kWarn=document.getElementById('kbWarn');
+  const kValues=[{key:'todo',label:'Todo'},{key:'adoptado',label:'Adoptado'},{key:'parcial',label:'Parcial'},{key:'candidato',label:'Candidato'},{key:'rechazado',label:'Rechazado'},{key:'referencia',label:'Referencia'}];
+  function fillGroups(){
+    kGroup.textContent='';
+    const map=kState.tab==='efectos'?KB.gruposEfectos:kState.tab==='practicas'?KB.gruposPracticas:null;
+    kGroup.hidden=!map;if(!map)return;
+    const all=el('option','','Todos los grupos');all.value='todo';kGroup.appendChild(all);
+    Object.entries(map).forEach(([k,v])=>{const o=el('option','',v);o.value=k;kGroup.appendChild(o)});
+  }
+  function renderKb(){
+    const q=norm(kSearch.value),tab=kState.tab,st=kState.estado.value,gr=kGroup.hidden?'todo':kGroup.value;
+    kList.textContent='';kWarn.textContent='';
+    let rows=[];
+    if(tab==='efectos')rows=KB.efectos.filter(e=>(st==='todo'||e.estado===st)&&(gr==='todo'||e.grupo===gr)&&(!q||norm([e.id,e.nombre,e.que,e.tecnica,e.nota].join(' ')).includes(q)));
+    if(tab==='practicas')rows=KB.practicas.filter(e=>(st==='todo'||e.estado===st)&&(gr==='todo'||e.grupo===gr)&&(!q||norm([e.id,e.titulo,e.regla,e.donde].join(' ')).includes(q)));
+    if(tab==='legal'){
+      const w=el('div','kb-warn',KB.avisoLegal);kWarn.appendChild(w);
+      rows=KB.legal.filter(e=>(st==='todo'||e.estado===st)&&(!q||norm([e.id,e.titulo,e.resumen,e.implementacion].join(' ')).includes(q)));
+    }
+    rows.forEach(r=>{
+      const c=el('div','kb-card');c.dataset.estado=r.estado;
+      const grupoTxt=tab==='efectos'?KB.gruposEfectos[r.grupo]:tab==='practicas'?KB.gruposPracticas[r.grupo]:'Marco legal';
+      c.appendChild(el('div','kb-id',r.id+' · '+grupoTxt));
+      c.appendChild(el('h4','',r.nombre||r.titulo));
+      const b=el('div','kb-badges');b.appendChild(badge(ESTADO_LABEL[r.estado]||r.estado,r.estado));
+      if(tab==='efectos'){b.appendChild(badge('Costo '+r.costo));if(r.blur)b.appendChild(badge('Requiere desenfoque','blur'))}
+      c.appendChild(b);
+      c.appendChild(el('p','',r.que||r.regla||r.resumen));
+      if(r.tecnica)c.appendChild(el('div','kb-meta','Técnica: '+r.tecnica));
+      if(r.implementacion)c.appendChild(el('div','kb-meta','Implementación: '+r.implementacion));
+      const note=r.nota||r.donde;if(note)c.appendChild(el('div','kb-note',note));
+      kList.appendChild(c);
+    });
+    if(!rows.length)emptyMsg(kList);
+    const total=tab==='efectos'?KB.efectos.length:tab==='practicas'?KB.practicas.length:KB.legal.length;
+    kCount.textContent=rows.length+' de '+total;
+  }
+  const chipBox=document.getElementById('kbChips');
+  function redrawChips(){chips(chipBox,kValues,kState.estado,renderKb)}
+  document.querySelectorAll('[data-kb-tab]').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-kb-tab]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+    kState.tab=btn.dataset.kbTab;kState.estado.value='todo';kSearch.value='';fillGroups();redrawChips();renderKb();
+  }));
+  kGroup.addEventListener('change',renderKb);kSearch.addEventListener('input',renderKb);
+  fillGroups();redrawChips();renderKb();
+
+  /* --- Copiar / descargar --- */
+  async function copy(text,btn,done){try{await navigator.clipboard.writeText(text);const o=btn.textContent;btn.textContent=done;setTimeout(()=>btn.textContent=o,1400)}catch{}}
+  document.getElementById('copyReuse').addEventListener('click',e=>copy(document.getElementById('reusePrompt').textContent,e.currentTarget,'Copiado'));
+  document.getElementById('copyKb').addEventListener('click',e=>copy(JSON.stringify(KB,null,2),e.currentTarget,'Copiado'));
+  document.getElementById('downloadKb').addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify(KB,null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='base-conocimiento-rai.json';a.click();URL.revokeObjectURL(a.href);
+  });
+})();
+</script>
+</body>
+</html>

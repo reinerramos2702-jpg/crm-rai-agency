@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { getOrCreateWorkspace } from '@/lib/workspace';
 import { isRoleContext, requireRole } from '@/lib/roles';
+import { redactUrls } from '@/lib/automation-runs';
+import { TRIGGER_META } from '@/lib/automations/ui-meta';
 
 export const runtime = 'nodejs';
+
+const MAX_STEPS = 50;
 
 /**
  * GET    /api/automations/[id] — detalle de un flujo + sus últimas ejecuciones
@@ -14,35 +16,46 @@ export const runtime = 'nodejs';
  */
 
 async function assertOwnership(workspaceId: string, id: string) {
-  return prisma.workflow.findFirst({ where: { id, workspaceId } });
+  return prisma.workflow.findFirst({ where: { id, workspaceId }, select: { id: true } });
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente', 'staff', 'viewer']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
   const { id } = await params;
 
-  const ws = await getOrCreateWorkspace(auth.userId);
-  const owned = await assertOwnership(ws.id, id);
-  if (!owned) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
-
-  const workflow = await prisma.workflow.findUnique({
-    where: { id },
+  // Una sola consulta: valida que el flujo es del workspace y trae solo lo que pinta el editor.
+  const found = await prisma.workflow.findFirst({
+    where: { id, workspaceId: ws.id },
     include: {
-      runs: { orderBy: { createdAt: 'desc' }, take: 20 },
+      runs: {
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+        select: { id: true, status: true, error: true, createdAt: true },
+      },
     },
   });
+  if (!found) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
+
+  // Los textos del motor pueden incluir la URL del webhook: no salen del servidor.
+  const workflow = {
+    ...found,
+    runs: found.runs.map((r) => ({
+      ...r,
+      error: r.error ? redactUrls(r.error) : null,
+    })),
+  };
 
   return NextResponse.json({ workflow });
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const ctx = await requireRole(req, ['admin', 'gerente', 'agente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
   if (!isRoleContext(ctx)) return ctx;
-  const auth = ctx.auth;
+  const ws = ctx.workspace;
   const { id } = await params;
 
-  const ws = await getOrCreateWorkspace(auth.userId);
   const owned = await assertOwnership(ws.id, id);
   if (!owned) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
 
@@ -55,8 +68,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const folder = await prisma.workflowFolder.findFirst({ where: { id: folderId, workspaceId: ws.id } });
     if (!folder) return NextResponse.json({ error: 'Carpeta no encontrada' }, { status: 404 });
   }
-  if (trigger !== undefined && (typeof trigger !== 'object' || !trigger?.type)) {
+  if (trigger !== undefined && (typeof trigger !== 'object' || !trigger?.type || !Object.prototype.hasOwnProperty.call(TRIGGER_META, trigger.type))) {
     return NextResponse.json({ error: 'trigger { type, config } inválido' }, { status: 400 });
+  }
+  if (name !== undefined && (typeof name !== 'string' || !name.trim() || name.trim().length > 120)) {
+    return NextResponse.json({ error: 'El nombre es obligatorio (máximo 120 caracteres)' }, { status: 400 });
+  }
+  if (steps !== undefined && (!Array.isArray(steps) || steps.length > MAX_STEPS)) {
+    return NextResponse.json({ error: `steps debe ser una lista (máximo ${MAX_STEPS} pasos)` }, { status: 400 });
   }
 
   const workflow = await prisma.workflow.update({
@@ -75,12 +94,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const ctx = await requireRole(req, ['admin', 'gerente', 'agente']);
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
   if (!isRoleContext(ctx)) return ctx;
-  const auth = ctx.auth;
+  const ws = ctx.workspace;
   const { id } = await params;
 
-  const ws = await getOrCreateWorkspace(auth.userId);
   const owned = await assertOwnership(ws.id, id);
   if (!owned) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
 

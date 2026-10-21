@@ -4,7 +4,9 @@ CRM SaaS multi-tenant de RAI Agency: contactos, conversaciones, calendarios, fac
 
 **Stack**: Next.js 14 (App Router) · Postgres + Prisma · BullMQ + Redis (Upstash) · Cloudflare R2 · Vercel AI SDK · SSE.
 
-**Arquitectura**: ver `ARCHITECTURE.md`. Resumen: 3 secuencias UI (chat planificación → orquestador autónomo → observador en vivo) con DAG `Copy → (Visual ∥ Audio) → Video → Music`.
+> **Nota (10 oct 2026):** este README conserva la descripción original del MVP de pipeline. Para stack y arquitectura vigentes → `docs/MEMORY.md`; estado actual → `docs/ESTADO-SESION.md`; backlog → `docs/planning/panel-control.html`; reglas del agente → `AGENTS.md`.
+
+**Arquitectura del pipeline** (original): el antiguo `ARCHITECTURE.md` fue eliminado el 10 oct 2026 (era solo un puntero). Resumen: 3 secuencias UI (chat planificación → orquestador autónomo → observador en vivo) con DAG `Copy → (Visual ∥ Audio) → Video → Music`.
 
 ---
 
@@ -32,7 +34,7 @@ pnpm worker            # terminal 2 — worker BullMQ
 
 Abrir [http://localhost:3000](http://localhost:3000).
 
-En modo dev (`DEV_BYPASS_AUTH=true`) se autocrea un user dummy `dev-user-001`. No necesitas JWT del CRM todavía.
+En modo dev (`DEV_BYPASS_AUTH=true`) se autocrea un user dummy `dev-user-001`. En producción la autenticación es real (login/registro con cookie `rai_session`); ver `docs/MEMORY.md` § Auth y roles.
 
 ---
 
@@ -91,7 +93,7 @@ src/
 │   ├── db.ts                     → Prisma singleton
 │   ├── redis.ts                  → Queue + pub/sub
 │   ├── r2.ts                     → Cloudflare R2 client
-│   ├── auth.ts                   → JWT SSO + dev bypass
+│   ├── auth.ts                   → sesión JWT (cookie rai_session / Bearer) + dev bypass
 │   ├── crypto.ts                 → AES-256-GCM para BYOK keys
 │   ├── llm-providers.ts          → multi-LLM via Vercel AI SDK
 │   ├── master-json-schema.ts     → contratos Zod
@@ -112,7 +114,7 @@ Marcado intencionalmente como MVP. Ajustar en este orden:
 5. **Publicación IG**: endpoint `/api/publish` que tome `kind=final` y use Graph API. Requiere App Review de Meta.
 6. **Scheduling**: cron por campaña (la UI "automatizaciones" del demo Morfeo). Usar BullMQ repeat jobs.
 7. **Stripe billing**: créditos consumibles + suscripción. Hoy hard cap pero sin cobro.
-8. **SSO real**: hoy `DEV_BYPASS_AUTH=true`. Setear `DEV_BYPASS_AUTH=false` y emitir JWT desde el CRM RAI con HS256 + `JWT_SECRET`.
+8. ~~**SSO real**~~ — resuelto en código (20 sep 2026): login/registro propios con JWT en cookie httpOnly. Pendiente no-código: `JWT_SECRET` y `SUPER_ADMIN_EMAILS` en Vercel y `DEV_BYPASS_AUTH=false` en producción.
 9. **Retry desde paused**: endpoint para reintentar una task pausada después de fixear la causa.
 10. **Multi-asset por item**: hoy 1 task = 1 item. Soportar variantes (ej: 5 hooks distintos para mismo item).
 

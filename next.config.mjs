@@ -8,6 +8,8 @@ const nextConfig = {
   },
   experimental: {
     serverActions: { bodySizeLimit: '10mb' },
+    // Importa solo los iconos usados (lucide-react exporta cientos): menos JS que compilar y enviar.
+    optimizePackageImports: ['lucide-react'],
   },
   // Permite que el CRM padre embeba esta app
   async headers() {

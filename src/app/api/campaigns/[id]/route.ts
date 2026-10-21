@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { CAMPAIGN_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
@@ -13,11 +13,11 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, CAMPAIGN_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const campaign = await prisma.campaign.findFirst({
-    where: { id: params.id, userId: auth.userId },
+    where: { id: params.id, workspaceId: ctx.workspace.id },
     include: {
       executions: {
         orderBy: { createdAt: 'desc' },
@@ -44,11 +44,11 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const auth = await getAuth(req);
-  if (!auth) return new Response('Unauthorized', { status: 401 });
+  const ctx = await requireRole(req, CAMPAIGN_ROLES);
+  if (!isRoleContext(ctx)) return ctx;
 
   const campaign = await prisma.campaign.findFirst({
-    where: { id: params.id, userId: auth.userId },
+    where: { id: params.id, workspaceId: ctx.workspace.id },
   });
 
   if (!campaign) return new Response('Not found', { status: 404 });

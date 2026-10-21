@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { getOrCreateWorkspace } from '@/lib/workspace';
+import { isRoleContext, requireRole } from '@/lib/roles';
 
 export const runtime = 'nodejs';
 
@@ -11,11 +10,11 @@ export const runtime = 'nodejs';
  */
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await getAuth(req);
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ctx = await requireRole(req, ['super_admin', 'agency_owner', 'admin', 'gerente', 'agente']);
+  if (!isRoleContext(ctx)) return ctx;
+  const ws = ctx.workspace;
   const { id } = await params;
 
-  const ws = await getOrCreateWorkspace(auth.userId);
   const conv = await prisma.conversation.findFirst({ where: { id, contact: { workspaceId: ws.id } } });
   if (!conv) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
 
