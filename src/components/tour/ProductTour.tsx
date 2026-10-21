@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowLeft, ArrowRight, Check, Sparkles, X } from 'lucide-react';
-import './tour.css';
 
 /** Elemento a resaltar: selector CSS o función que lo resuelve en el momento. */
 export type TourTarget = string | (() => HTMLElement | null);

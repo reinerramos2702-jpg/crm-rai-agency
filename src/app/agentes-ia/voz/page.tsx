@@ -15,7 +15,6 @@ import { UsageCard } from './_components/UsageCard';
 import { useVoiceSettings } from './_components/use-voice-settings';
 import type { VoiceCallsResponse, VoiceStatusResponse } from './_components/types';
 import type { CallListItem } from '@/lib/voice/queries';
-import './voz.css';
 
 const TABS = [
   { id: 'resumen', label: 'Resumen', icon: LayoutDashboard },

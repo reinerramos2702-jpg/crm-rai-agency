@@ -2,7 +2,6 @@
 
 import React, { useId, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import './module-kit.css';
 
 interface DisabledActionProps {
   label: string;

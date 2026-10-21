@@ -5,7 +5,6 @@ import { AlertTriangle, CheckCircle2, Info, ShieldCheck } from 'lucide-react';
 import { summarizeRisks, type RiskLevel } from '@/lib/automation-safety';
 import type { SettingsT, WorkflowT } from '../types';
 import { useAutomationPrefs } from '../use-automation-prefs';
-import '../settings.css';
 
 const LEVEL_ICON: Record<RiskLevel, typeof Info> = { high: AlertTriangle, medium: AlertTriangle, info: Info };
 
@@ -26,7 +25,7 @@ export function SafetyCard({ settings, workflows }: SafetyCardProps) {
     : null;
 
   return (
-    <div className="st-card">
+    <div className="au-st-card">
       <h3 className="st-card-title"><ShieldCheck size={16} /> Seguridad de los envíos</h3>
       <p className="st-card-text">Un flujo con «Enviar notificación» escribe a clientes reales. Estas protecciones evitan activarlo por error.</p>
       <div className="st-prefs">

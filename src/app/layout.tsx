@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import '../styles/effects.css';
-import '../styles/select.css';
+import '../styles/modules'; // todo el demás CSS (ver el encabezado de ese archivo)
 import { Sidebar } from '@/components/layout/Sidebar';
 import TourHost from '@/components/tour/TourHost';
 import { ClickFx } from '@/components/ui/ClickFx';

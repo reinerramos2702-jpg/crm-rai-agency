@@ -1,6 +1,5 @@
 import React from 'react';
 import { SkeletonLine } from '@/components/ui/Skeleton';
-import '../flows.css';
 
 /** Esqueleto con las mismas medidas que `FlowRow` (interruptor 40×24, título y metadatos, resultado y acciones): sin saltos al cargar. */
 export function FlowSkeleton({ rows = 4 }: { rows?: number }) {

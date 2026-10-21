@@ -15,7 +15,6 @@ import { useDebouncedValue } from './_components/use-debounced-value';
 import {
   EMPTY_FILTERS, countBy, filterSites, pluralize, summarize, type Site,
 } from './_components/site-model';
-import './sitios.css';
 
 export default function SitiosPage() {
   const list = useCachedJson<{ sites: Site[] }>('/api/sites', { ttlMs: 15_000 });

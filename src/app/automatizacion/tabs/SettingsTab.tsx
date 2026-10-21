@@ -11,7 +11,6 @@ import { SafetyCard } from '../components/SafetyCard';
 import { SoonCards } from '../components/SoonCards';
 import type { SettingsT } from '../types';
 import type { useAutomations } from '../use-automations';
-import '../settings.css';
 
 interface SettingsTabProps {
   settings: SettingsT | null;
@@ -40,10 +39,10 @@ function Section({ def, children }: { def: SectionDef; children: React.ReactNode
   const Icon = def.icon;
   return (
     <section id={def.id} className="st-section" aria-labelledby={`${def.id}-title`}>
-      <header className="st-section-head">
+      <header className="au-st-section-head">
         <span className="st-section-ico" aria-hidden="true"><Icon size={16} /></span>
         <div>
-          <h2 id={`${def.id}-title`} className="st-section-title">{def.title}</h2>
+          <h2 id={`${def.id}-title`} className="au-st-section-title">{def.title}</h2>
           <p className="st-section-text">{def.text}</p>
         </div>
       </header>
@@ -70,7 +69,7 @@ export default function SettingsTab({ settings, loading, save, data }: SettingsT
         </ul>
       </nav>
 
-      <div className="st-grid">
+      <div className="au-st-grid">
         <Section def={sectionOf('st-motor')}>
           <EngineCard settings={settings} loading={loading} save={save} workflows={data.workflows} />
         </Section>
@@ -81,7 +80,7 @@ export default function SettingsTab({ settings, loading, save, data }: SettingsT
 
         <Section def={sectionOf('st-notificaciones')}>
           <NotifyCard settings={settings} save={save} />
-          <div className="st-card">
+          <div className="au-st-card">
             <div className="st-card-head">
               <div>
                 <h3 className="st-card-title"><ExternalLink size={16} aria-hidden="true" /> Webhook de notificaciones (n8n)</h3>

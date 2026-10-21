@@ -18,7 +18,6 @@ import { FolderPanel } from '../components/FolderPanel';
 import type { FolderT, WorkflowT } from '../types';
 import { useAutomationPrefs } from '../use-automation-prefs';
 import type { useAutomations } from '../use-automations';
-import '../flows.css';
 
 const BLANK_NAME = 'Nuevo flujo sin título';
 

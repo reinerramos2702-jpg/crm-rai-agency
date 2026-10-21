@@ -1,6 +1,5 @@
 import React from 'react';
 import { Info } from 'lucide-react';
-import './module-kit.css';
 
 interface NoticeBandProps {
   children: React.ReactNode;

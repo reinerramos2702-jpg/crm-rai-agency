@@ -30,7 +30,6 @@ import { CategoryRail } from './CategoryRail';
 import { StepRow } from './StepRow';
 import { TutorialModal } from './TutorialModal';
 import { stepIcon } from './launchpad-icons';
-import './launchpad.css';
 
 interface LaunchpadProgress {
   completed: string[];

@@ -6,7 +6,6 @@ import { buildFlowPreview, templateTags, triggerKindLabel, type PreviewKind } fr
 import { CATEGORY_LABELS, categoryOf, readinessOf, type Requirement } from '@/lib/automation-template-gallery';
 import { TRIGGER_META } from '@/lib/automations/ui-meta';
 import { CATEGORY_ICONS, NICHE_META, type TemplateT } from '../templates-data';
-import '../templates.css';
 
 const MAX_TAGS = 2;
 const MAX_TRACK = 6;

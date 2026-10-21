@@ -13,6 +13,7 @@ Creada el 17 oct 2026 tras una auditoría de solo lectura del repositorio. **Nad
 | `src/components/ui/Button.tsx`, `Card.tsx`, `Input.tsx` | Biblioteca de componentes sin ninguna importación; `CLAUDE.md` indica no usarla. Último cambio: 21 jun 2026 |
 | `src/components/campaign/AssetPreview.tsx`, `DayGrid.tsx`, `PlanningChat.tsx` | Sin importaciones; el módulo de campañas ya usa los componentes de `src/app/campaign/new/` |
 | `docs/planning/COWORK-BRIEFING.md` | Se declara a sí mismo «documento histórico» (1 sep 2026); hoy el código lo ejecuta OpenCode. Solo lo citaba otro documento de planning, ya actualizado |
+| `src/app/marketing/_components/styles.ts` | Solo reexportaba las 4 hojas de estilo de /marketing; desde el 21 oct 2026 todo el CSS se carga desde `src/styles/modules.ts` (evita el parpadeo sin estilos al navegar) y nadie lo importa |
 | `css/globals-reglas-sin-uso.css` | 49 reglas CSS retiradas de `src/app/globals.css` (clases `.cn-chips/.cn-input/.cn-starters`, `.lp-checkbox*`, `.lp-progress-*`, `.lp-check-icon`, `.lp-ring-pct`, `.lp-next-cta`, `.dash-duo`, `.dash-pulse*` de contenedor, `.dash-auto-head`, `.dash-empty-*`, `.rai-sync-status`, `.rai-progress`, `.rai-cfg-pct`) sin ningún uso en `.ts`/`.tsx`. Para restaurar, pegar la regla en `globals.css` |
 
 ## Dudoso: NO se movió, requiere decisión de Reiner

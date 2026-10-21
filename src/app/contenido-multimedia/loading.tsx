@@ -1,8 +1,6 @@
 import { Plus } from 'lucide-react';
 import { TopBar } from '@/components/layout/TopBar';
 import { MediaPageSkeleton } from './MediaSkeleton';
-import './media.css';
-import './media-grid.css';
 
 /** Esqueleto instantáneo con la estructura real de la biblioteca (pestañas, barra y cuadrícula). */
 export default function Loading() {

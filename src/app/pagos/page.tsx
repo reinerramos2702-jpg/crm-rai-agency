@@ -18,7 +18,6 @@ import { PaymentsKpis } from './PaymentsKpis';
 import { PaymentsTable } from './PaymentsTable';
 import { LIST_URL } from './payments-client';
 import { usePaymentsActions } from './use-payments-actions';
-import './pagos.css';
 
 const PAGE_SIZE = 25;
 

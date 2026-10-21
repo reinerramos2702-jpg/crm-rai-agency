@@ -19,7 +19,6 @@ import { PaymentDetailCards, type PaymentDetail } from '../PaymentDetailCards';
 import {
   deletePayment, detailUrl, errorMessage, patchListCache, postTransition, removeFromListCache,
 } from '../payments-client';
-import '../pagos.css';
 
 type Intent = 'primary' | 'danger' | 'secondary';
 interface ActionDef { id: PaymentAction; label: string; icon: LucideIcon; intent: Intent }

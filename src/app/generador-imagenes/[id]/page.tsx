@@ -19,8 +19,6 @@ import { SetupPanel } from './SetupPanel';
 import { WeekProgress } from './WeekProgress';
 import { WizardSkeleton } from './WizardSkeleton';
 import { useWizardChat } from './useWizardChat';
-import '../generador.css';
-import '../wizard.css';
 
 const AUTOSAVE_MS = 1500;
 

@@ -19,7 +19,6 @@ import LinksTab from './_components/LinksTab';
 import BrandTab from './_components/BrandTab';
 import AdsTab from './_components/AdsTab';
 import ProspectingTab from './_components/ProspectingTab';
-import './_components/styles';
 
 function MarketingInner() {
   const params = useSearchParams();

@@ -6,7 +6,6 @@ import { buildFlowPreview, templateTags, triggerKindLabel, type PreviewKind } fr
 import { CATEGORY_LABELS, categoryOf, type Requirement, type RequirementState } from '@/lib/automation-template-gallery';
 import { CATEGORY_ICONS, NICHE_META, type TemplateT } from '../templates-data';
 import { Dialog } from './Dialog';
-import '../templates.css';
 
 const KIND_META: Record<PreviewKind, { label: string; icon: LucideIcon }> = {
   trigger: { label: 'Disparador', icon: Zap },

@@ -5,7 +5,6 @@ import { Download, FilterX, Loader2, RefreshCw } from 'lucide-react';
 import type { RunFilters, RunRange, RunStatusFilter } from '@/lib/automation-runs';
 import { pickOption } from '../guards';
 import type { WorkflowT } from '../types';
-import '../activity.css';
 
 const STATUS_CHIPS: { id: RunStatusFilter; label: string }[] = [
   { id: 'todos', label: 'Todas' },

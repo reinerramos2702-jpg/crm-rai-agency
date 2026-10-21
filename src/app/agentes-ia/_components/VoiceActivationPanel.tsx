@@ -13,7 +13,6 @@ import { ActivationCard } from '../voz/_components/ActivationCard';
 import { saveVoiceSettings } from '../voz/_components/use-voice-settings';
 import type { VoiceStatusResponse } from '../voz/_components/types';
 import { VOICE_CENTER_HREF } from './NewAgentButtons';
-import '../voz/voz.css';
 
 /**
  * Último paso del asistente de voz: reutiliza la tarjeta de activación del Centro de voz.

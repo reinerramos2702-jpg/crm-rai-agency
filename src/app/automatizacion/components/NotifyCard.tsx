@@ -6,7 +6,6 @@ import toast from 'react-hot-toast';
 import { checkNotifyEmail } from '@/lib/automation-settings';
 import { errorMessage } from '../api';
 import type { SettingsT } from '../types';
-import '../settings.css';
 
 interface NotifyCardProps {
   settings: SettingsT | null;
@@ -51,7 +50,7 @@ export function NotifyCard({ settings, save }: NotifyCardProps) {
   }
 
   return (
-    <div className="st-card">
+    <div className="au-st-card">
       <h3 className="st-card-title"><Bell size={16} /> Correo de avisos internos</h3>
       <p className="st-card-text">
         Dirección de referencia para los avisos cuando un flujo falla. El envío automático por correo todavía no está

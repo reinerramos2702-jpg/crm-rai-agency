@@ -15,7 +15,6 @@ import { PAGE_TOUR_KEY, PAGE_TOUR_STEPS } from './tour-steps';
 import { RUNS_URL, TOP_TABS, isTopTab, type TopTab } from './types';
 import { useAutomationSettings } from './use-automation-settings';
 import { useAutomations } from './use-automations';
-import './automation.css';
 
 const ContentIGTab = dynamic(() => import('@/components/pipeline-ig/ContentIGTab'), {
   ssr: false,

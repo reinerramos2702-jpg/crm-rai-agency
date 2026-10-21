@@ -1,6 +1,5 @@
 import React from 'react';
 import { summarizeCounts } from '@/lib/automation-runs';
-import '../activity.css';
 
 /** Resumen del periodo: totales por estado sobre todo el historial filtrado, no solo lo cargado. */
 export function ActivitySummary({ summary }: { summary: Record<string, number> | undefined }) {

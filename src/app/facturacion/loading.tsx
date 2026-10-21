@@ -1,5 +1,4 @@
 import { BillingSkeleton } from './_components/BillingSkeleton';
-import './_components/facturacion.css';
 
 /** Esqueleto instantáneo con la misma estructura que la página (sin saltos de diseño). */
 export default function Loading() {

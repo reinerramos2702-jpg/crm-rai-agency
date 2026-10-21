@@ -21,7 +21,6 @@ import { TemplateCard } from '../components/TemplateCard';
 import { TemplatePreview } from '../components/TemplatePreview';
 import { useAutomationPrefs } from '../use-automation-prefs';
 import type { NewWorkflowInput } from '../use-automations';
-import '../templates.css';
 
 const SORT_KEYS: readonly TemplateSort[] = ['recomendado', 'nombre', 'pasos-asc', 'pasos-desc'];
 
