@@ -10,7 +10,6 @@ import { BILLING_TABS, tabById, type BillingTab } from './_components/billing-ta
 import { EmptyPreview } from './_components/EmptyPreview';
 import { IntegrationsPanel } from './_components/IntegrationsPanel';
 import { TransactionsPanel } from './_components/TransactionsPanel';
-import './_components/facturacion.css';
 
 const PREFIX = 'bl';
 

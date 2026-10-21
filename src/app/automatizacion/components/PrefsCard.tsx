@@ -12,7 +12,6 @@ import {
 } from '@/lib/automation-prefs';
 import { pickOption } from '../guards';
 import { useAutomationPrefs } from '../use-automation-prefs';
-import '../settings.css';
 
 const FLOW_SORTS: readonly FlowSort[] = ['recientes', 'nombre', 'ejecuciones'];
 const ZONES: readonly DisplayZone[] = ['America/Caracas', 'local'];
@@ -33,7 +32,7 @@ export function PrefsCard() {
   };
 
   return (
-    <div className="st-card">
+    <div className="au-st-card">
       <h3 className="st-card-title"><SlidersHorizontal size={16} /> Preferencias de vista</h3>
       <p className="st-card-text">Se guardan en este navegador y solo cambian cómo ves el módulo; no afectan a tu equipo.</p>
       <div className="st-prefs">

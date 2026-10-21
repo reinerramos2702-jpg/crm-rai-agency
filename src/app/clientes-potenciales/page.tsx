@@ -3,16 +3,12 @@
 import React, { useMemo, useState } from 'react';
 import { ListChecks, Target, TrendingUp, Workflow } from 'lucide-react';
 import { CrmTabs, panelDomId, tabDomId, type CrmTabItem } from '../contactos/_shared/CrmTabs';
-import '../contactos/_shared/crm-base.css';
-import '../contactos/_shared/crm-table.css';
-import '../contactos/_shared/crm-overlay.css';
 import { BatchTab } from './_components/BatchTab';
 import { ForecastTab } from './_components/ForecastTab';
 import { OpportunitiesTab } from './_components/OpportunitiesTab';
 import { SequenceTab } from './_components/SequenceTab';
 import { useCardPrefs } from './_components/use-card-prefs';
 import { useOpportunities } from './_components/use-opportunities';
-import './clientes-potenciales.css';
 
 const TOP_TABS = [
   { id: 'oportunidades', label: 'Clientes Potenciales', icon: Target },

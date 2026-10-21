@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import './module-kit.css';
 import {
   centerScrollLeft,
   indicatorTransform,

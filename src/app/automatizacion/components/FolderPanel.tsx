@@ -4,7 +4,6 @@ import React from 'react';
 import { Folder, FolderPlus, Layers, Trash2 } from 'lucide-react';
 import { SkeletonLine } from '@/components/ui/Skeleton';
 import type { FolderT, WorkflowT } from '../types';
-import '../flows.css';
 
 interface FolderPanelProps {
   folders: FolderT[];

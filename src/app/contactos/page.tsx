@@ -7,9 +7,6 @@ import { SectionTab } from './_components/SectionTab';
 import { SECTION_CONFIGS } from './_components/section-configs';
 import { CrmTabs, panelDomId, tabDomId, type CrmTabItem } from './_shared/CrmTabs';
 import { notifySoon } from './_shared/crm-notify';
-import './_shared/crm-base.css';
-import './_shared/crm-table.css';
-import './_shared/crm-overlay.css';
 
 const TOP_TABS = [
   { id: 'listas', label: 'Listas inteligentes', icon: Layers },

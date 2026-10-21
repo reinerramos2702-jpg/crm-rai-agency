@@ -9,7 +9,6 @@ import { zoneOption, type DisplayZone } from '@/lib/automation-prefs';
 import { RUN_STATUS_LABELS, TRIGGER_META } from '@/lib/automations/ui-meta';
 import { isTriggerType } from '../guards';
 import type { RunT } from '../types';
-import '../activity.css';
 
 const RUN_DOT: Record<string, string> = {
   success: 'fx-dot--ok',

@@ -18,7 +18,6 @@ import { useIgSession } from './content-ig/useIgSession';
 import { useIgTour } from './content-ig/useIgTour';
 import { useMetaStatus } from './content-ig/useMetaStatus';
 import { buildConfigProgress } from './content-ig/utils';
-import './content-ig/content-ig.css';
 
 /**
  * Contenido IG: campañas, planificador con IA, calendario de publicación y configuración de marca.

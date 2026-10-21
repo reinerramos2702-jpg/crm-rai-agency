@@ -8,7 +8,6 @@ import { analyzeFlow } from '@/lib/automation-safety';
 import { errorMessage } from '../api';
 import type { SettingsT, WorkflowT } from '../types';
 import { Dialog } from './Dialog';
-import '../settings.css';
 
 interface EngineCardProps {
   settings: SettingsT | null;
@@ -44,7 +43,7 @@ export function EngineCard({ settings, loading, save, workflows }: EngineCardPro
     : `Al reactivarlo, ${active.length === 0 ? 'ningún flujo se reanuda (no hay activos)' : `${active.length === 1 ? 'se reanuda 1 flujo activo' : `se reanudan ${active.length} flujos activos`}`}. Lo ocurrido mientras estuvo pausado no se ejecuta después.`;
 
   return (
-    <div className="st-card">
+    <div className="au-st-card">
       <div className="st-card-head">
         <div>
           <h3 className="st-card-title"><Zap size={16} /> Motor de automatización</h3>

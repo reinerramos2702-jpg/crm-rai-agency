@@ -1,6 +1,5 @@
 import { TopBar } from '@/components/layout/TopBar';
 import { SkeletonCard, SkeletonLine } from '@/components/ui/Skeleton';
-import './campaign-new.css';
 
 /** Esqueleto instantáneo con la misma estructura de dos paneles: evita saltos al llegar la página. */
 export default function Loading() {

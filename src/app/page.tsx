@@ -23,7 +23,6 @@ import { NextActionCard } from './_dashboard/NextActionCard';
 import { InstagramCard, AutomationCard } from './_dashboard/ChannelCards';
 import { ActivityFeed } from './_dashboard/ActivityFeed';
 import { CampaignsSection, type DashCampaign } from './_dashboard/CampaignsSection';
-import './_dashboard/dashboard.css';
 
 const TOUR_KEY = 'rai-tour-dash-v1';
 const PERIOD_KEY = 'rai-dash-period-v1';

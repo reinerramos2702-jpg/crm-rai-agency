@@ -22,15 +22,15 @@
 .st-index a:focus-visible { outline: 2px solid var(--rai-gold); outline-offset: 1px; }
 @media (hover: hover) { .st-index a:hover { color: var(--rai-gold); background: color-mix(in srgb, var(--rai-gold) 8%, transparent); } }
 
-.st-grid { display: grid; gap: 32px; min-width: 0; }
+.au-st-grid { display: grid; gap: 32px; min-width: 0; }
 .st-section { scroll-margin-top: 16px; }
-.st-section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.au-st-section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .st-section-ico { display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px; color: var(--rai-gold); background: color-mix(in srgb, var(--rai-gold) 11%, transparent); border: 1px solid color-mix(in srgb, var(--rai-gold) 28%, transparent); }
-.st-section-title { margin: 0; font-size: 16px; font-weight: 700; }
+.au-st-section-title { margin: 0; font-size: 16px; font-weight: 700; }
 .st-section-text { margin: 2px 0 0; font-size: 12px; color: var(--rai-muted); }
 .st-section-body { display: grid; gap: 16px; min-width: 0; }
 
-.st-card { padding: 18px 20px; border-radius: 16px; border: 1px solid var(--rai-border); background: var(--rai-card); }
+.au-st-card { padding: 18px 20px; border-radius: 16px; border: 1px solid var(--rai-border); background: var(--rai-card); }
 .st-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .st-card-title { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 15px; font-weight: 700; }
 .st-card-title svg { color: var(--rai-gold); flex: 0 0 auto; }

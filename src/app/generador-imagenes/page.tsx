@@ -19,7 +19,6 @@ import { EMPTY_BRAND_DOC, type BrandDocInfo, type ContentGridSummary } from './t
 import { getErrorMessage } from './utils';
 import { useGridView } from './useGridView';
 import { usePinnedGrids } from './usePinnedGrids';
-import './generador.css';
 
 /** Duración del pulso `is-syncing` de la cabecera (el anillo dura ~1,1 s). */
 const SYNC_PULSE_MS = 1200;

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Bell, Clock, FlaskConical, Gauge, RotateCw, Sparkles, type LucideIcon } from 'lucide-react';
-import '../settings.css';
 
 interface SoonItem {
   icon: LucideIcon;

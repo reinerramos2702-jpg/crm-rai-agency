@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { Dialog } from './Dialog';
-import '../flows.css';
 
 interface FolderDialogProps {
   onCreate: (name: string) => Promise<void>;

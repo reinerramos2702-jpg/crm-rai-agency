@@ -13,7 +13,6 @@ import type { ModalState } from './_components/modal-state';
 import { useCalendarActions } from './_components/use-calendar-actions';
 import { useCalendarData } from './_components/use-calendar-data';
 import { useNow } from './_components/use-now';
-import './calendarios.css';
 
 export default function CalendariosPage() {
   const data = useCalendarData();

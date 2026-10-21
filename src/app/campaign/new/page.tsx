@@ -16,7 +16,6 @@ import { useCampaignPresets } from './hooks/useCampaignPresets';
 import { useCampaignSession, type NewCampaignParams } from './hooks/useCampaignSession';
 import { useReadiness, usePlannerConfig } from './hooks/useReadiness';
 import { useResearch } from './hooks/useResearch';
-import './campaign-new.css';
 
 export default function NewCampaignPage() {
   // Identidad de la campaña + formulario. El borrador solo se activa en campañas nuevas (tras leer la URL).

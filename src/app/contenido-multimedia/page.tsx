@@ -36,10 +36,6 @@ import { LoadNotice, RetryButton } from './StatusPanels';
 import { useBatchActions } from './use-batch-actions';
 import { useMediaLocal } from './use-media-local';
 import { useMediaSelection } from './use-media-selection';
-import './media.css';
-import './media-grid.css';
-import './media-batch.css';
-import './media-overlays.css';
 
 const TAB_HINTS = {
   image: 'Las imágenes salen del Generador, de las campañas y de las publicaciones programadas.',

@@ -44,7 +44,7 @@ button.ig-cta { gap: 8px; }
   .ig-actions { width: 100%; }
   .ig-actions > .ig-btn { flex: 1 1 140px; }
 }
-code { overflow-wrap: anywhere; }
+.ig-root code { overflow-wrap: anywhere; }
 
 /* ---------- Campañas ---------- */
 .ig-camp-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }

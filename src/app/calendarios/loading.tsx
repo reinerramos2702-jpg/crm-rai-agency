@@ -1,6 +1,5 @@
 import { SkeletonLine } from '@/components/ui/Skeleton';
 import { CalendarGridSkeleton, GroupsSkeleton } from './_components/CalendarsSkeleton';
-import './calendarios.css';
 
 /** Esqueleto instantáneo mientras se resuelve la ruta: misma estructura que la pantalla (cabecera, pestañas, grupos y tarjetas). */
 export default function Loading() {

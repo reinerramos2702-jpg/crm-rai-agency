@@ -15,7 +15,6 @@ import { FieldInput, StepCard } from './builder-parts';
 import { RunsPanel } from './RunsPanel';
 import { STEP_LABELS, isTriggerType } from './step-model';
 import { useWorkflowEditor } from './use-workflow-editor';
-import './builder.css';
 
 const ADD_BUTTONS: Array<{ type: StepType; icon: typeof Clock }> = [
   { type: 'condition', icon: GitBranch },

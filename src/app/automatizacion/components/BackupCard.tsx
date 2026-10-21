@@ -8,7 +8,6 @@ import { errorMessage } from '../api';
 import type { WorkflowT } from '../types';
 import type { NewWorkflowInput } from '../use-automations';
 import { Dialog } from './Dialog';
-import '../settings.css';
 
 const PREVIEW_MAX = 8;
 
@@ -65,7 +64,7 @@ export function BackupCard({ workflows, createWorkflow }: BackupCardProps) {
   const duplicateCount = plan?.filter((p) => p.duplicate).length ?? 0;
 
   return (
-    <div className="st-card">
+    <div className="au-st-card">
       <h3 className="st-card-title"><FileJson size={16} /> Respaldo de flujos</h3>
       <p className="st-card-text">
         Descarga tus flujos en un archivo JSON para guardarlos o llevarlos a otro espacio de trabajo. Antes de importar verás qué

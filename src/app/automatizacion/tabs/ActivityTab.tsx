@@ -22,7 +22,6 @@ import { isRunsPayload } from '../guards';
 import { RUNS_PAGE_SIZE, type RunT, type WorkflowT } from '../types';
 import { useAutomationPrefs } from '../use-automation-prefs';
 import { useRuns } from '../use-runs';
-import '../activity.css';
 
 const EXPORT_PAGE = 100;
 const EXPORT_MAX_PAGES = 5;

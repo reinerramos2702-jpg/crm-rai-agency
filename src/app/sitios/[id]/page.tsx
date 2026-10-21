@@ -15,7 +15,6 @@ import { SiteEditForm } from '../_components/SiteEditForm';
 import { SiteInfo } from '../_components/SiteInfo';
 import { invalidateSites, sendJson } from '../_components/sites-api';
 import type { SiteDetail, SiteMetrics } from '../_components/site-model';
-import '../sitios.css';
 
 interface DetailResponse {
   site: SiteDetail;

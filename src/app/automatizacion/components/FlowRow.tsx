@@ -8,7 +8,6 @@ import { lastRunBadge } from '@/lib/automation-flows';
 import { zoneOption, type DisplayZone } from '@/lib/automation-prefs';
 import { STATUS_LABELS, TRIGGER_META } from '@/lib/automations/ui-meta';
 import type { WorkflowT } from '../types';
-import '../flows.css';
 
 const STATUS_DOT: Record<string, string> = { active: 'fx-dot--ok', paused: 'fx-dot--warn', draft: '' };
 const TONE_DOT: Record<string, string> = { ok: 'fx-dot--ok', danger: 'fx-dot--danger', warn: 'fx-dot--warn', muted: '' };

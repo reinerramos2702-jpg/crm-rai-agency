@@ -14,7 +14,6 @@ import { useInbox } from './_hooks/use-inbox';
 import { useMediaQuery } from './_hooks/use-media-query';
 import { appendToDraft } from './_lib/conv-model';
 import type { ChatView, TopTabId } from './_lib/conv-types';
-import './conversaciones.css';
 
 /**
  * Conversaciones (bandeja unificada). Esta página solo coordina: pestaña activa,

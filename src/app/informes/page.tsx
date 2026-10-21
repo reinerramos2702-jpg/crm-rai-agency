@@ -13,7 +13,6 @@ import { KpiGrid, KpiGridSkeleton } from './_components/KpiGrid';
 import { ReportsToolbar } from './_components/ReportsToolbar';
 import { allEmpty, buildKpiCards, periodText, timeText, type DashPeriod } from './_components/report-model';
 import { REPORT_TABS, reportTabById } from './_components/report-tabs';
-import './_components/informes.css';
 
 const PREFIX = 'rp';
 // Número de reportes guardados: todavía no existe API ni modelo para crearlos.
