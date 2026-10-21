@@ -1,6 +1,7 @@
 import { jwtVerify, SignJWT } from 'jose';
 import { NextRequest } from 'next/server';
 import { prisma } from './db';
+import { SESSION_COOKIE } from './session-cookie';
 
 export interface AuthContext {
   userId: string;
@@ -10,8 +11,8 @@ export interface AuthContext {
 
 const encoder = new TextEncoder();
 
-/** Nombre de la cookie httpOnly de sesión (Etapa 3 — Auth real). */
-export const SESSION_COOKIE = 'rai_session';
+// Se re-exporta aquí para no cambiar los importadores existentes; el valor vive en session-cookie.ts (apto para edge).
+export { SESSION_COOKIE };
 
 export async function verifyJwt(token: string): Promise<AuthContext | null> {
   try {

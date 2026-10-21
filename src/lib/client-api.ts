@@ -9,15 +9,14 @@
  * "credenciales inválidas", no "sesión expirada").
  */
 
+import { isPublicPath } from './public-paths';
+
 export class UnauthorizedError extends Error {
   constructor() {
     super('Sesión expirada. Inicia sesión de nuevo.');
     this.name = 'UnauthorizedError';
   }
 }
-
-/** Páginas públicas: un 401 ahí es normal (no hay sesión) y no debe redirigir a /login. */
-const PUBLIC_PATHS = ['/login', '/registro', '/recuperar', '/restablecer', '/terminos', '/privacidad'];
 
 export async function apiFetch(input: string, init?: RequestInit): Promise<Response> {
   const res = await fetch(input, {
@@ -27,8 +26,8 @@ export async function apiFetch(input: string, init?: RequestInit): Promise<Respo
   });
 
   if (res.status === 401 && typeof window !== 'undefined') {
-    const path = window.location.pathname;
-    if (!PUBLIC_PATHS.some((p) => path.startsWith(p))) {
+    // Páginas públicas: un 401 ahí es normal (no hay sesión) y no debe redirigir a /login.
+    if (!isPublicPath(window.location.pathname)) {
       window.location.href = '/login';
     }
     throw new UnauthorizedError();
