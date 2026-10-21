@@ -3,8 +3,14 @@
 import { useEffect, useState } from 'react';
 import { LogIn, Loader2, Check } from 'lucide-react';
 import { AuthShell, AuthLink } from '@/components/auth/AuthShell';
+import { safeNext } from '@/lib/safe-next';
 
 const REMEMBER_KEY = 'rai-login-remember';
+
+/** Destino tras iniciar sesión: `?next=` del middleware, solo si es ruta interna; si no, el inicio. */
+function nextTarget(): string {
+  return safeNext(new URLSearchParams(window.location.search).get('next'));
+}
 
 /**
  * Página pública de login (Etapa 3 — Auth real).
@@ -41,7 +47,7 @@ export default function LoginPage() {
     let cancelled = false;
     fetch('/api/me', { credentials: 'same-origin' })
       .then((res) => {
-        if (!cancelled && res.ok) window.location.href = '/';
+        if (!cancelled && res.ok) window.location.href = nextTarget();
       })
       .catch(() => {});
     return () => {
@@ -63,7 +69,7 @@ export default function LoginPage() {
       if (!r.ok) {
         setError(d.error || 'Error al iniciar sesión');
       } else {
-        window.location.href = '/';
+        window.location.href = nextTarget();
       }
     } catch {
       setError('Error de red. Intenta de nuevo.');
