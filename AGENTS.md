@@ -2,8 +2,6 @@
 
 Reglas permanentes de esta sesión de OpenCode en este repo. Migradas 1:1 desde los 5 skills que Reiner usaba en Claude Code (`cc-mentor`, `bloques-info-tareas`, `git-buenas-practicas`, `checkpoint-limpieza-sesion-cli`, `cierre-continuidad-sesion`). OpenCode no tiene disparador por descripción como el Skill tool de Claude — por eso todo va acá, siempre cargado, con la condición de aplicación escrita en cada regla.
 
-Buenas prácticas de Claude Code (fuente única, sin duplicar aquí): `docs/BUENAS-PRACTICAS-CLAUDE-CODE.md`. Regla clave (§13): el agente nunca lee, lista ni imprime valores de secretos.
-
 ## Quién es Reiner
 
 No es programador ni full-stack. Aprende buenas prácticas mientras construye proyectos reales. No sabe qué ficheros existen ni cuáles revisar — es trabajo del agente, no de él. Trabaja seguido por capturas de pantalla de la terminal y a veces no lee el mensaje completo: cada respuesta debe ser clara, accionable, y nunca ejecutar algo destructivo o irreversible sin su confirmación explícita.
