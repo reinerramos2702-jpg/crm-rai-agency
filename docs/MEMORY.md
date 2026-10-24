@@ -370,6 +370,11 @@ Archivos >~4500 bytes a veces se truncan. Workaround: escribir en bloques con Py
 
 ---
 
+**B4 — Tablas nuevas en `public` nacen abiertas (Supabase):**
+Los privilegios por defecto dan acceso a `anon` y `authenticated`. Regla permanente: **toda tabla nueva en `public` lleva RLS (`ENABLE ROW LEVEL SECURITY`) y sus grants en la misma migración que la crea.** Desde el 23 oct 2026 `anon`/`authenticated` ya no heredan permisos en tablas nuevas (migración `20261023230000_close_public_api_access`). Tras cada migración, correr el asesor de seguridad de Supabase y confirmar 0 `rls_disabled_in_public`. Guía completa: `docs/BUENAS-PRACTICAS-CLAUDE-CODE.md` §13.
+
+---
+
 ## 10. Agentes IA del pipeline de campañas (`src/agents/`)
 
 8 agentes: Orchestrator (DAG), Copy, Visual, Audio, Video, Music, VisionAnalyzer, CompetitorResearcher.

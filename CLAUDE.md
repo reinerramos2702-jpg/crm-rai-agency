@@ -24,6 +24,7 @@
 | Arquitectura del ecosistema (Generador, Automatización, Multimedia, Sitios Web), ADR y hoja de ruta | `docs/ARQUITECTURA-ECOSISTEMA-CRM.md` | Todo modelo nuevo es *Propuesta* hasta que Reiner lo apruebe |
 | Mapa de agentes, tecnologías y base de conocimiento reutilizable (efectos, prácticas, legal) | `docs/planning/roadmap-agentes-rai.html` | Se actualiza al adoptar o descubrir una técnica; es la referencia que se pasa a proyectos nuevos |
 | Efectos adoptados y rechazados del CRM | `docs/DISENO-EFECTOS.md` | Reglas duras: sin desenfoque, solo `transform`/`opacity` |
+| Buenas prácticas de Claude Code (seguridad, secretos, cierre) | `docs/BUENAS-PRACTICAS-CLAUDE-CODE.md` | v1.5 · el agente nunca lee ni imprime valores de secretos (§13) |
 | Código y documentos sin uso, pendientes de revisión | `_revisar-obsoletos/` | Nada se borra sin el «sí» de Reiner; ver su `LEEME.md` |
 
 ## 1. Inicio de sesión — protocolo obligatorio
