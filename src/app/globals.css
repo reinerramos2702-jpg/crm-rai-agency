@@ -731,6 +731,17 @@ input, select, textarea {
   transition: var(--transition);
 }
 
+/* Casillas y radios: la regla anterior (width:100% + padding) los estiraba al ancho del contenedor y partía el texto en vertical. */
+input[type="checkbox"], input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  padding: 0;
+  flex: 0 0 auto;
+  accent-color: var(--rai-gold);
+  cursor: pointer;
+}
+
 input:focus, select:focus, textarea:focus {
   border-color: var(--rai-gold);
   box-shadow: var(--shadow-gold);
