@@ -3,12 +3,13 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { AI_AGENT_WRITE_ROLES, isRoleContext, requireRole } from '@/lib/roles';
 import { getLLM, type Provider } from '@/lib/llm-providers';
+import { providerName } from '@/lib/llm-provider-names';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-function jsonError(message: string, status: number) {
-  return new Response(JSON.stringify({ error: message }), {
+function jsonError(message: string, status: number, code?: 'missing_api_key') {
+  return new Response(JSON.stringify(code ? { error: message, code } : { error: message }), {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
@@ -52,10 +53,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     model = await getLLM(ctx.workspace.id, agent.llmProvider as Provider, agent.llmModel);
   } catch (e) {
-    return jsonError(
-      `${(e as Error).message}. Configura una API key para ${agent.llmProvider} en Ajustes → Integraciones.`,
-      400
-    );
+    if ((e as Error).message.startsWith('No API key')) {
+      return jsonError(
+        `Falta la clave de ${providerName(agent.llmProvider)}. Agrégala en Claves de IA para poder probar el agente.`,
+        400,
+        'missing_api_key'
+      );
+    }
+    return jsonError(`No se pudo preparar el modelo de ${providerName(agent.llmProvider)}: ${(e as Error).message}`, 400);
   }
 
   const systemPrompt = buildSystemPrompt(agent);

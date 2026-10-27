@@ -16,7 +16,7 @@ async function getAgent(id: string, workspaceId: string) {
     include: {
       triggers: {
         orderBy: { createdAt: 'asc' },
-        include: { knowledgeBase: { select: { id: true, name: true, description: true } } },
+        include: { knowledgeBase: { select: { id: true, name: true, description: true, _count: { select: { items: true } } } } },
       },
       _count: { select: { conversations: true } },
     },
