@@ -26,13 +26,11 @@ interface TeamOwner {
  * Página de Configuración.
  * - URL del Webhook n8n
  * - Instagram Business Account ID
- * - Toggle modo dev / producción
  */
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testingN8n, setTestingN8n] = useState(false);
-  const [devMode, setDevMode] = useState(true);
   const [n8nStatus, setN8nStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   // Estado del formulario
@@ -278,7 +276,7 @@ export default function SettingsPage() {
     <>
       <TopBar
         title="Configuración"
-        subtitle="Webhook n8n, Instagram y modo de ejecución"
+        subtitle="Webhook n8n, Instagram, equipo y apariencia"
         actions={
           <button onClick={saveSettings} disabled={saving} className="btn btn-primary">
             {saving ? <Spinner size="sm" /> : <Settings2 size={14} />}
@@ -550,83 +548,6 @@ export default function SettingsPage() {
               <Globe size={12} />
               Guardar token (encriptado)
             </button>
-          </div>
-
-          {/* Modo Dev / Producción */}
-          <div className="card">
-            <div className="card-header">
-              <h3 style={{ fontSize: 15, fontWeight: 600 }}>Modo de Ejecución</h3>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0' }}>
-              <div>
-                <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--rai-text)', marginBottom: 4 }}>
-                  Modo Desarrollo
-                </p>
-                <p style={{ fontSize: 12, color: 'var(--rai-muted)' }}>
-                  Auth bypass activo. Cambia DEV_BYPASS_AUTH en .env.local para producción.
-                </p>
-              </div>
-              <button
-                onClick={() => setDevMode(!devMode)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  padding: 0,
-                  cursor: 'pointer',
-                  color: devMode ? 'var(--rai-warning)' : 'var(--rai-success)',
-                }}
-              >
-                {devMode ? <ToggleRight size={36} /> : <ToggleLeft size={36} />}
-              </button>
-            </div>
-
-            <div
-              style={{
-                padding: '10px 14px',
-                background: devMode ? 'rgba(255,159,28,0.08)' : 'rgba(46,196,182,0.08)',
-                border: `1px solid ${devMode ? 'rgba(255,159,28,0.2)' : 'rgba(46,196,182,0.2)'}`,
-                borderRadius: 8,
-                fontSize: 12,
-                color: devMode ? 'var(--rai-warning)' : 'var(--rai-success)',
-              }}
-            >
-              {devMode
-                ? '⚠️ Modo DEV activo — sin autenticación real. No usar en producción.'
-                : '✅ Modo PRODUCCIÓN — autenticación JWT completa.'}
-            </div>
-          </div>
-
-          {/* Variable de entorno de info */}
-          <div className="card">
-            <div className="card-header">
-              <h3 style={{ fontSize: 15, fontWeight: 600 }}>Variables de Entorno</h3>
-            </div>
-            <p style={{ fontSize: 12, color: 'var(--rai-muted)', lineHeight: 1.7 }}>
-              Configura las siguientes variables en <code style={{ color: 'var(--rai-gold)' }}>.env.local</code>:
-            </p>
-            <div
-              className="terminal"
-              style={{ marginTop: 12, fontSize: 11 }}
-            >
-              {[
-                'DATABASE_URL=postgresql://...',
-                'DIRECT_URL=postgresql://...',
-                'UPSTASH_REDIS_REST_URL=https://...',
-                'UPSTASH_REDIS_REST_TOKEN=...',
-                'R2_ACCOUNT_ID=...',
-                'R2_ACCESS_KEY_ID=...',
-                'R2_SECRET_ACCESS_KEY=...',
-                'R2_BUCKET=rai-content-engine',
-                'R2_PUBLIC_URL=https://pub-xxx.r2.dev',
-                'JWT_SECRET=...',
-                'KEYS_ENCRYPTION_KEY=...',
-                'DEV_BYPASS_AUTH=true',
-                'HARD_CAP_USD_PER_EXECUTION=50',
-              ].map((v) => (
-                <div key={v} className="terminal-line info">{v}</div>
-              ))}
-            </div>
           </div>
         </div>
       </div>

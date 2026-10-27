@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useChat } from 'ai/react';
 import { Loader2, Send, RotateCcw, Sparkles, PhoneCall } from 'lucide-react';
+import { parseTestError } from '@/lib/agent-test-error';
 
 interface Props {
   agentId: string;
@@ -32,6 +34,9 @@ export function TestChatPanel({ agentId, dirty = false, variant = 'chat', sticky
     api: `/api/ai-agents/${agentId}/test`,
   });
   const logRef = useRef<HTMLDivElement>(null);
+  // «Reiniciar» descarta el error visible; si la prueba vuelve a fallar llega un error nuevo y se muestra.
+  const [dismissedError, setDismissedError] = useState<Error | undefined>(undefined);
+  const errorInfo = error && error !== dismissedError ? parseTestError(error.message) : null;
   const copy = COPY[variant];
   const Icon = variant === 'voice' ? PhoneCall : Sparkles;
 
@@ -47,7 +52,7 @@ export function TestChatPanel({ agentId, dirty = false, variant = 'chat', sticky
           <Icon size={15} color="var(--rai-gold)" aria-hidden="true" />
           <span style={{ fontWeight: 600 }}>{copy.title}</span>
         </div>
-        <button type="button" className="ag-btn ag-btn--ghost" style={{ minHeight: 32, padding: '0 10px' }} onClick={() => setMessages([])} title="Reiniciar conversación">
+        <button type="button" className="ag-btn ag-btn--ghost" style={{ minHeight: 32, padding: '0 10px' }} onClick={() => { setMessages([]); setDismissedError(error); }} title="Reiniciar conversación">
           <RotateCcw size={13} aria-hidden="true" /> Reiniciar
         </button>
       </div>
@@ -68,8 +73,16 @@ export function TestChatPanel({ agentId, dirty = false, variant = 'chat', sticky
         {isLoading && (
           <div className="chat-bubble assistant"><Loader2 className="animate-spin" size={14} aria-label="Escribiendo" /></div>
         )}
-        {error && (
-          <div className="chat-bubble assistant" style={{ borderColor: 'var(--rai-error)', color: 'var(--rai-error)' }}>{error.message}</div>
+        {errorInfo && (
+          <div className="chat-bubble assistant" role="alert" style={{ borderColor: 'var(--rai-error)', color: 'var(--rai-error)' }}>
+            {errorInfo.message}
+            {errorInfo.code === 'missing_api_key' && (
+              <>
+                {' '}
+                <Link href="/keys" style={{ color: 'var(--rai-gold)', textDecoration: 'underline' }}>Ir a Claves de IA</Link>
+              </>
+            )}
+          </div>
         )}
       </div>
 

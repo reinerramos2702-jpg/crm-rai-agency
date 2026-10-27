@@ -1,10 +1,11 @@
 import { Settings as SettingsIcon, BookOpen, Target } from 'lucide-react';
+import { PROVIDER_NAMES } from '@/lib/llm-provider-names';
 
 export const LLM_PROVIDERS = [
-  { provider: 'openai', label: 'GPT-4', models: [{ id: 'gpt-4o', label: 'GPT-4o' }, { id: 'gpt-4o-mini', label: 'GPT-4o mini' }] },
-  { provider: 'anthropic', label: 'Claude', models: [{ id: 'claude-sonnet-4-5', label: 'Claude Sonnet 4.5' }, { id: 'claude-opus-4-7', label: 'Claude Opus 4.7' }] },
-  { provider: 'google', label: 'Gemini', models: [{ id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' }, { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' }] },
-  { provider: 'deepseek', label: 'DeepSeek', models: [{ id: 'deepseek-chat', label: 'DeepSeek Chat' }, { id: 'deepseek-reasoner', label: 'DeepSeek Reasoner' }] },
+  { provider: 'openai', label: PROVIDER_NAMES.openai, models: [{ id: 'gpt-4o', label: 'GPT-4o' }, { id: 'gpt-4o-mini', label: 'GPT-4o mini' }] },
+  { provider: 'anthropic', label: PROVIDER_NAMES.anthropic, models: [{ id: 'claude-sonnet-4-5', label: 'Claude Sonnet 4.5' }, { id: 'claude-opus-4-7', label: 'Claude Opus 4.7' }] },
+  { provider: 'google', label: PROVIDER_NAMES.google, models: [{ id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' }, { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' }] },
+  { provider: 'deepseek', label: PROVIDER_NAMES.deepseek, models: [{ id: 'deepseek-chat', label: 'DeepSeek Chat' }, { id: 'deepseek-reasoner', label: 'DeepSeek Reasoner' }] },
 ] as const;
 
 export const SUB_TABS = [
